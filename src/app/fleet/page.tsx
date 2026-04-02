@@ -144,7 +144,7 @@ export default function FleetPage() {
               <div className="bg-[#c8a45a] text-[#111110] px-12 py-8 rounded-sm text-center">
                 <div className="text-xs font-semibold tracking-widest uppercase mb-1 opacity-70">Daily Rate</div>
                 <div className="text-5xl font-light mb-1">$130</div>
-                <div className="text-sm opacity-70">+ 11.9% tax · per bike / per day</div>
+                <div className="text-sm opacity-70">+ $15.47 tax · per bike / per day</div>
               </div>
             </div>
             <p className="text-white/40 text-sm mb-8">
