@@ -142,9 +142,8 @@ export default function FleetPage() {
             <h2 className="text-white text-4xl font-light mb-12">Simple, transparent rates</h2>
             <div className="grid md:grid-cols-3 gap-6 mb-10">
               {[
-                { season: "Fall", period: "Oct – Nov", rate: "$175", note: "Min. 3 days" },
-                { season: "Winter", period: "Dec – Feb", rate: "$155", note: "Min. 3 days" },
-                { season: "Spring Peak", period: "Mar – Apr", rate: "$195", note: "Min. 3 days", featured: true },
+                { season: "Shoulder", period: "May · Sep", rate: "$165", note: "Min. 3 days" },
+                { season: "Peak Season", period: "Jun – Aug", rate: "$195", note: "Min. 3 days", featured: true },
               ].map((tier) => (
                 <div
                   key={tier.season}
@@ -164,9 +163,6 @@ export default function FleetPage() {
                 </div>
               ))}
             </div>
-            <p className="text-white/50 text-sm mb-2">
-              Available <strong className="text-white/70">October – April</strong> · Sonoran Desert, Arizona
-            </p>
             <p className="text-white/40 text-sm mb-8">
               Group discounts available for 5+ bikes. Contact us directly.
             </p>

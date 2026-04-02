@@ -58,7 +58,7 @@ export default function HomePage() {
             {[
               { value: "10", label: "Bikes Available" },
               { value: "450cc", label: "Engine" },
-              { value: "Oct – Apr", label: "Arizona Season" },
+              { value: "3 days", label: "Minimum Rental" },
               { value: "24/7", label: "Support" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
@@ -115,7 +115,7 @@ export default function HomePage() {
                 </div>
                 <div className="absolute -bottom-6 -left-6 bg-[#c8a45a] text-[#111110] px-6 py-4 rounded-sm hidden md:block">
                   <div className="text-2xl font-light">from $155</div>
-                  <div className="text-xs font-semibold tracking-wider uppercase">per day · Oct–Apr</div>
+                  <div className="text-xs font-semibold tracking-wider uppercase">per day</div>
                 </div>
               </div>
             </div>
@@ -242,12 +242,8 @@ export default function HomePage() {
                   a: "The bike, panniers, a tank bag, a phone/GPS mount, and 24/7 support contact. Fuel and accommodation are not included.",
                 },
                 {
-                  q: "When are rentals available?",
-                  a: "October through April only. Our bikes are based in the Sonoran Desert, Arizona during winter — ideal riding weather. From May to September they're in the mountains on our guided Freedom Tours.",
-                },
-                {
                   q: "What's the minimum rental period?",
-                  a: "3 days minimum. For spring peak (March–April) we recommend at least 5 days to make the most of the desert routes.",
+                  a: "3 days minimum year-round. For peak summer season we recommend at least 5 days to make the most of the routes.",
                 },
                 {
                   q: "Can I pick my own route?",

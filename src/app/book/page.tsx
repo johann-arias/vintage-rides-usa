@@ -163,15 +163,7 @@ export default function BookPage() {
           {step === "dates" && (
             <div className="space-y-8">
               <div className="bg-white rounded-sm border border-[#e8e6e0] p-8">
-                <h2 className="text-[#111110] font-semibold text-lg mb-4">Select Dates & Bikes</h2>
-
-                <div className="bg-[#f8f6f0] border border-[#e8e6e0] rounded-sm px-4 py-3 mb-6 flex items-start gap-2">
-                  <span className="text-[#c8a45a] text-sm shrink-0 mt-0.5">📍</span>
-                  <p className="text-[#6b6b6b] text-xs leading-relaxed">
-                    <strong className="text-[#2a2a28]">Arizona season: October – April.</strong>{" "}
-                    Our fleet is based in the Sonoran Desert during winter. May–September the bikes are in the mountains on guided Freedom Tours and not available for rental.
-                  </p>
-                </div>
+                <h2 className="text-[#111110] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div>
@@ -244,15 +236,9 @@ export default function BookPage() {
                     }`}
                   >
                     {availability.outOfSeason ? (
-                      <div>
-                        <p className="text-red-700 text-sm font-medium mb-1">
-                          Bikes not available for those dates.
-                        </p>
-                        <p className="text-red-600 text-xs">
-                          Our fleet is based in Arizona from <strong>October through April</strong> only.
-                          May–September the bikes are in the mountains on guided Freedom Tours.
-                        </p>
-                      </div>
+                      <p className="text-red-700 text-sm font-medium">
+                        Bikes are not available for rental during those dates. Please select dates between May and September.
+                      </p>
                     ) : !availability.pricing?.meetsMinimum ? (
                       <p className="text-red-700 text-sm font-medium">
                         Minimum rental is {availability.pricing?.minDays} days.
