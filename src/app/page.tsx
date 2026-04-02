@@ -58,7 +58,7 @@ export default function HomePage() {
             {[
               { value: "10", label: "Bikes Available" },
               { value: "450cc", label: "Engine" },
-              { value: "3 days", label: "Minimum Rental" },
+              { value: "$130", label: "Per Day + Tax" },
               { value: "24/7", label: "Support" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
@@ -114,8 +114,8 @@ export default function HomePage() {
                   </div>
                 </div>
                 <div className="absolute -bottom-6 -left-6 bg-[#c8a45a] text-[#111110] px-6 py-4 rounded-sm hidden md:block">
-                  <div className="text-2xl font-light">from $155</div>
-                  <div className="text-xs font-semibold tracking-wider uppercase">per day</div>
+                  <div className="text-2xl font-light">$130/day</div>
+                  <div className="text-xs font-semibold tracking-wider uppercase">+ tax</div>
                 </div>
               </div>
             </div>
@@ -240,10 +240,6 @@ export default function HomePage() {
                 {
                   q: "What's included in the rental?",
                   a: "The bike, panniers, a tank bag, a phone/GPS mount, and 24/7 support contact. Fuel and accommodation are not included.",
-                },
-                {
-                  q: "What's the minimum rental period?",
-                  a: "3 days minimum year-round. For peak summer season we recommend at least 5 days to make the most of the routes.",
                 },
                 {
                   q: "Can I pick my own route?",

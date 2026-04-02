@@ -223,21 +223,25 @@ export function getPriceForDate(
   return rules.sort((a, b) => a.dailyRateUsd - b.dailyRateUsd)[0];
 }
 
+export const TAX_RATE = 0.119; // 11.9%
+
 export function calculateRentalPrice(
   startDate: string,
   endDate: string,
   numberOfBikes: number,
   rules: PricingRule[]
-): { dailyRate: number; totalDays: number; totalPrice: number; minDays: number } {
+): { dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number; minDays: number } {
   const start = new Date(startDate);
   const end = new Date(endDate);
   const totalDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
 
   const rule = getPriceForDate(start, rules);
   const dailyRate = rule.dailyRateUsd;
-  const totalPrice = dailyRate * totalDays * numberOfBikes;
+  const subtotal = dailyRate * totalDays * numberOfBikes;
+  const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
+  const totalPrice = Math.round((subtotal + tax) * 100) / 100;
 
-  return { dailyRate, totalDays, totalPrice, minDays: rule.minRentalDays };
+  return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays: 1 };
 }
 
 // ── Bikes ──────────────────────────────────────────────────────────────────

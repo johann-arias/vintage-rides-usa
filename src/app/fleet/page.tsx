@@ -140,28 +140,12 @@ export default function FleetPage() {
           <div className="max-w-4xl mx-auto px-6 text-center">
             <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Pricing</p>
             <h2 className="text-white text-4xl font-light mb-12">Simple, transparent rates</h2>
-            <div className="grid md:grid-cols-3 gap-6 mb-10">
-              {[
-                { season: "Shoulder", period: "May · Sep", rate: "$165", note: "Min. 3 days" },
-                { season: "Peak Season", period: "Jun – Aug", rate: "$195", note: "Min. 3 days", featured: true },
-              ].map((tier) => (
-                <div
-                  key={tier.season}
-                  className={`p-8 rounded-sm ${
-                    tier.featured
-                      ? "bg-[#c8a45a] text-[#111110]"
-                      : "bg-[#1a1a18] text-white border border-white/10"
-                  }`}
-                >
-                  <div className="text-xs font-semibold tracking-widest uppercase mb-1 opacity-70">
-                    {tier.season}
-                  </div>
-                  <div className="text-sm mb-4 opacity-60">{tier.period}</div>
-                  <div className="text-4xl font-light mb-1">{tier.rate}</div>
-                  <div className="text-xs opacity-60">per bike / per day</div>
-                  <div className="mt-3 text-xs opacity-50">{tier.note}</div>
-                </div>
-              ))}
+            <div className="flex justify-center mb-10">
+              <div className="bg-[#c8a45a] text-[#111110] px-12 py-8 rounded-sm text-center">
+                <div className="text-xs font-semibold tracking-widest uppercase mb-1 opacity-70">Daily Rate</div>
+                <div className="text-5xl font-light mb-1">$130</div>
+                <div className="text-sm opacity-70">+ 11.9% tax · per bike / per day</div>
+              </div>
             </div>
             <p className="text-white/40 text-sm mb-8">
               Group discounts available for 5+ bikes. Contact us directly.

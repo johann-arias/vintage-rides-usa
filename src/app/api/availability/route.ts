@@ -54,9 +54,9 @@ export async function GET(req: NextRequest) {
       pricing: {
         dailyRate: pricing.dailyRate,
         totalDays: pricing.totalDays,
+        subtotal: pricing.subtotal,
+        tax: pricing.tax,
         totalPrice: pricing.totalPrice,
-        minDays: pricing.minDays,
-        meetsMinimum: pricing.totalDays >= pricing.minDays,
       },
     });
   } catch (err) {

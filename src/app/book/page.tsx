@@ -13,10 +13,10 @@ type AvailabilityResult = {
   pricing: {
     dailyRate: number;
     totalDays: number;
+    subtotal: number;
+    tax: number;
     totalPrice: number;
-    minDays: number;
-    meetsMinimum: boolean;
-  };
+  } | null;
 } | null;
 
 type Step = "dates" | "details" | "review";
@@ -92,7 +92,7 @@ export default function BookPage() {
           licenseNumber,
           emergencyContact,
           specialRequests,
-          totalPrice: availability?.pricing.totalPrice,
+          totalPrice: availability?.pricing?.totalPrice,
         }),
       });
       const data = await res.json();
@@ -109,7 +109,7 @@ export default function BookPage() {
   }
 
   const canProceedToDetails =
-    availability?.canBook && availability?.pricing?.meetsMinimum && !availability?.outOfSeason;
+    availability?.canBook && !availability?.outOfSeason && availability?.pricing != null;
 
   return (
     <>
@@ -230,7 +230,7 @@ export default function BookPage() {
                 {availability && !checkingAvailability && (
                   <div
                     className={`rounded-sm px-5 py-5 border ${
-                      availability.canBook && availability.pricing?.meetsMinimum
+                      availability.canBook && !availability.outOfSeason
                         ? "bg-green-50 border-green-200"
                         : "bg-red-50 border-red-200"
                     }`}
@@ -239,11 +239,6 @@ export default function BookPage() {
                       <p className="text-red-700 text-sm font-medium">
                         Bikes are not available for rental during those dates. Please select dates between May and September.
                       </p>
-                    ) : !availability.pricing?.meetsMinimum ? (
-                      <p className="text-red-700 text-sm font-medium">
-                        Minimum rental is {availability.pricing?.minDays} days.
-                        Please extend your dates.
-                      </p>
                     ) : !availability.canBook ? (
                       <p className="text-red-700 text-sm font-medium">
                         Only {availability.availableCount} bike{availability.availableCount !== 1 ? "s" : ""} available
@@ -251,23 +246,21 @@ export default function BookPage() {
                       </p>
                     ) : (
                       <div>
-                        <p className="text-green-700 text-sm font-semibold mb-3">
+                        <p className="text-green-700 text-sm font-semibold mb-4">
                           {availability.availableCount} bike{availability.availableCount !== 1 ? "s" : ""} available — looks good!
                         </p>
-                        <div className="grid grid-cols-3 gap-4 text-center">
-                          <div>
-                            <div className="text-[#111110] font-semibold">{availability.pricing.totalDays}</div>
-                            <div className="text-[#6b6b6b] text-xs uppercase tracking-wider">Days</div>
+                        <div className="space-y-1.5 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-[#6b6b6b]">${availability.pricing!.dailyRate} × {availability.pricing!.totalDays} day{availability.pricing!.totalDays !== 1 ? "s" : ""} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
+                            <span className="text-[#111110]">${availability.pricing!.subtotal.toLocaleString()}</span>
                           </div>
-                          <div>
-                            <div className="text-[#111110] font-semibold">${availability.pricing.dailyRate}</div>
-                            <div className="text-[#6b6b6b] text-xs uppercase tracking-wider">Per bike/day</div>
+                          <div className="flex justify-between">
+                            <span className="text-[#6b6b6b]">Tax (11.9%)</span>
+                            <span className="text-[#111110]">${availability.pricing!.tax.toLocaleString()}</span>
                           </div>
-                          <div>
-                            <div className="text-[#c8a45a] font-bold text-lg">
-                              ${availability.pricing.totalPrice.toLocaleString()}
-                            </div>
-                            <div className="text-[#6b6b6b] text-xs uppercase tracking-wider">Total</div>
+                          <div className="flex justify-between border-t border-[#e8e6e0] pt-2 mt-2">
+                            <span className="font-semibold text-[#111110]">Total</span>
+                            <span className="font-bold text-[#c8a45a] text-lg">${availability.pricing!.totalPrice.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -398,26 +391,31 @@ export default function BookPage() {
               <div className="bg-white rounded-sm border border-[#e8e6e0] p-8">
                 <h2 className="text-[#111110] font-semibold text-lg mb-6">Review Your Booking</h2>
 
-                <div className="space-y-4 mb-8">
+                <div className="space-y-0 mb-8">
                   {[
                     { label: "Pickup", value: new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) },
                     { label: "Return", value: new Date(endDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" }) },
-                    { label: "Duration", value: `${availability.pricing.totalDays} days` },
+                    { label: "Duration", value: `${availability.pricing!.totalDays} day${availability.pricing!.totalDays !== 1 ? "s" : ""}` },
                     { label: "Bikes", value: `${bikeCount} × Royal Enfield Himalayan 450` },
-                    { label: "Daily Rate", value: `$${availability.pricing.dailyRate} per bike` },
                     { label: "Rider", value: `${firstName} ${lastName}` },
                     { label: "Email", value: email },
                   ].map((row) => (
-                    <div key={row.label} className="flex justify-between py-2 border-b border-[#f0ede6] text-sm">
+                    <div key={row.label} className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
                       <span className="text-[#6b6b6b]">{row.label}</span>
                       <span className="text-[#111110] font-medium">{row.value}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between py-3 text-lg">
+                  <div className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
+                    <span className="text-[#6b6b6b]">Subtotal (${availability.pricing!.dailyRate}/day × {availability.pricing!.totalDays}d × {bikeCount})</span>
+                    <span className="text-[#111110] font-medium">${availability.pricing!.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
+                    <span className="text-[#6b6b6b]">Tax (11.9%)</span>
+                    <span className="text-[#111110] font-medium">${availability.pricing!.tax.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between pt-4 mt-1">
                     <span className="font-semibold text-[#111110]">Total</span>
-                    <span className="font-bold text-[#c8a45a]">
-                      ${availability.pricing.totalPrice.toLocaleString()}
-                    </span>
+                    <span className="font-bold text-[#c8a45a] text-xl">${availability.pricing!.totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
 
@@ -445,7 +443,7 @@ export default function BookPage() {
                       Redirecting…
                     </>
                   ) : (
-                    `Pay $${availability.pricing.totalPrice.toLocaleString()}`
+                    `Pay $${availability.pricing!.totalPrice.toLocaleString()}`
                   )}
                 </button>
               </div>
