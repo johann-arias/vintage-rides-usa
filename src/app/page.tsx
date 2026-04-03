@@ -178,7 +178,7 @@ export default function HomePage() {
             <div className="text-center mb-16">
               <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why Us</p>
               <h2 className="text-[#111110] text-4xl md:text-5xl font-light">
-                Born from 15 years of<br />guided adventures
+                Born from 20 years of<br />guided adventures
               </h2>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
