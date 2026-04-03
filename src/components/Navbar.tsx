@@ -12,7 +12,7 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <span className="text-white font-semibold tracking-widest text-sm uppercase">
-            Vintage Ride
+            Vintage Rides
           </span>
           <span className="text-[#c8a45a] font-light text-sm tracking-wider">
             USA
