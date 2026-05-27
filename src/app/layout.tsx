@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ContactButton from "@/components/ContactButton";
 import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
 
 const GA_ID = "G-M87DWZQ2B4";
+const GTM_ID = "GTM-T22FLRVR";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -236,7 +238,16 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <GoogleTagManager gtmId={GTM_ID} />
       <body className="min-h-full flex flex-col">
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          />
+        </noscript>
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
