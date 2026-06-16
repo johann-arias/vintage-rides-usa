@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import { GoogleTagManager } from "@next/third-parties/google";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import ContactButton from "@/components/ContactButton";
 import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
@@ -9,13 +9,13 @@ import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
 const GA_ID = "G-M87DWZQ2B4";
 const GTM_ID = "GTM-T22FLRVR";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const sourceSerif = Source_Serif_4({
+  variable: "--font-serif",
   subsets: ["latin"],
 });
 
@@ -236,7 +236,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${sourceSerif.variable} h-full antialiased`}
     >
       <GoogleTagManager gtmId={GTM_ID} />
       <body className="min-h-full flex flex-col">

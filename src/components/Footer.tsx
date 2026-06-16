@@ -3,13 +3,13 @@ import { PICKUP_LOCATION, PICKUP_MAPS_URL } from "@/lib/location";
 
 export default function Footer() {
   return (
-    <footer className="bg-[#111110] text-white/60 mt-auto">
+    <footer className="bg-[#1f2817] text-white/60 mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
             <div className="flex items-center gap-2 mb-4">
               <span className="text-white font-semibold tracking-widest text-sm uppercase">Vintage Rides</span>
-              <span className="text-[#c8a45a] font-light text-sm tracking-wider">USA</span>
+              <span className="text-[#d9a32b] font-light text-sm tracking-wider">USA</span>
             </div>
             <p className="text-sm leading-relaxed">
               Motorcycle rentals in Rapid City, SD — gateway to the Black Hills,
@@ -37,7 +37,7 @@ export default function Footer() {
               href={PICKUP_MAPS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#c8a45a] hover:text-[#e8c98a] transition-colors"
+              className="text-xs text-[#d9a32b] hover:text-[#e2ae2c] transition-colors"
             >
               Open in Google Maps →
             </a>

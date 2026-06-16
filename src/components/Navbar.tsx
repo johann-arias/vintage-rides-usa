@@ -27,13 +27,13 @@ export default function Navbar() {
   }, [ridesOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#111110]/90 backdrop-blur-md border-b border-white/10">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#1f2817]/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <span className="text-white font-semibold tracking-widest text-sm uppercase">
             Vintage Rides
           </span>
-          <span className="text-[#c8a45a] font-light text-sm tracking-wider">
+          <span className="text-[#d9a32b] font-light text-sm tracking-wider">
             USA
           </span>
         </Link>
@@ -55,7 +55,7 @@ export default function Navbar() {
               Rides <ChevronDown size={14} className={`transition-transform ${ridesOpen ? "rotate-180" : ""}`} />
             </button>
             {ridesOpen && (
-              <div className="absolute top-full left-0 mt-3 w-56 bg-[#1a1a18] border border-white/10 rounded-sm shadow-xl overflow-hidden">
+              <div className="absolute top-full left-0 mt-3 w-56 bg-[#26301c] border border-white/10 rounded-sm shadow-xl overflow-hidden">
                 {RIDES.map((r) => (
                   <Link
                     key={r.href}
@@ -83,7 +83,7 @@ export default function Navbar() {
           </Link>
           <Link
             href="/book"
-            className="bg-[#c8a45a] hover:bg-[#e8c98a] text-[#111110] text-sm font-semibold tracking-wider px-5 py-2 rounded-sm transition-colors"
+            className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] text-sm font-semibold tracking-wider px-5 py-2 rounded-sm transition-colors"
           >
             Book Now
           </Link>
@@ -101,7 +101,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-[#111110] border-t border-white/10 px-6 py-4 flex flex-col gap-4">
+        <div className="md:hidden bg-[#1f2817] border-t border-white/10 px-6 py-4 flex flex-col gap-4">
           <Link
             href="/fleet"
             onClick={() => setOpen(false)}
@@ -141,7 +141,7 @@ export default function Navbar() {
           <Link
             href="/book"
             onClick={() => setOpen(false)}
-            className="bg-[#c8a45a] text-[#111110] text-sm font-semibold tracking-wider px-5 py-3 rounded-sm text-center"
+            className="bg-[#d9a32b] text-[#1a1a17] text-sm font-semibold tracking-wider px-5 py-3 rounded-sm text-center"
           >
             Book Now
           </Link>

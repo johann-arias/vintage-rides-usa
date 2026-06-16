@@ -27,10 +27,10 @@ export default function ContactButton() {
   return (
     <div ref={panelRef} className="fixed bottom-6 right-6 z-50">
       {open && (
-        <div className="mb-3 w-80 bg-white border border-[#e8e6e0] rounded-sm shadow-xl overflow-hidden">
-          <div className="bg-[#111110] px-5 py-4 flex items-center justify-between">
+        <div className="mb-3 w-80 bg-white border border-[#e8e3d3] rounded-sm shadow-xl overflow-hidden">
+          <div className="bg-[#1f2817] px-5 py-4 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#c8a45a]">Get in touch</p>
+              <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#d9a32b]">Get in touch</p>
               <p className="text-white text-sm font-medium mt-0.5">Vintage Rides USA</p>
             </div>
             <button
@@ -44,20 +44,20 @@ export default function ContactButton() {
               </svg>
             </button>
           </div>
-          <ul className="divide-y divide-[#f0ede6]">
+          <ul className="divide-y divide-[#e8e3d3]">
             <li>
               <a
                 href={CONTACT_LINKS.phone}
-                className="flex items-center gap-4 px-5 py-4 hover:bg-[#faf8f3] transition-colors"
+                className="flex items-center gap-4 px-5 py-4 hover:bg-[#fdfaf2] transition-colors"
               >
-                <span className="w-9 h-9 rounded-full bg-[#f0ede6] flex items-center justify-center text-[#111110] shrink-0">
+                <span className="w-9 h-9 rounded-full bg-[#f3ecd9] flex items-center justify-center text-[#1a1a17] shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8a8a86]">Phone</div>
-                  <div className="text-[#111110] text-sm font-medium truncate">{CONTACT.phone.display}</div>
+                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8c8779]">Phone</div>
+                  <div className="text-[#1a1a17] text-sm font-medium truncate">{CONTACT.phone.display}</div>
                 </div>
               </a>
             </li>
@@ -66,7 +66,7 @@ export default function ContactButton() {
                 href={CONTACT_LINKS.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-4 px-5 py-4 hover:bg-[#faf8f3] transition-colors"
+                className="flex items-center gap-4 px-5 py-4 hover:bg-[#fdfaf2] transition-colors"
               >
                 <span className="w-9 h-9 rounded-full bg-[#25d366] flex items-center justify-center text-white shrink-0">
                   <svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor">
@@ -74,25 +74,25 @@ export default function ContactButton() {
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8a8a86]">WhatsApp</div>
-                  <div className="text-[#111110] text-sm font-medium truncate">{CONTACT.whatsapp.display}</div>
+                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8c8779]">WhatsApp</div>
+                  <div className="text-[#1a1a17] text-sm font-medium truncate">{CONTACT.whatsapp.display}</div>
                 </div>
               </a>
             </li>
             <li>
               <a
                 href={CONTACT_LINKS.email}
-                className="flex items-center gap-4 px-5 py-4 hover:bg-[#faf8f3] transition-colors"
+                className="flex items-center gap-4 px-5 py-4 hover:bg-[#fdfaf2] transition-colors"
               >
-                <span className="w-9 h-9 rounded-full bg-[#f0ede6] flex items-center justify-center text-[#111110] shrink-0">
+                <span className="w-9 h-9 rounded-full bg-[#f3ecd9] flex items-center justify-center text-[#1a1a17] shrink-0">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="3" y="5" width="18" height="14" rx="2" />
                     <polyline points="3 7 12 13 21 7" />
                   </svg>
                 </span>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8a8a86]">Email Wendy</div>
-                  <div className="text-[#111110] text-sm font-medium truncate">{CONTACT.email}</div>
+                  <div className="text-[10px] font-semibold tracking-[0.18em] uppercase text-[#8c8779]">Email Wendy</div>
+                  <div className="text-[#1a1a17] text-sm font-medium truncate">{CONTACT.email}</div>
                 </div>
               </a>
             </li>
@@ -104,7 +104,7 @@ export default function ContactButton() {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label={open ? "Close contact panel" : "Open contact panel"}
-        className="bg-[#111110] hover:bg-[#2a2a28] text-white rounded-full shadow-xl flex items-center gap-2 px-5 py-3.5 text-sm font-semibold tracking-wider uppercase transition-colors"
+        className="bg-[#1f2817] hover:bg-[#3a4a2c] text-white rounded-full shadow-xl flex items-center gap-2 px-5 py-3.5 text-sm font-semibold tracking-wider uppercase transition-colors"
       >
         {open ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

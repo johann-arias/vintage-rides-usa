@@ -50,9 +50,9 @@ export default function FleetPage() {
       <Navbar />
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="bg-[#111110] py-20">
+        <section className="bg-[#1f2817] py-20">
           <div className="max-w-7xl mx-auto px-6">
-            <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
+            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
             <h1 className="text-white text-4xl md:text-6xl font-light leading-tight mb-4">
               Royal Enfield<br />
               <span className="font-semibold">Himalayan 450</span>
@@ -65,10 +65,10 @@ export default function FleetPage() {
         </section>
 
         {/* Bike hero image */}
-        <section className="bg-[#1a1a18]">
+        <section className="bg-[#26301c]">
           <div className="max-w-7xl mx-auto px-6 py-12">
             <div
-              className="aspect-[16/7] bg-[#2a2a28] bg-cover bg-center rounded-sm overflow-hidden"
+              className="aspect-[16/7] bg-[#2e3b23] bg-cover bg-center rounded-sm overflow-hidden"
               style={{ backgroundImage: "url('/hero-bike-outdoor.jpg')" }}
               role="img"
               aria-label="Royal Enfield Himalayan 450 in the Black Hills"
@@ -77,21 +77,21 @@ export default function FleetPage() {
         </section>
 
         {/* Specs */}
-        <section className="bg-[#f8f6f0] py-20">
+        <section className="bg-[#faf5ea] py-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16">
               <div>
-                <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-6">Technical Specs</p>
+                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-6">Technical Specs</p>
                 <div className="space-y-0">
                   {SPECS.map((spec, i) => (
                     <div
                       key={spec.label}
                       className={`grid grid-cols-2 gap-4 py-3 ${
-                        i < SPECS.length - 1 ? "border-b border-[#e8e6e0]" : ""
+                        i < SPECS.length - 1 ? "border-b border-[#e8e3d3]" : ""
                       }`}
                     >
-                      <span className="text-[#6b6b6b] text-sm">{spec.label}</span>
-                      <span className="text-[#111110] text-sm font-medium">{spec.value}</span>
+                      <span className="text-[#6e6a5e] text-sm">{spec.label}</span>
+                      <span className="text-[#1a1a17] text-sm font-medium">{spec.value}</span>
                     </div>
                   ))}
                 </div>
@@ -99,22 +99,22 @@ export default function FleetPage() {
 
               <div>
                 <div className="mb-12">
-                  <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-6">What&apos;s Included</p>
+                  <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-6">What&apos;s Included</p>
                   <ul className="space-y-3">
                     {INCLUDED.map((item) => (
-                      <li key={item} className="flex items-start gap-3 text-sm text-[#2a2a28]">
-                        <span className="text-[#c8a45a] font-bold shrink-0 mt-0.5">✓</span>
+                      <li key={item} className="flex items-start gap-3 text-sm text-[#2a2a24]">
+                        <span className="text-[#d9a32b] font-bold shrink-0 mt-0.5">✓</span>
                         {item}
                       </li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-[#6b6b6b]">Not Included</p>
+                  <p className="text-xs font-semibold tracking-[0.25em] uppercase mb-4 text-[#6e6a5e]">Not Included</p>
                   <ul className="space-y-3">
                     {NOT_INCLUDED.map((item) => (
-                      <li key={item} className="flex items-start gap-3 text-sm text-[#6b6b6b]">
-                        <span className="text-[#6b6b6b] shrink-0 mt-0.5">—</span>
+                      <li key={item} className="flex items-start gap-3 text-sm text-[#6e6a5e]">
+                        <span className="text-[#6e6a5e] shrink-0 mt-0.5">—</span>
                         {item}
                       </li>
                     ))}
@@ -129,8 +129,8 @@ export default function FleetPage() {
         <section className="bg-white py-20">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-10">
-              <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
-              <h2 className="text-[#111110] text-3xl md:text-4xl font-light">Ten bikes, ready to ride</h2>
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
+              <h2 className="text-[#1a1a17] text-3xl md:text-4xl font-light">Ten bikes, ready to ride</h2>
             </div>
             <div
               className="aspect-[16/9] bg-cover bg-center rounded-sm overflow-hidden mb-3"
@@ -156,12 +156,12 @@ export default function FleetPage() {
         </section>
 
         {/* Pricing */}
-        <section className="bg-[#111110] py-20">
+        <section className="bg-[#1f2817] py-20">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Pricing</p>
+            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Pricing</p>
             <h2 className="text-white text-4xl font-light mb-12">Simple, transparent rates</h2>
             <div className="flex justify-center mb-10">
-              <div className="bg-[#c8a45a] text-[#111110] px-12 py-8 rounded-sm text-center">
+              <div className="bg-[#d9a32b] text-[#1a1a17] px-12 py-8 rounded-sm text-center">
                 <div className="text-xs font-semibold tracking-widest uppercase mb-1 opacity-70">Daily Rate</div>
                 <div className="text-5xl font-light mb-1">$130</div>
                 <div className="text-sm opacity-70">+ $15.47 tax · per bike / per day</div>
@@ -172,7 +172,7 @@ export default function FleetPage() {
             </p>
             <Link
               href="/book"
-              className="bg-[#c8a45a] hover:bg-[#e8c98a] text-[#111110] font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+              className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
             >
               Check Availability
             </Link>

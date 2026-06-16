@@ -121,24 +121,24 @@ export default function BookPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 pt-16 bg-[#f8f6f0] min-h-screen">
+      <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
         {/* Header */}
-        <section className="bg-[#111110] py-14">
+        <section className="bg-[#1f2817] py-14">
           <div className="max-w-3xl mx-auto px-6">
-            <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-3">Rental Booking</p>
+            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-3">Rental Booking</p>
             <h1 className="text-white text-3xl md:text-4xl font-light">Book Your Bike</h1>
           </div>
         </section>
 
         {/* Progress steps */}
-        <div className="bg-[#1a1a18] border-b border-white/10">
+        <div className="bg-[#26301c] border-b border-white/10">
           <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-6">
             {(["dates", "details", "review"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
                     step === s
-                      ? "bg-[#c8a45a] text-[#111110]"
+                      ? "bg-[#d9a32b] text-[#1a1a17]"
                       : i < ["dates", "details", "review"].indexOf(step)
                       ? "bg-white/20 text-white"
                       : "bg-white/10 text-white/40"
@@ -169,12 +169,12 @@ export default function BookPage() {
           {/* ── Step 1: Dates ──────────────────────────────────────────────── */}
           {step === "dates" && (
             <div className="space-y-8">
-              <div className="bg-white rounded-sm border border-[#e8e6e0] p-8">
-                <h2 className="text-[#111110] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
+              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
+                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
 
                 <div className="grid md:grid-cols-2 gap-6 mb-3">
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                       Pickup Date
                     </label>
                     <input
@@ -187,11 +187,11 @@ export default function BookPage() {
                           setEndDate(minEnd(e.target.value));
                         }
                       }}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-[#111110] text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                       Return Date
                     </label>
                     <input
@@ -199,40 +199,40 @@ export default function BookPage() {
                       min={startDate ? minEnd(startDate) : today}
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-[#111110] text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                 </div>
-                <p className="text-xs text-[#6b6b6b] mb-6">
-                  Pickup at <span className="text-[#111110] font-medium">9:00 AM</span> · Return by <span className="text-[#111110] font-medium">9:00 AM</span> the following day
+                <p className="text-xs text-[#6e6a5e] mb-6">
+                  Pickup at <span className="text-[#1a1a17] font-medium">9:00 AM</span> · Return by <span className="text-[#1a1a17] font-medium">9:00 AM</span> the following day
                 </p>
 
                 <div className="mb-6">
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                     Number of Bikes
                   </label>
                   <div className="flex items-center gap-4">
                     <button
                       onClick={() => setBikeCount(Math.max(1, bikeCount - 1))}
-                      className="w-10 h-10 border border-[#e8e6e0] rounded-sm text-[#111110] font-bold hover:border-[#c8a45a] transition-colors"
+                      className="w-10 h-10 border border-[#e8e3d3] rounded-sm text-[#1a1a17] font-bold hover:border-[#d9a32b] transition-colors"
                     >
                       −
                     </button>
-                    <span className="text-[#111110] font-semibold text-xl w-8 text-center">{bikeCount}</span>
+                    <span className="text-[#1a1a17] font-semibold text-xl w-8 text-center">{bikeCount}</span>
                     <button
                       onClick={() => setBikeCount(Math.min(10, bikeCount + 1))}
-                      className="w-10 h-10 border border-[#e8e6e0] rounded-sm text-[#111110] font-bold hover:border-[#c8a45a] transition-colors"
+                      className="w-10 h-10 border border-[#e8e3d3] rounded-sm text-[#1a1a17] font-bold hover:border-[#d9a32b] transition-colors"
                     >
                       +
                     </button>
-                    <span className="text-[#6b6b6b] text-sm">bike{bikeCount > 1 ? "s" : ""}</span>
+                    <span className="text-[#6e6a5e] text-sm">bike{bikeCount > 1 ? "s" : ""}</span>
                   </div>
                 </div>
 
                 {/* Availability result */}
                 {checkingAvailability && (
-                  <div className="bg-[#f8f6f0] border border-[#e8e6e0] rounded-sm px-4 py-4 text-sm text-[#6b6b6b] flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-[#c8a45a] border-t-transparent rounded-full animate-spin" />
+                  <div className="bg-[#faf5ea] border border-[#e8e3d3] rounded-sm px-4 py-4 text-sm text-[#6e6a5e] flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-[#d9a32b] border-t-transparent rounded-full animate-spin" />
                     Checking availability…
                   </div>
                 )}
@@ -261,16 +261,16 @@ export default function BookPage() {
                         </p>
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-[#6b6b6b]">${availability.pricing!.dailyRate} × {availability.pricing!.totalDays} day{availability.pricing!.totalDays !== 1 ? "s" : ""} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
-                            <span className="text-[#111110]">${availability.pricing!.subtotal.toLocaleString()}</span>
+                            <span className="text-[#6e6a5e]">${availability.pricing!.dailyRate} × {availability.pricing!.totalDays} day{availability.pricing!.totalDays !== 1 ? "s" : ""} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
+                            <span className="text-[#1a1a17]">${availability.pricing!.subtotal.toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-[#6b6b6b]">Tax (11.9%)</span>
-                            <span className="text-[#111110]">${availability.pricing!.tax.toLocaleString()}</span>
+                            <span className="text-[#6e6a5e]">Tax (11.9%)</span>
+                            <span className="text-[#1a1a17]">${availability.pricing!.tax.toLocaleString()}</span>
                           </div>
-                          <div className="flex justify-between border-t border-[#e8e6e0] pt-2 mt-2">
-                            <span className="font-semibold text-[#111110]">Total</span>
-                            <span className="font-bold text-[#c8a45a] text-lg">${availability.pricing!.totalPrice.toLocaleString()}</span>
+                          <div className="flex justify-between border-t border-[#e8e3d3] pt-2 mt-2">
+                            <span className="font-semibold text-[#1a1a17]">Total</span>
+                            <span className="font-bold text-[#d9a32b] text-lg">${availability.pricing!.totalPrice.toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -282,7 +282,7 @@ export default function BookPage() {
               <button
                 onClick={() => setStep("details")}
                 disabled={!canProceedToDetails}
-                className="w-full bg-[#c8a45a] hover:bg-[#e8c98a] disabled:bg-[#e8e6e0] disabled:text-[#6b6b6b] text-[#111110] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
+                className="w-full bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
               >
                 Continue to Details
               </button>
@@ -292,53 +292,53 @@ export default function BookPage() {
           {/* ── Step 2: Details ────────────────────────────────────────────── */}
           {step === "details" && (
             <div className="space-y-8">
-              <div className="bg-white rounded-sm border border-[#e8e6e0] p-8">
-                <h2 className="text-[#111110] font-semibold text-lg mb-6">Your Details</h2>
+              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
+                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Your Details</h2>
 
                 <div className="grid md:grid-cols-2 gap-5 mb-5">
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">First Name *</label>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">First Name *</label>
                     <input
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">Last Name *</label>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Last Name *</label>
                     <input
                       type="text"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-5 mb-5">
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">Email *</label>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Email *</label>
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">Phone</label>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Phone</label>
                     <input
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
                 </div>
 
                 <div className="mb-5">
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                     Motorcycle License Number *
                   </label>
                   <input
@@ -346,12 +346,12 @@ export default function BookPage() {
                     value={licenseNumber}
                     onChange={(e) => setLicenseNumber(e.target.value)}
                     placeholder="Your license number with motorcycle endorsement"
-                    className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                   />
                 </div>
 
                 <div className="mb-5">
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                     Emergency Contact (Name & Phone)
                   </label>
                   <input
@@ -359,12 +359,12 @@ export default function BookPage() {
                     value={emergencyContact}
                     onChange={(e) => setEmergencyContact(e.target.value)}
                     placeholder="Jane Doe — +1 555 123 4567"
-                    className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a]"
+                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6b6b6b] mb-2">
+                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                     Special Requests
                   </label>
                   <textarea
@@ -372,7 +372,7 @@ export default function BookPage() {
                     onChange={(e) => setSpecialRequests(e.target.value)}
                     rows={3}
                     placeholder="Luggage, helmet size, route suggestions…"
-                    className="w-full border border-[#e8e6e0] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#c8a45a] focus:ring-1 focus:ring-[#c8a45a] resize-none"
+                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b] resize-none"
                   />
                 </div>
               </div>
@@ -380,14 +380,14 @@ export default function BookPage() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep("dates")}
-                  className="flex-1 border border-[#2a2a28] text-[#111110] font-medium tracking-wider py-4 rounded-sm hover:bg-[#111110] hover:text-white transition-colors text-sm uppercase"
+                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
                 >
                   Back
                 </button>
                 <button
                   onClick={() => setStep("review")}
                   disabled={!firstName || !lastName || !email || !licenseNumber}
-                  className="flex-[2] bg-[#c8a45a] hover:bg-[#e8c98a] disabled:bg-[#e8e6e0] disabled:text-[#6b6b6b] text-[#111110] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
+                  className="flex-[2] bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
                 >
                   Review Booking
                 </button>
@@ -398,8 +398,8 @@ export default function BookPage() {
           {/* ── Step 3: Review ─────────────────────────────────────────────── */}
           {step === "review" && availability && (
             <div className="space-y-6">
-              <div className="bg-white rounded-sm border border-[#e8e6e0] p-8">
-                <h2 className="text-[#111110] font-semibold text-lg mb-6">Review Your Booking</h2>
+              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
+                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Review Your Booking</h2>
 
                 <div className="space-y-0 mb-8">
                   {[
@@ -410,42 +410,42 @@ export default function BookPage() {
                     { label: "Rider", value: `${firstName} ${lastName}` },
                     { label: "Email", value: email },
                   ].map((row) => (
-                    <div key={row.label} className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
-                      <span className="text-[#6b6b6b]">{row.label}</span>
-                      <span className="text-[#111110] font-medium">{row.value}</span>
+                    <div key={row.label} className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
+                      <span className="text-[#6e6a5e]">{row.label}</span>
+                      <span className="text-[#1a1a17] font-medium">{row.value}</span>
                     </div>
                   ))}
-                  <div className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
-                    <span className="text-[#6b6b6b]">Subtotal (${availability.pricing!.dailyRate}/day × {availability.pricing!.totalDays}d × {bikeCount})</span>
-                    <span className="text-[#111110] font-medium">${availability.pricing!.subtotal.toLocaleString()}</span>
+                  <div className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
+                    <span className="text-[#6e6a5e]">Subtotal (${availability.pricing!.dailyRate}/day × {availability.pricing!.totalDays}d × {bikeCount})</span>
+                    <span className="text-[#1a1a17] font-medium">${availability.pricing!.subtotal.toLocaleString()}</span>
                   </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#f0ede6] text-sm">
-                    <span className="text-[#6b6b6b]">Tax (11.9%)</span>
-                    <span className="text-[#111110] font-medium">${availability.pricing!.tax.toLocaleString()}</span>
+                  <div className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
+                    <span className="text-[#6e6a5e]">Tax (11.9%)</span>
+                    <span className="text-[#1a1a17] font-medium">${availability.pricing!.tax.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between pt-4 mt-1">
-                    <span className="font-semibold text-[#111110]">Total</span>
-                    <span className="font-bold text-[#c8a45a] text-xl">${availability.pricing!.totalPrice.toLocaleString()}</span>
+                    <span className="font-semibold text-[#1a1a17]">Total</span>
+                    <span className="font-bold text-[#d9a32b] text-xl">${availability.pricing!.totalPrice.toLocaleString()}</span>
                   </div>
                 </div>
 
-                <p className="text-[#6b6b6b] text-xs leading-relaxed border-t border-[#f0ede6] pt-4">
+                <p className="text-[#6e6a5e] text-xs leading-relaxed border-t border-[#e8e3d3] pt-4">
                   By proceeding you agree to our Terms & Conditions. Full payment is charged at checkout.
                   Cancellation policy: 100% refund if cancelled 30+ days before pickup, 50% within 30 days, no refund within 7 days.
                 </p>
               </div>
 
-              <div className="bg-white rounded-sm border border-[#e8e6e0] overflow-hidden">
+              <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
                 <div className="p-6 pb-4">
-                  <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#c8a45a] mb-2">Pickup location</p>
-                  <p className="text-[#111110] font-semibold">{PICKUP_LOCATION.name}</p>
-                  <p className="text-[#2a2a28] text-sm mt-1">{PICKUP_LOCATION.street}</p>
-                  <p className="text-[#2a2a28] text-sm">{PICKUP_LOCATION.city}, {PICKUP_LOCATION.state} {PICKUP_LOCATION.zip}</p>
+                  <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#d9a32b] mb-2">Pickup location</p>
+                  <p className="text-[#1a1a17] font-semibold">{PICKUP_LOCATION.name}</p>
+                  <p className="text-[#2a2a24] text-sm mt-1">{PICKUP_LOCATION.street}</p>
+                  <p className="text-[#2a2a24] text-sm">{PICKUP_LOCATION.city}, {PICKUP_LOCATION.state} {PICKUP_LOCATION.zip}</p>
                   <a
                     href={PICKUP_DIRECTIONS_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-block mt-3 text-sm text-[#c8a45a] hover:text-[#a07e3a] font-medium"
+                    className="inline-block mt-3 text-sm text-[#d9a32b] hover:text-[#966b14] font-medium"
                   >
                     Get directions →
                   </a>
@@ -462,14 +462,14 @@ export default function BookPage() {
               <div className="flex gap-4">
                 <button
                   onClick={() => setStep("details")}
-                  className="flex-1 border border-[#2a2a28] text-[#111110] font-medium tracking-wider py-4 rounded-sm hover:bg-[#111110] hover:text-white transition-colors text-sm uppercase"
+                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
                 >
                   Back
                 </button>
                 <button
                   onClick={handleCheckout}
                   disabled={submitting}
-                  className="flex-[2] bg-[#111110] hover:bg-[#2a2a28] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
+                  className="flex-[2] bg-[#1f2817] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>

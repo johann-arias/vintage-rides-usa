@@ -7,9 +7,10 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: var(--font-serif), "Source Serif 4", Georgia, serif;
+  --font-heading: var(--font-serif), "Source Serif 4", Georgia, serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,32 +50,35 @@
 }
 
 :root {
-  /* Brand colors */
-  --brand-black: #111110;
-  --brand-gold: #c8a45a;
-  --brand-gold-light: #e8c98a;
-  --brand-cream: #f8f6f0;
-  --brand-charcoal: #2a2a28;
-  --brand-gray: #6b6b6b;
+  /* Vintage Rides brand palette (aligned with crew / ops platforms) */
+  --brand-olive-deep: #1f2817;  /* hero / darkest sections */
+  --brand-olive: #2e3b23;       /* signature olive */
+  --brand-olive-700: #455324;   /* brand green */
+  --brand-amber: #d9a32b;       /* accent / CTA */
+  --brand-amber-light: #e2ae2c; /* accent hover */
+  --brand-cream: #faf5ea;       /* light backgrounds */
+  --brand-ink: #1a1a17;         /* text */
+  --brand-ink-muted: #6e6a5e;   /* secondary text */
+  --brand-border: #e8e3d3;      /* hairlines */
 
-  --background: oklch(0.98 0.003 90);
-  --foreground: oklch(0.12 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.12 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.12 0 0);
-  --primary: oklch(0.12 0 0);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.96 0.005 90);
-  --secondary-foreground: oklch(0.12 0 0);
-  --muted: oklch(0.96 0.005 90);
-  --muted-foreground: oklch(0.50 0 0);
-  --accent: oklch(0.75 0.08 75);
-  --accent-foreground: oklch(0.12 0 0);
+  --background: #faf5ea;
+  --foreground: #1a1a17;
+  --card: #ffffff;
+  --card-foreground: #1a1a17;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a17;
+  --primary: #1f2817;
+  --primary-foreground: #faf5ea;
+  --secondary: #f3ecd9;
+  --secondary-foreground: #1a1a17;
+  --muted: #f3ecd9;
+  --muted-foreground: #6e6a5e;
+  --accent: #d9a32b;
+  --accent-foreground: #1a1a17;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.90 0.005 90);
-  --input: oklch(0.90 0.005 90);
-  --ring: oklch(0.75 0.08 75);
+  --border: #e8e3d3;
+  --input: #e8e3d3;
+  --ring: #d9a32b;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -134,5 +138,10 @@
   }
   html {
     @apply font-sans;
+  }
+  /* Premium display headings in Source Serif 4 (matches crew / ops). */
+  h1, h2 {
+    font-family: var(--font-heading);
+    letter-spacing: -0.01em;
   }
 }

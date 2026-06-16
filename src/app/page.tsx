@@ -9,23 +9,23 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section className="relative h-screen min-h-[600px] bg-[#111110] flex items-center overflow-hidden">
+        <section className="relative h-screen min-h-[600px] bg-[#1f2817] flex items-center overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{ backgroundImage: "url('/hero-bike-outdoor.jpg')" }}
             aria-hidden
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#111110] via-[#111110]/70 to-transparent" aria-hidden />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#111110] via-transparent to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1f2817] via-[#1f2817]/70 to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-transparent to-transparent" aria-hidden />
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
             <div className="max-w-2xl">
-              <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
                 Motorcycle Rental · Rapid City & Black Hills
               </p>
               <h1 className="text-white text-5xl md:text-7xl font-light leading-[1.05] tracking-tight mb-6">
                 Ride the<br />
-                <span className="italic text-[#c8a45a]">Black Hills</span>
+                <span className="italic text-[#d9a32b]">Black Hills</span>
               </h1>
               <p className="text-white/70 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
                 Rent a Royal Enfield Himalayan 450 in Rapid City and explore
@@ -34,7 +34,7 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/book"
-                  className="bg-[#c8a45a] hover:bg-[#e8c98a] text-[#111110] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase"
+                  className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase"
                 >
                   Book Your Bike
                 </Link>
@@ -54,7 +54,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Stats bar ────────────────────────────────────────────────────── */}
-        <section className="bg-[#1a1a18] border-y border-white/10">
+        <section className="bg-[#26301c] border-y border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { value: "10", label: "Bikes Available" },
@@ -63,7 +63,7 @@ export default function HomePage() {
               { value: "24/7", label: "Support" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <div className="text-[#c8a45a] text-2xl md:text-3xl font-light">{stat.value}</div>
+                <div className="text-[#d9a32b] text-2xl md:text-3xl font-light">{stat.value}</div>
                 <div className="text-white/50 text-xs tracking-widest uppercase mt-1">{stat.label}</div>
               </div>
             ))}
@@ -71,16 +71,16 @@ export default function HomePage() {
         </section>
 
         {/* ── The Bike Feature ─────────────────────────────────────────────── */}
-        <section className="bg-[#f8f6f0] py-24">
+        <section className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div>
-                <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Machine</p>
-                <h2 className="text-[#111110] text-4xl md:text-5xl font-light leading-tight mb-6">
+                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Machine</p>
+                <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light leading-tight mb-6">
                   Royal Enfield<br />
                   <span className="font-semibold">Himalayan 450</span>
                 </h2>
-                <p className="text-[#6b6b6b] text-lg leading-relaxed mb-8">
+                <p className="text-[#6e6a5e] text-lg leading-relaxed mb-8">
                   The same bikes we trust to take our riders through the Himalayas
                   and across the Andes. Reliable, capable, and perfectly sized for
                   both highways and dirt roads.
@@ -94,27 +94,27 @@ export default function HomePage() {
                     "Panniers, phone mount & tank bag included",
                     "Custer State Park + Black Hills National Forest passes included",
                   ].map((spec) => (
-                    <li key={spec} className="flex items-start gap-3 text-sm text-[#2a2a28]">
-                      <span className="text-[#c8a45a] mt-0.5 shrink-0">—</span>
+                    <li key={spec} className="flex items-start gap-3 text-sm text-[#2a2a24]">
+                      <span className="text-[#d9a32b] mt-0.5 shrink-0">—</span>
                       {spec}
                     </li>
                   ))}
                 </ul>
                 <Link
                   href="/fleet"
-                  className="inline-block border border-[#111110] hover:bg-[#111110] hover:text-white text-[#111110] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
+                  className="inline-block border border-[#1a1a17] hover:bg-[#2e3b23] hover:text-white text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
                 >
                   See Full Specs
                 </Link>
               </div>
               <div className="relative">
                 <div
-                  className="aspect-[4/3] bg-[#e8e6e0] bg-cover bg-center rounded-sm overflow-hidden"
+                  className="aspect-[4/3] bg-[#e8e3d3] bg-cover bg-center rounded-sm overflow-hidden"
                   style={{ backgroundImage: "url('/bike-studio.jpg')" }}
                   role="img"
                   aria-label="Royal Enfield Himalayan 450"
                 />
-                <div className="absolute -bottom-6 -left-6 bg-[#c8a45a] text-[#111110] px-6 py-4 rounded-sm hidden md:block">
+                <div className="absolute -bottom-6 -left-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm hidden md:block">
                   <div className="text-2xl font-light">$130/day</div>
                   <div className="text-xs font-semibold tracking-wider uppercase">+ tax</div>
                 </div>
@@ -124,10 +124,10 @@ export default function HomePage() {
         </section>
 
         {/* ── How It Works ─────────────────────────────────────────────────── */}
-        <section id="how-it-works" className="bg-[#111110] py-24">
+        <section id="how-it-works" className="bg-[#1f2817] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Process</p>
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Process</p>
               <h2 className="text-white text-4xl md:text-5xl font-light">How It Works</h2>
             </div>
             <div className="grid md:grid-cols-4 gap-8">
@@ -154,7 +154,7 @@ export default function HomePage() {
                 },
               ].map((item) => (
                 <div key={item.step}>
-                  <div className="text-[#c8a45a]/20 text-7xl font-bold leading-none mb-4 select-none">
+                  <div className="text-[#d9a32b]/20 text-7xl font-bold leading-none mb-4 select-none">
                     {item.step}
                   </div>
                   <h3 className="text-white font-semibold mb-2">{item.title}</h3>
@@ -165,7 +165,7 @@ export default function HomePage() {
             <div className="text-center mt-14">
               <Link
                 href="/book"
-                className="bg-[#c8a45a] hover:bg-[#e8c98a] text-[#111110] font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+                className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
               >
                 Start Booking
               </Link>
@@ -174,11 +174,11 @@ export default function HomePage() {
         </section>
 
         {/* ── Why Vintage Ride ─────────────────────────────────────────────── */}
-        <section className="bg-[#f8f6f0] py-24">
+        <section className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why Us</p>
-              <h2 className="text-[#111110] text-4xl md:text-5xl font-light">
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why Us</p>
+              <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light">
                 Born from 20 years of<br />guided adventures
               </h2>
             </div>
@@ -200,10 +200,10 @@ export default function HomePage() {
                   desc: "Not sure where to go? We'll suggest the best routes through the Black Hills, Badlands, and Spearfish Canyon — the same roads our guides ride every season.",
                 },
               ].map((card) => (
-                <div key={card.title} className="bg-white p-8 rounded-sm border border-[#e8e6e0]">
+                <div key={card.title} className="bg-white p-8 rounded-sm border border-[#e8e3d3]">
                   <div className="text-3xl mb-4">{card.icon}</div>
-                  <h3 className="text-[#111110] font-semibold text-lg mb-3">{card.title}</h3>
-                  <p className="text-[#6b6b6b] text-sm leading-relaxed">{card.desc}</p>
+                  <h3 className="text-[#1a1a17] font-semibold text-lg mb-3">{card.title}</h3>
+                  <p className="text-[#6e6a5e] text-sm leading-relaxed">{card.desc}</p>
                 </div>
               ))}
             </div>
@@ -211,9 +211,9 @@ export default function HomePage() {
         </section>
 
         {/* ── Testimonial ──────────────────────────────────────────────────── */}
-        <section className="bg-[#2a2a28] py-20">
+        <section className="bg-[#2e3b23] py-20">
           <div className="max-w-3xl mx-auto px-6 text-center">
-            <div className="text-[#c8a45a] text-4xl mb-6">&ldquo;</div>
+            <div className="text-[#d9a32b] text-4xl mb-6">&ldquo;</div>
             <blockquote className="text-white text-xl md:text-2xl font-light leading-relaxed mb-8 italic">
               Three weeks in the American West on a Himalayan 450. Best trip of my
               life. The bike never missed a beat — from asphalt to gravel to dirt.
@@ -226,11 +226,11 @@ export default function HomePage() {
         </section>
 
         {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-        <section id="faq" className="bg-[#f8f6f0] py-24">
+        <section id="faq" className="bg-[#faf5ea] py-24">
           <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-14">
-              <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">FAQ</p>
-              <h2 className="text-[#111110] text-4xl font-light">Common Questions</h2>
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">FAQ</p>
+              <h2 className="text-[#1a1a17] text-4xl font-light">Common Questions</h2>
             </div>
             <div className="space-y-6">
               {[
@@ -255,9 +255,9 @@ export default function HomePage() {
                   a: "Yes. You can book up to all 10 bikes simultaneously — perfect for group rides or small moto-events.",
                 },
               ].map((item) => (
-                <div key={item.q} className="border-b border-[#e8e6e0] pb-6">
-                  <h3 className="text-[#111110] font-semibold mb-2">{item.q}</h3>
-                  <p className="text-[#6b6b6b] text-sm leading-relaxed">{item.a}</p>
+                <div key={item.q} className="border-b border-[#e8e3d3] pb-6">
+                  <h3 className="text-[#1a1a17] font-semibold mb-2">{item.q}</h3>
+                  <p className="text-[#6e6a5e] text-sm leading-relaxed">{item.a}</p>
                 </div>
               ))}
             </div>
@@ -265,11 +265,11 @@ export default function HomePage() {
         </section>
 
         {/* ── Find Us ──────────────────────────────────────────────────────── */}
-        <section className="bg-[#1a1a18] py-24">
+        <section className="bg-[#26301c] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <p className="text-[#c8a45a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Find Us</p>
+                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Find Us</p>
                 <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
                   Our garage in<br />
                   <span className="font-semibold">Rapid City</span>
@@ -292,7 +292,7 @@ export default function HomePage() {
                   href={PICKUP_DIRECTIONS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block border border-[#c8a45a] text-[#c8a45a] hover:bg-[#c8a45a] hover:text-[#111110] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
+                  className="inline-block border border-[#d9a32b] text-[#d9a32b] hover:bg-[#d9a32b] hover:text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
                 >
                   Get Directions
                 </a>
@@ -311,15 +311,15 @@ export default function HomePage() {
         </section>
 
         {/* ── CTA Banner ───────────────────────────────────────────────────── */}
-        <section className="bg-[#c8a45a] py-16">
+        <section className="bg-[#d9a32b] py-16">
           <div className="max-w-4xl mx-auto px-6 text-center">
-            <h2 className="text-[#111110] text-4xl md:text-5xl font-light mb-4">Ready to ride?</h2>
-            <p className="text-[#111110]/70 text-lg mb-8">
+            <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light mb-4">Ready to ride?</h2>
+            <p className="text-[#1a1a17]/70 text-lg mb-8">
               Check availability and lock in your dates in under 5 minutes.
             </p>
             <Link
               href="/book"
-              className="bg-[#111110] hover:bg-[#2a2a28] text-white font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+              className="bg-[#1f2817] hover:bg-[#3a4a2c] text-white font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
             >
               Book Now
             </Link>
