@@ -165,7 +165,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     h1: "Ride the",
     h1Accent: "Sturgis Rally",
     intro:
-      "Sturgis is the world's biggest motorcycle gathering — 250,000+ riders, every August, in a town of 7,000. Most rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to escape the Main Street parade and ride the routes the rally crowd is too loud to enjoy.",
+      "Sturgis is the world's biggest motorcycle gathering, averaging around 500,000 bikes every August in a town of 7,000. During rally week the paved roads run two-wide for a hundred miles in every direction. Most rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to slip off the pavement and onto the trails, where the Black Hills are almost yours alone.",
     stats: [
       { label: "Distance to Sturgis", value: "30 min from base" },
       { label: "Rally dates 2026", value: "Aug 1–10" },
@@ -175,8 +175,9 @@ export const DESTINATIONS: Record<string, Destination> = {
     whyHimalayan: {
       title: "Why a Himalayan during Sturgis week",
       body:
-        "The rally crowd doesn't ride the actual Black Hills — most never leave Main Street, Buffalo Chip, and the Hwy-34 to Mount Rushmore corridor. The riders who escape the noise on light, agile bikes get the entire Black Hills to themselves. The Himalayan 450 is the perfect tool: nimble for the gravel forest roads the Harleys can't touch, comfortable for the 200-mile day, and standout-different from every other bike at the campground.",
+        "With around 500,000 bikes packing the paved roads two-wide for a hundred miles in every direction, most of the rally crowd never leaves Main Street, Buffalo Chip, and the Hwy-34 to Mount Rushmore corridor. The riders who slip onto the trails leave the roar of American steel behind and get the entire Black Hills almost to themselves. The Himalayan 450 is the perfect tool: nimble for the gravel forest roads the Harleys can't touch, comfortable for the 200-mile day, and standout-different from every other bike at the campground.",
       bullets: [
+        "Slip onto the gravel and leave the roar of American steel behind; the trails stay empty all rally week",
         "Nimble enough for Spearfish Canyon at sunrise before the crowd wakes",
         "ADV geometry handles the gravel forest service roads (Harley territory: paved only)",
         "Royal Enfield brand presence at Sturgis is growing — turn heads at the Buffalo Chip",
