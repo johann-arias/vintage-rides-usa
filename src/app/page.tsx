@@ -61,6 +61,10 @@ export default function HomePage() {
                   Explore the Fleet
                 </Link>
               </div>
+              <div className="flex items-center gap-2.5 mt-8">
+                <span className="text-[#d9a32b] tracking-[0.18em] text-sm" aria-hidden>★★★★★</span>
+                <span className="text-white/70 text-sm tracking-wider">5.0 on Google</span>
+              </div>
             </div>
           </div>
 
@@ -283,7 +287,7 @@ export default function HomePage() {
                 <span className="text-[#d9a32b] text-2xl tracking-[0.2em]" aria-hidden>★★★★★</span>
                 <span className="text-white text-3xl font-light">5.0</span>
               </div>
-              <p className="text-white/50 text-sm tracking-wider">Rated 5.0 across 3 Google reviews</p>
+              <p className="text-white/50 text-sm tracking-wider">Five-star rated on Google</p>
             </div>
             <div className="grid md:grid-cols-2 gap-6 mb-12">
               {REVIEWS.map((review) => (
