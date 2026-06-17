@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PICKUP_LOCATION, PICKUP_MAPS_URL } from "@/lib/location";
+import { PICKUP_LOCATION, PICKUP_MAPS_URL, GOOGLE_REVIEW_URL } from "@/lib/location";
 
 export default function Footer() {
   return (
@@ -49,6 +49,11 @@ export default function Footer() {
               <li>
                 <a href="https://www.vintagerides.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                   vintagerides.com
+                </a>
+              </li>
+              <li>
+                <a href={GOOGLE_REVIEW_URL} target="_blank" rel="noopener noreferrer" className="text-[#d9a32b] hover:text-[#e2ae2c] transition-colors">
+                  Leave us a Google review →
                 </a>
               </li>
             </ul>

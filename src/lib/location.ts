@@ -19,6 +19,11 @@ export const PICKUP_DIRECTIONS_URL = `https://www.google.com/maps/dir/?api=1&des
 // Embeddable iframe map (no API key required).
 export const PICKUP_MAP_EMBED_URL = `https://maps.google.com/maps?q=${QUERY}&output=embed`;
 
+// Google Business Profile listing (reviews + leave-a-review).
+// TODO: swap for the one-tap "Get more reviews" short link (g.page/r/.../review)
+// from the GBP dashboard so the star dialog opens directly.
+export const GOOGLE_REVIEW_URL = "https://share.google/lzlz2jYsuFtaHkgAO";
+
 // Contact channels.
 export const CONTACT = {
   phone: { display: "+1 (605) 646-2343", e164: "+16056462343" },
