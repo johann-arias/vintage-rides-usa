@@ -59,9 +59,16 @@ export default function HomePage() {
                   Explore the Fleet
                 </Link>
               </div>
-              <div className="flex items-center gap-2.5 mt-8">
-                <span className="text-[#d9a32b] tracking-[0.18em] text-sm" aria-hidden>★★★★★</span>
-                <span className="text-white/70 text-sm tracking-wider">5.0 on Google</span>
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 text-sm text-white/70">
+                <span className="flex items-center gap-2 tracking-wider">
+                  <span className="text-[#d9a32b] tracking-[0.18em]" aria-hidden>★★★★★</span>
+                  5.0 on Google
+                </span>
+                <span className="hidden sm:inline text-white/20" aria-hidden>|</span>
+                <span className="flex items-center gap-2 tracking-wider">
+                  <span aria-hidden>🏆</span>
+                  Co-founded by an Iron Butt Rally champion
+                </span>
               </div>
             </div>
           </div>
@@ -125,10 +132,10 @@ export default function HomePage() {
                   </p>
                   <p>
                     Wendy knows long roads better than just about anyone. In 2019 she became
-                    the first woman ever to win the Iron Butt Rally, eleven days and some
-                    eleven thousand miles of nonstop endurance riding. So when we tell you
-                    these bikes are ready for whatever the Black Hills throw at you, that
-                    comes from real experience.
+                    the first woman ever to win the Iron Butt Rally, riding 13,000 miles of
+                    nonstop endurance over eleven days. So when we tell you these bikes are
+                    ready for whatever the Black Hills throw at you, that comes from real
+                    experience.
                   </p>
                   <p>
                     Stop by our shop in Rapid City and you&apos;ll get the keys from us in
