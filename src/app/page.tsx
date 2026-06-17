@@ -97,7 +97,7 @@ export default function HomePage() {
                   className="aspect-[4/3] bg-[#26301c] bg-cover bg-center rounded-sm overflow-hidden border border-white/10"
                   style={{ backgroundImage: "url('/mike-wendy-garage.jpg')" }}
                   role="img"
-                  aria-label="Mike and Wendy with their dog in the Vintage Rides USA garage in Rapid City"
+                  aria-label="Mike and Wendy with their dog Katie in the Vintage Rides USA garage in Rapid City"
                 />
                 <div className="absolute -bottom-6 -right-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm hidden md:block">
                   <div className="text-sm font-semibold italic">Mike &amp; Wendy</div>
@@ -105,27 +105,31 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="order-1 md:order-2">
-                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts</p>
+                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts · Black Hills since 2018</p>
                 <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
                   Meet Mike<br />
                   <span className="font-semibold">&amp; Wendy</span>
                 </h2>
                 <div className="space-y-5 text-white/70 text-lg leading-relaxed mb-8">
                   <p>
-                    We&apos;re not a big rental chain. We&apos;re two riders who fell in love
-                    with the Black Hills and decided to build a life here, with a garage
-                    full of bikes and the open road right out front.
+                    Mike was born and raised right here in the Black Hills. He went off to
+                    work in Hollywood for a while, but these roads have a way of calling you
+                    home. We came back in 2018, certain this was the best adventure-riding
+                    country in America that nobody was talking about yet.
                   </p>
                   <p>
-                    When you come by our shop in Rapid City, you&apos;ll get the keys from
-                    us in person, a warm welcome from our dog, and honest advice on which
-                    roads to chase that week, the kind of local knowledge you only get from
-                    people who ride these passes all season long.
+                    Stop by our shop in Rapid City and you&apos;ll get the keys from us in
+                    person, plus a warm welcome from Katie, our dog and unofficial greeter.
+                    We&apos;ll give you the honest local rundown on which roads are riding
+                    best that week, the kind of knowledge you only get from people who ride
+                    these passes all season long.
                   </p>
                   <p>
-                    Needles Highway at sunrise, the wildlife loop in Custer, a quiet
-                    canyon road nobody else knows about. Tell us what kind of ride
-                    you&apos;re after and we&apos;ll point you to the good stuff.
+                    Ask us where to go. We&apos;ll send you down Nemo Road for something the
+                    maps won&apos;t show you, out along the Wildlife Loop in Custer, or up
+                    Needles Highway at first light. And we&apos;ll happily point you to our
+                    favorite coffee stop, Essence of Coffee, a proper Australian café with
+                    the meat pies to match.
                   </p>
                 </div>
                 <p className="text-white text-base italic">
