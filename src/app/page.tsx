@@ -106,16 +106,29 @@ export default function HomePage() {
               </div>
               <div className="order-1 md:order-2">
                 <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts · Black Hills since 2018</p>
-                <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
+                <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-5">
                   Meet Mike<br />
                   <span className="font-semibold">&amp; Wendy</span>
                 </h2>
+                <div className="inline-flex items-center gap-2.5 border border-[#d9a32b]/40 bg-[#d9a32b]/5 rounded-sm px-3.5 py-2 mb-7">
+                  <span className="text-[#d9a32b] text-base leading-none" aria-hidden>🏆</span>
+                  <span className="text-white/85 text-xs tracking-wider uppercase">
+                    Wendy: first woman to win the Iron Butt Rally · 2019
+                  </span>
+                </div>
                 <div className="space-y-5 text-white/70 text-lg leading-relaxed mb-8">
                   <p>
                     Mike was born and raised right here in the Black Hills. He went off to
                     work in Hollywood for a while, but these roads have a way of calling you
                     home. We came back in 2018, certain this was the best adventure-riding
                     country in America that nobody was talking about yet.
+                  </p>
+                  <p>
+                    Wendy knows long roads better than just about anyone. In 2019 she became
+                    the first woman ever to win the Iron Butt Rally, eleven days and some
+                    eleven thousand miles of nonstop endurance riding. So when we tell you
+                    these bikes are ready for whatever the Black Hills throw at you, that
+                    comes from real experience.
                   </p>
                   <p>
                     Stop by our shop in Rapid City and you&apos;ll get the keys from us in
