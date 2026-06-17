@@ -3,6 +3,22 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL } from "@/lib/location";
 
+const GOOGLE_REVIEWS_URL = "https://share.google/lzlz2jYsuFtaHkgAO";
+
+const REVIEWS = [
+  {
+    quote:
+      "I rented a Royal Enfield Himalayan 450 from Vintage Rides USA to explore the Black Hills and Custer State Park…",
+    author: "Trai Hunt",
+    badge: "Local Guide",
+  },
+  {
+    quote: "Recommend! A+++++ service and routes.",
+    author: "Cultural Enigma",
+    badge: null,
+  },
+];
+
 export default function HomePage() {
   return (
     <>
@@ -258,17 +274,46 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* ── Testimonial ──────────────────────────────────────────────────── */}
-        <section className="bg-[#2e3b23] py-20">
-          <div className="max-w-3xl mx-auto px-6 text-center">
-            <div className="text-[#d9a32b] text-4xl mb-6">&ldquo;</div>
-            <blockquote className="text-white text-xl md:text-2xl font-light leading-relaxed mb-8 italic">
-              Three weeks in the American West on a Himalayan 450. Best trip of my
-              life. The bike never missed a beat — from asphalt to gravel to dirt.
-              Vintage Rides&apos; support team was always one call away.
-            </blockquote>
-            <div className="text-white/50 text-sm tracking-wider">
-              Marcus T. — Denver, CO
+        {/* ── Reviews ──────────────────────────────────────────────────────── */}
+        <section className="bg-[#2e3b23] py-24">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-14">
+              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Reviews</p>
+              <div className="flex items-center justify-center gap-3 mb-2">
+                <span className="text-[#d9a32b] text-2xl tracking-[0.2em]" aria-hidden>★★★★★</span>
+                <span className="text-white text-3xl font-light">5.0</span>
+              </div>
+              <p className="text-white/50 text-sm tracking-wider">Rated 5.0 across 3 Google reviews</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6 mb-12">
+              {REVIEWS.map((review) => (
+                <figure
+                  key={review.author}
+                  className="bg-[#26301c] border border-white/10 rounded-sm p-8 flex flex-col"
+                >
+                  <div className="text-[#d9a32b] text-sm tracking-[0.2em] mb-5" aria-hidden>★★★★★</div>
+                  <blockquote className="text-white/80 text-lg font-light leading-relaxed italic mb-6 flex-1">
+                    &ldquo;{review.quote}&rdquo;
+                  </blockquote>
+                  <figcaption className="text-sm tracking-wider">
+                    <span className="text-white font-medium">{review.author}</span>
+                    {review.badge && (
+                      <span className="text-[#d9a32b]"> · {review.badge}</span>
+                    )}
+                    <span className="text-white/30"> · via Google</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+            <div className="text-center">
+              <a
+                href={GOOGLE_REVIEWS_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block border border-[#d9a32b] text-[#d9a32b] hover:bg-[#d9a32b] hover:text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
+              >
+                Read all reviews on Google →
+              </a>
             </div>
           </div>
         </section>
