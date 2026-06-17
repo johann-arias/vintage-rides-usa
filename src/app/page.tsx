@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_REVIEW_URL } from "@/lib/location";
+import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_LISTING_URL } from "@/lib/location";
 
 const REVIEWS = [
   {
@@ -309,7 +309,7 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <a
-                href={GOOGLE_REVIEW_URL}
+                href={GOOGLE_LISTING_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block border border-[#d9a32b] text-[#d9a32b] hover:bg-[#d9a32b] hover:text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
