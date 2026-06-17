@@ -61,7 +61,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     slug: "black-hills-motorcycle-rental",
     metaTitle: "Black Hills Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
     metaDescription:
-      "Rent a 2025 Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills loop — Needles Highway, Iron Mountain Road, Custer State Park. $130/day, May–September.",
+      "Rent a 2025 Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills loop — Needles Highway, Iron Mountain Road, Custer State Park. $130/day, year-round.",
     ogImage: "/hero-bike-outdoor.jpg",
     heroImage: "/hero-bike-outdoor.jpg",
     eyebrow: "Black Hills Motorcycle Rental",
@@ -136,7 +136,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "When is the best time to rent a motorcycle in the Black Hills?",
-        a: "June and September. Weather is mild (60-80°F daytime), wildlife is active, the loops are open, and crowds are thin. Avoid the first two weeks of August unless you're going for the Sturgis Rally — every road and every campground is packed. May and October work too, but check our season — we operate May 1 to September 30 only.",
+        a: "June and September. Weather is mild (60-80°F daytime), wildlife is active, the loops are open, and crowds are thin. Avoid the first two weeks of August unless you're going for the Sturgis Rally, when every road and every campground is packed. May and October are quieter shoulder months and work well too. We now rent year-round, though winter riding is weather-dependent and some mountain roads close for snow.",
       },
       {
         q: "What's the difference between renting in Rapid City vs Sturgis?",
@@ -169,7 +169,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     stats: [
       { label: "Distance to Sturgis", value: "30 min from base" },
       { label: "Rally dates 2026", value: "Aug 1–10" },
-      { label: "Daily rate", value: "$130 + tax" },
+      { label: "Daily rate", value: "$250 rally week ($130 rest of year)" },
       { label: "Why us", value: "Adventure bike, not a Harley" },
     ],
     whyHimalayan: {
@@ -230,7 +230,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "Why rent in Rapid City instead of Sturgis itself?",
-        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open all season at the same $130/day rate.",
+        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open year-round; the rate is $130/day, or $250/day during the rally (August 1-10).",
       },
       {
         q: "Can I ride to Sturgis on a Royal Enfield Himalayan?",
@@ -242,7 +242,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "How much does motorcycle rental cost during Sturgis?",
-        a: "Vintage Rides USA charges the same $130/day during rally week as the rest of the season — no surge pricing. Most local Harley rental shops 2x or 3x their rates for early August. Book us early; rally-week dates fill 3-6 months in advance.",
+        a: "During the Sturgis Rally (August 1-10) our rate is $250/day plus tax. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [
@@ -256,7 +256,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     slug: "badlands-motorcycle-rental",
     metaTitle: "Badlands Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
     metaDescription:
-      "Rent a Royal Enfield Himalayan 450 in Rapid City to ride the Badlands National Park loop. 1h from base. Adventure bike for an alien landscape. $130/day, May–September.",
+      "Rent a Royal Enfield Himalayan 450 in Rapid City to ride the Badlands National Park loop. 1h from base. Adventure bike for an alien landscape. $130/day, year-round.",
     ogImage: "/hero-bike-outdoor.jpg",
     heroImage: "/bike-outdoor-cliff.jpg",
     eyebrow: "Badlands Motorcycle Rental",
@@ -352,7 +352,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     slug: "needles-highway-motorcycle-tour",
     metaTitle: "Needles Highway Motorcycle Tour — Royal Enfield Himalayan 450 | Vintage Rides USA",
     metaDescription:
-      "Ride the Needles Highway on a 2025 Royal Enfield Himalayan 450. The most spectacular 14 miles in South Dakota. Rent in Rapid City, $130/day, May–September.",
+      "Ride the Needles Highway on a 2025 Royal Enfield Himalayan 450. The most spectacular 14 miles in South Dakota. Rent in Rapid City, $130/day, year-round.",
     ogImage: "/hero-bike-outdoor.jpg",
     heroImage: "/bike-outdoor-cliff.jpg",
     eyebrow: "Needles Highway Motorcycle Tour",
@@ -430,7 +430,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "When is the Needles Highway open?",
-        a: "Early May through October (weather permitting). The South Dakota Department of Transportation closes SD-87 when snow accumulates. We recommend May to September for the best riding — exactly the season Vintage Rides USA operates.",
+        a: "Early May through October (weather permitting). The South Dakota Department of Transportation closes SD-87 when snow accumulates. We recommend May to September for the best riding. Vintage Rides USA rents year-round, but the highway itself closes for snow, so check conditions for off-season dates.",
       },
       {
         q: "Do I need a permit or pass for the Needles Highway?",
@@ -448,7 +448,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     slug: "mount-rushmore-motorcycle-rental",
     metaTitle: "Mount Rushmore Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
     metaDescription:
-      "Rent a Royal Enfield Himalayan 450 in Rapid City and ride to Mount Rushmore via the iconic Iron Mountain Road. 30 minutes from base. $130/day, May–September.",
+      "Rent a Royal Enfield Himalayan 450 in Rapid City and ride to Mount Rushmore via the iconic Iron Mountain Road. 30 minutes from base. $130/day, year-round.",
     ogImage: "/hero-bike-outdoor.jpg",
     heroImage: "/bike-studio.jpg",
     eyebrow: "Mount Rushmore Motorcycle Rental",

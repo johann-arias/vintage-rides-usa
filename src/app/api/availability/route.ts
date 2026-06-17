@@ -3,7 +3,6 @@ import {
   getAvailableBikeCount,
   getActivePricingRules,
   calculateRentalPrice,
-  isPeriodInRentalSeason,
 } from "@/lib/airtable";
 
 const NO_STORE = { "cache-control": "no-store, no-cache, must-revalidate" };
@@ -32,19 +31,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "endDate must be after startDate" }, { status: 400, headers: NO_STORE });
   }
 
-  // Bikes are in Arizona Oct–Apr only
-  if (!isPeriodInRentalSeason(startDate, endDate)) {
-    return NextResponse.json(
-      {
-        availableCount: 0,
-        requested: bikes,
-        canBook: false,
-        outOfSeason: true,
-        pricing: null,
-      },
-      { headers: NO_STORE }
-    );
-  }
 
   try {
     const [availableCount, pricingRules] = await Promise.all([

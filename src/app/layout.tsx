@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.vintageridesusa.com"),
   title: "Motorcycle Rental Rapid City & Black Hills | Vintage Rides USA",
   description:
-    "Rent a Royal Enfield Himalayan 450 in Rapid City, SD. Explore the Black Hills, Badlands, and Sturgis on a world-class adventure motorcycle. Daily rentals available May–September.",
+    "Rent a Royal Enfield Himalayan 450 in Rapid City, SD. Explore the Black Hills, Badlands, and Sturgis on a world-class adventure motorcycle. Daily rentals available year-round.",
   alternates: {
     canonical: "/",
   },

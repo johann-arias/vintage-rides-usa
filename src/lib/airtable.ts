@@ -160,23 +160,7 @@ export async function getBikesBlockedByRentals(
 
 const TOTAL_BIKES = 10;
 
-// Bikes are available for rental May 1 – Sep 30 only.
-export const RENTAL_SEASON = { start: "05-01", end: "09-30" };
-
-/**
- * Returns true if the entire rental period falls within the May–Sep rental season.
- */
-export function isPeriodInRentalSeason(startDate: string, endDate: string): boolean {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  const cursor = new Date(start);
-  while (cursor <= end) {
-    const mmdd = `${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-    if (mmdd < "05-01" || mmdd > "09-30") return false;
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return true;
-}
+// Rentals are open year-round. Best riding is May–Sep; winter rides are weather-dependent.
 
 export async function getAvailableBikeCount(
   startDate: string,
@@ -211,19 +195,34 @@ export async function getActivePricingRules(): Promise<PricingRule[]> {
   }));
 }
 
+// Numeric ordinal for an MM-DD string, used to compare how wide a season window is.
+function mmddOrdinal(mmdd: string): number {
+  const [m, d] = mmdd.split("-").map(Number);
+  return m * 31 + d;
+}
+
 export function getPriceForDate(
   date: Date,
   rules: PricingRule[]
 ): PricingRule {
   const mmdd = `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 
-  for (const rule of rules) {
-    if (!rule.seasonStart || !rule.seasonEnd) continue;
-    if (mmdd >= rule.seasonStart && mmdd <= rule.seasonEnd) return rule;
+  const matching = rules.filter(
+    (r) => r.seasonStart && r.seasonEnd && mmdd >= r.seasonStart && mmdd <= r.seasonEnd
+  );
+
+  if (matching.length > 0) {
+    // Most specific (narrowest) window wins, so a short rally window overrides the
+    // broad standard season when dates overlap (e.g. Sturgis week inside May–Sep).
+    return matching.sort(
+      (a, b) =>
+        mmddOrdinal(a.seasonEnd!) - mmddOrdinal(a.seasonStart!) -
+        (mmddOrdinal(b.seasonEnd!) - mmddOrdinal(b.seasonStart!))
+    )[0];
   }
 
-  // Fallback to cheapest active rule
-  return rules.sort((a, b) => a.dailyRateUsd - b.dailyRateUsd)[0];
+  // Off-season (no window matches): fall back to the cheapest active rule.
+  return [...rules].sort((a, b) => a.dailyRateUsd - b.dailyRateUsd)[0];
 }
 
 export const TAX_RATE = 0.119; // 11.9%

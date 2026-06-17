@@ -313,8 +313,8 @@ export default function DestinationPage({ destination: d }: Props) {
             </h2>
             <p className="text-white/60 text-base md:text-lg mb-10 max-w-2xl mx-auto">
               $130/day. Brand-new 2025 Royal Enfield Himalayan 450. Custer State
-              Park + Black Hills National Forest passes included. Available May 1
-              through September 30.
+              Park + Black Hills National Forest passes included. Available
+              year-round.
             </p>
             <Link
               href="/book"

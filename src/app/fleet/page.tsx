@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 export const metadata: Metadata = {
   title: "Royal Enfield Himalayan 450 Rental — Black Hills & Rapid City | Vintage Rides USA",
   description:
-    "Rent a 2025 Royal Enfield Himalayan 450 in Rapid City, SD. $130/day. Explore the Black Hills, Badlands, and Needles Highway. Available May–September.",
+    "Rent a 2025 Royal Enfield Himalayan 450 in Rapid City, SD. $130/day. Explore the Black Hills, Badlands, and Needles Highway. Available year-round.",
 };
 
 const SPECS = [

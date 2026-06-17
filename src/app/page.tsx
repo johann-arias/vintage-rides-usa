@@ -373,6 +373,10 @@ export default function HomePage() {
                   q: "Can I book multiple bikes?",
                   a: "Yes. You can book up to all 10 bikes simultaneously — perfect for group rides or small moto-events.",
                 },
+                {
+                  q: "Can I rent year-round, or just in summer?",
+                  a: "We rent year-round. May through September is the prime season: mild weather, every road open, and wildlife active. Winter rides are weather-dependent, some mountain roads like Needles Highway close for snow, and you should be comfortable riding in the cold. Tell us your dates and we'll tell you what's rideable.",
+                },
               ].map((item) => (
                 <div key={item.q} className="border-b border-[#e8e3d3] pb-6">
                   <h3 className="text-[#1a1a17] font-semibold mb-2">{item.q}</h3>
