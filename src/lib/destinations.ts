@@ -117,7 +117,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     knowBefore: {
       title: "What to know before you ride",
       items: [
-        { label: "Pickup", value: "9:00 AM at 1715 Samco Rd, Rapid City, SD" },
+        { label: "Pickup", value: "9:00 AM at 1715 Samco Rd #107, Rapid City, SD" },
         { label: "Daily rate", value: "$130 + 11.9% SD tax" },
         { label: "Park passes", value: "Custer State Park + Black Hills NF passes included" },
         { label: "Best months", value: "Late May to mid-September (June and September are quietest)" },
@@ -140,7 +140,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "What's the difference between renting in Rapid City vs Sturgis?",
-        a: "Rapid City is the strategic base — 30 min from Mount Rushmore, 1h from Sturgis, 1h from the Badlands, 30 min from Custer State Park. From our shop at 1715 Samco Rd you have direct access to every Black Hills highlight without backtracking. Sturgis-based shops only make sense during Rally week.",
+        a: "Rapid City is the strategic base — 30 min from Mount Rushmore, 1h from Sturgis, 1h from the Badlands, 30 min from Custer State Park. From our shop at 1715 Samco Rd #107 you have direct access to every Black Hills highlight without backtracking. Sturgis-based shops only make sense during Rally week.",
       },
       {
         q: "Can I do the Black Hills loop in one day?",
@@ -216,7 +216,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       title: "Sturgis Rally rental tips",
       items: [
         { label: "Book early", value: "Reserve 3-6 months ahead for August dates — rally week books out" },
-        { label: "Pickup", value: "1715 Samco Rd, Rapid City, SD — 30 min south of Sturgis on I-90" },
+        { label: "Pickup", value: "1715 Samco Rd #107, Rapid City, SD — 30 min south of Sturgis on I-90" },
         { label: "Lodging", value: "Camping in Sturgis is the experience. Book Buffalo Chip, Pappy Hoel, or Glencoe months in advance" },
         { label: "Roads to avoid (during rally)", value: "Main Street, US-385 between Hill City and Custer mid-day, Mount Rushmore parking 10 AM–4 PM" },
         { label: "Roads to ride (during rally)", value: "Spearfish Canyon at sunrise, Needles Highway after 6 PM, all forest gravel anytime" },
@@ -312,7 +312,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       title: "Badlands rental tips",
       items: [
         { label: "Park entry fee", value: "$15 per motorcycle (single rider) — not included in rental" },
-        { label: "Pickup", value: "1715 Samco Rd, Rapid City, SD — 1h to park west entrance" },
+        { label: "Pickup", value: "1715 Samco Rd #107, Rapid City, SD — 1h to park west entrance" },
         { label: "Best time of day", value: "Sunrise (6-8 AM) or late afternoon (4-7 PM) — light is everything" },
         { label: "Avoid", value: "Mid-day July/August — surface temps on the formations can hit 130°F" },
         { label: "Water", value: "Carry 2L+. No services inside the park between Pinnacles and Cactus Flat." },
@@ -322,7 +322,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     faq: [
       {
         q: "How far is the Badlands from Rapid City?",
-        a: "About 60 miles (~1 hour) on I-90 east to Wall, then south on SD-240 to the Pinnacles entrance. From our base at 1715 Samco Rd, you can be inside the park before 10 AM if you pick up your bike at 9.",
+        a: "About 60 miles (~1 hour) on I-90 east to Wall, then south on SD-240 to the Pinnacles entrance. From our base at 1715 Samco Rd #107, you can be inside the park before 10 AM if you pick up your bike at 9.",
       },
       {
         q: "Can you ride a motorcycle through Badlands National Park?",

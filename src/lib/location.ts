@@ -1,6 +1,6 @@
 export const PICKUP_LOCATION = {
   name: "Vintage Rides USA",
-  street: "1715 Samco Rd",
+  street: "1715 Samco Rd #107",
   city: "Rapid City",
   state: "SD",
   zip: "57702",

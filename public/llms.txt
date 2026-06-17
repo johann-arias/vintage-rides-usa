@@ -7,7 +7,7 @@ Vintage Rides USA is the US subsidiary of Vintage Rides, a premium guided motorc
 ## Key facts
 
 - **Business**: Vintage Rides USA (subsidiary of Vintage Rides)
-- **Location**: 1715 Samco Rd, Rapid City, SD 57702, United States
+- **Location**: 1715 Samco Rd #107, Rapid City, SD 57702, United States
 - **Pickup hours**: 9:00 AM (return by 9:00 AM on end date)
 - **Season**: open year-round. Best riding is May through September; winter rides are weather-dependent and some mountain roads (e.g. Needles Highway / SD-87) close for snow.
 - **Fleet**: 10 × 2025 Royal Enfield Himalayan 450 (brand new)
@@ -58,7 +58,7 @@ This means renters deal directly with experienced, local riders who know the roa
 1. Choose dates and number of bikes at https://www.vintageridesusa.com/book
 2. Pay securely via Stripe (full amount up front)
 3. Receive an instant confirmation email with pickup details and the pickup address
-4. Show up at 1715 Samco Rd, Rapid City, SD at 9:00 AM on your start date
+4. Show up at 1715 Samco Rd #107, Rapid City, SD at 9:00 AM on your start date
 5. Return the bike by 9:00 AM on your end date
 
 ## What's included
