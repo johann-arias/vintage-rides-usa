@@ -41,6 +41,12 @@ export default function Navbar() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
           <Link
+            href="/#our-story"
+            className="text-white/70 hover:text-white text-sm tracking-wider transition-colors"
+          >
+            Our Story
+          </Link>
+          <Link
             href="/fleet"
             className="text-white/70 hover:text-white text-sm tracking-wider transition-colors"
           >
@@ -102,6 +108,13 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-[#1f2817] border-t border-white/10 px-6 py-4 flex flex-col gap-4">
+          <Link
+            href="/#our-story"
+            onClick={() => setOpen(false)}
+            className="text-white/70 hover:text-white text-sm tracking-wider"
+          >
+            Our Story
+          </Link>
           <Link
             href="/fleet"
             onClick={() => setOpen(false)}

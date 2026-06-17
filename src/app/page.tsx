@@ -70,6 +70,54 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* ── Meet Mike & Wendy ────────────────────────────────────────────── */}
+        <section id="our-story" className="bg-[#1f2817] py-24">
+          <div className="max-w-7xl mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-16 items-center">
+              <div className="relative order-2 md:order-1">
+                <div
+                  className="aspect-[4/3] bg-[#26301c] bg-cover bg-center rounded-sm overflow-hidden border border-white/10"
+                  style={{ backgroundImage: "url('/mike-wendy-garage.jpg')" }}
+                  role="img"
+                  aria-label="Mike and Wendy with their dog in the Vintage Rides USA garage in Rapid City"
+                />
+                <div className="absolute -bottom-6 -right-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm hidden md:block">
+                  <div className="text-sm font-semibold italic">Mike &amp; Wendy</div>
+                  <div className="text-xs tracking-wider uppercase opacity-70">Rapid City, SD</div>
+                </div>
+              </div>
+              <div className="order-1 md:order-2">
+                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts</p>
+                <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
+                  Meet Mike<br />
+                  <span className="font-semibold">&amp; Wendy</span>
+                </h2>
+                <div className="space-y-5 text-white/70 text-lg leading-relaxed mb-8">
+                  <p>
+                    We&apos;re not a big rental chain. We&apos;re two riders who fell in love
+                    with the Black Hills and decided to build a life here, with a garage
+                    full of bikes and the open road right out front.
+                  </p>
+                  <p>
+                    When you come by our shop in Rapid City, you&apos;ll get the keys from
+                    us in person, a warm welcome from our dog, and honest advice on which
+                    roads to chase that week, the kind of local knowledge you only get from
+                    people who ride these passes all season long.
+                  </p>
+                  <p>
+                    Needles Highway at sunrise, the wildlife loop in Custer, a quiet
+                    canyon road nobody else knows about. Tell us what kind of ride
+                    you&apos;re after and we&apos;ll point you to the good stuff.
+                  </p>
+                </div>
+                <p className="text-white text-base italic">
+                  Come ride with us. We&apos;ll treat you like a neighbor, not a number.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ── The Bike Feature ─────────────────────────────────────────────── */}
         <section className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
