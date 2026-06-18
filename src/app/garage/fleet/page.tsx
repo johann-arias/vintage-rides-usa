@@ -3,16 +3,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createMaintenanceAction } from "../actions";
+import { createMaintenanceAction, updateBikeMileageAction } from "../actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function FleetPage({
   searchParams,
 }: {
-  searchParams: Promise<{ maint?: string; error?: string }>;
+  searchParams: Promise<{ maint?: string; error?: string; mileage?: string }>;
 }) {
-  const { maint, error } = await searchParams;
+  const { maint, error, mileage } = await searchParams;
   const [bikes, pricing] = await Promise.all([
     getAllBikes(),
     getActivePricingRules(),
@@ -32,6 +32,11 @@ export default async function FleetPage({
       {maint ? (
         <p className="rounded-lg border border-[var(--brand-olive-700)]/30 bg-[var(--brand-olive-700)]/10 px-4 py-2.5 text-sm text-[var(--brand-olive-700)]">
           Maintenance block created.
+        </p>
+      ) : null}
+      {mileage ? (
+        <p className="rounded-lg border border-[var(--brand-olive-700)]/30 bg-[var(--brand-olive-700)]/10 px-4 py-2.5 text-sm text-[var(--brand-olive-700)]">
+          Mileage updated.
         </p>
       ) : null}
       {error === "dates" ? (
