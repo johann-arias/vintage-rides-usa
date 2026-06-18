@@ -435,6 +435,29 @@ export default function BookPage() {
                 </p>
               </div>
 
+              <div className="flex gap-4">
+                <button
+                  onClick={() => setStep("details")}
+                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleCheckout}
+                  disabled={submitting}
+                  className="flex-[2] bg-[#1f2817] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
+                >
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Redirecting…
+                    </>
+                  ) : (
+                    `Pay $${availability.pricing!.totalPrice.toLocaleString()}`
+                  )}
+                </button>
+              </div>
+
               <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
                 <div className="p-6 pb-4">
                   <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#d9a32b] mb-2">Pickup location</p>
@@ -457,29 +480,6 @@ export default function BookPage() {
                   loading="lazy"
                   referrerPolicy="no-referrer-when-downgrade"
                 />
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => setStep("details")}
-                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleCheckout}
-                  disabled={submitting}
-                  className="flex-[2] bg-[#1f2817] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Redirecting…
-                    </>
-                  ) : (
-                    `Pay $${availability.pricing!.totalPrice.toLocaleString()}`
-                  )}
-                </button>
               </div>
             </div>
           )}
