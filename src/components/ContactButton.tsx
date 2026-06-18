@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { CONTACT, CONTACT_LINKS } from "@/lib/location";
 
 export default function ContactButton() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -23,6 +25,9 @@ export default function ContactButton() {
       document.removeEventListener("keydown", onKey);
     };
   }, [open]);
+
+  // Customer-facing widget — hide it on the internal /garage backoffice.
+  if (pathname.startsWith("/garage")) return null;
 
   return (
     <div ref={panelRef} className="fixed bottom-6 right-6 z-50">
