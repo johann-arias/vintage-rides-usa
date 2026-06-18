@@ -6,10 +6,10 @@ import { CalendarDays, ClipboardList, PlusCircle, Bike } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
-  { href: "/admin", label: "Planning", icon: CalendarDays, exact: true },
-  { href: "/admin/bookings", label: "Reservations", icon: ClipboardList },
-  { href: "/admin/bookings/new", label: "Add B2B booking", icon: PlusCircle },
-  { href: "/admin/fleet", label: "Fleet & maintenance", icon: Bike },
+  { href: "/garage", label: "Planning", icon: CalendarDays, exact: true },
+  { href: "/garage/bookings", label: "Reservations", icon: ClipboardList },
+  { href: "/garage/bookings/new", label: "Add B2B booking", icon: PlusCircle },
+  { href: "/garage/fleet", label: "Fleet & maintenance", icon: Bike },
 ];
 
 export default function AdminNav() {

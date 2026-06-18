@@ -58,7 +58,7 @@ export default async function BookingsPage({
             Website and B2B rental bookings ({bookings.length})
           </p>
         </div>
-        <Button render={<Link href="/admin/bookings/new" />}>
+        <Button render={<Link href="/garage/bookings/new" />}>
           <PlusCircle className="size-4" />
           Add B2B booking
         </Button>

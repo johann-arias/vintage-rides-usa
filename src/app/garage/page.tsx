@@ -100,7 +100,7 @@ export default async function PlanningPage({
             {todayCap ? ` · ${todayCap.free} free today` : ""}
           </p>
         </div>
-        <Button render={<Link href="/admin/bookings/new" />}>
+        <Button render={<Link href="/garage/bookings/new" />}>
           <PlusCircle className="size-4" />
           Add B2B booking
         </Button>
@@ -108,11 +108,11 @@ export default async function PlanningPage({
 
       <section className="rounded-2xl border border-border bg-card p-4 shadow-sm sm:p-6">
         <div className="mb-4 flex items-center justify-between">
-          <Button variant="outline" size="sm" render={<Link href={`/admin?month=${prevMonth}`} />}>
+          <Button variant="outline" size="sm" render={<Link href={`/garage?month=${prevMonth}`} />}>
             <ChevronLeft className="size-4" />
           </Button>
           <h2 className="font-serif text-lg">{format(monthDate, "MMMM yyyy")}</h2>
-          <Button variant="outline" size="sm" render={<Link href={`/admin?month=${nextMonth}`} />}>
+          <Button variant="outline" size="sm" render={<Link href={`/garage?month=${nextMonth}`} />}>
             <ChevronRight className="size-4" />
           </Button>
         </div>

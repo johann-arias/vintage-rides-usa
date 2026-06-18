@@ -13,23 +13,23 @@ import {
 // /admin, but per the Next.js data-security guidance we re-check auth inside
 // every mutating action rather than trusting the proxy alone.
 async function requireAuth() {
-  if (!(await isAuthed())) redirect("/admin/login");
+  if (!(await isAuthed())) redirect("/garage/login");
 }
 
 export async function loginAction(formData: FormData) {
   const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "/admin") || "/admin";
+  const next = String(formData.get("next") ?? "/garage") || "/garage";
 
   if (password && password === process.env.ADMIN_PASSWORD) {
     await setSession();
-    redirect(next.startsWith("/admin") ? next : "/admin");
+    redirect(next.startsWith("/garage") ? next : "/garage");
   }
-  redirect(`/admin/login?error=1&next=${encodeURIComponent(next)}`);
+  redirect(`/garage/login?error=1&next=${encodeURIComponent(next)}`);
 }
 
 export async function logoutAction() {
   await clearSession();
-  redirect("/admin/login");
+  redirect("/garage/login");
 }
 
 export async function createB2BBookingAction(formData: FormData) {
@@ -43,10 +43,10 @@ export async function createB2BBookingAction(formData: FormData) {
   const platform = String(formData.get("platform") ?? "").trim();
 
   if (!startDate || !endDate || !platform || (!firstName && !lastName)) {
-    redirect("/admin/bookings/new?error=missing");
+    redirect("/garage/bookings/new?error=missing");
   }
   if (endDate < startDate) {
-    redirect("/admin/bookings/new?error=dates");
+    redirect("/garage/bookings/new?error=dates");
   }
 
   await createB2BBooking({
@@ -61,9 +61,9 @@ export async function createB2BBookingAction(formData: FormData) {
     notes: String(formData.get("notes") ?? "").trim() || undefined,
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/bookings");
-  redirect("/admin/bookings?created=1");
+  revalidatePath("/garage");
+  revalidatePath("/garage/bookings");
+  redirect("/garage/bookings?created=1");
 }
 
 export async function createMaintenanceAction(formData: FormData) {
@@ -74,7 +74,7 @@ export async function createMaintenanceAction(formData: FormData) {
   const bikes = Math.max(1, Math.min(10, Number(formData.get("bikes") ?? 1)));
 
   if (!startDate || !endDate || endDate < startDate) {
-    redirect("/admin/fleet?error=dates");
+    redirect("/garage/fleet?error=dates");
   }
 
   await createMaintenanceBlock({
@@ -84,9 +84,9 @@ export async function createMaintenanceAction(formData: FormData) {
     reason: String(formData.get("reason") ?? "").trim() || undefined,
   });
 
-  revalidatePath("/admin");
-  revalidatePath("/admin/fleet");
-  redirect("/admin/fleet?maint=1");
+  revalidatePath("/garage");
+  revalidatePath("/garage/fleet");
+  redirect("/garage/fleet?maint=1");
 }
 
 export async function cancelBookingAction(formData: FormData) {
@@ -94,8 +94,8 @@ export async function cancelBookingAction(formData: FormData) {
   const bookingId = String(formData.get("bookingId") ?? "").trim();
   if (bookingId) {
     await cancelBooking(bookingId);
-    revalidatePath("/admin");
-    revalidatePath("/admin/bookings");
+    revalidatePath("/garage");
+    revalidatePath("/garage/bookings");
   }
-  redirect("/admin/bookings?cancelled=1");
+  redirect("/garage/bookings?cancelled=1");
 }

@@ -29,7 +29,7 @@ export default async function AdminLoginPage({
         </p>
 
         <form action={loginAction} className="mt-6 space-y-4">
-          <input type="hidden" name="next" value={next ?? "/admin"} />
+          <input type="hidden" name="next" value={next ?? "/garage"} />
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
             <Input

@@ -7,7 +7,7 @@ import { SESSION_COOKIE, expectedToken } from "@/lib/admin-auth";
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/admin/login") {
+  if (pathname === "/garage/login") {
     return NextResponse.next();
   }
 
@@ -17,11 +17,11 @@ export async function proxy(request: NextRequest) {
   }
 
   const url = request.nextUrl.clone();
-  url.pathname = "/admin/login";
+  url.pathname = "/garage/login";
   url.searchParams.set("next", pathname);
   return NextResponse.redirect(url);
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/garage/:path*"],
 };

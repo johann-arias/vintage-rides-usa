@@ -124,7 +124,7 @@ export default async function NewB2BBookingPage({
         </div>
 
         <div className="flex items-center justify-end gap-2 pt-2">
-          <Button variant="ghost" render={<Link href="/admin/bookings" />}>
+          <Button variant="ghost" render={<Link href="/garage/bookings" />}>
             Cancel
           </Button>
           <Button type="submit">Create booking</Button>
