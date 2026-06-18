@@ -28,7 +28,9 @@ export function BikePicker({
             defaultChecked={sel.has(b.name)}
             className="size-4 accent-[var(--brand-olive-700)]"
           />
-          <span className="truncate">{b.name}</span>
+          <span className="truncate font-medium">
+            {b.name.replace(/^Himalayan 450 #?/, "") || b.name}
+          </span>
           {b.status !== "Available" ? (
             <span className="ml-auto text-[0.65rem] text-muted-foreground">
               {b.status === "In Maintenance" ? "maint." : b.status}
