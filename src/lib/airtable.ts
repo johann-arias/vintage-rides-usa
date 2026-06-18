@@ -1,4 +1,5 @@
-import Airtable from "airtable";
+import Airtable, { type FieldSet, type Record as AirtableRecord } from "airtable";
+import { nanoid } from "nanoid";
 
 const base = new Airtable({
   apiKey: process.env.AIRTABLE_API_KEY!,
@@ -247,6 +248,312 @@ export function calculateRentalPrice(
 }
 
 // ── Bikes ──────────────────────────────────────────────────────────────────
+
+// ── Admin backoffice: planning reads ─────────────────────────────────────────
+
+export interface PlanningBlock {
+  id: string;
+  type: BikeBlock["type"];
+  bookingId?: string;
+  tourId?: string;
+  startDate: string;
+  endDate: string;
+  notes?: string;
+}
+
+export interface PlanningTour {
+  id: string;
+  idTour: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  pilots: number;
+}
+
+export type BookingChannel = "WEBSITE" | "B2B" | "DIRECT";
+
+export interface AdminBooking {
+  id: string;
+  bookingId: string;
+  channel: BookingChannel;
+  status: RentalBooking["status"];
+  customerName: string;
+  email?: string;
+  phone?: string;
+  startDate: string;
+  endDate: string;
+  numberOfDays: number;
+  numberOfBikes: number;
+  totalPrice: number;
+  partnerPlatform?: string;
+  notes?: string;
+}
+
+// Channel is derived from the Booking ID prefix so no Airtable schema change is
+// required: `VR-B2B-*` = partner platform, anything else = public website.
+function channelFromBookingId(bookingId: string): BookingChannel {
+  if (bookingId.startsWith("VR-B2B-")) return "B2B";
+  return "WEBSITE";
+}
+
+function overlapFormula(
+  startField: string,
+  endField: string,
+  from: string,
+  to: string
+): string {
+  return `AND(
+    IS_BEFORE({${startField}}, DATEADD("${to}", 1, "days")),
+    IS_AFTER({${endField}}, DATEADD("${from}", -1, "days"))
+  )`;
+}
+
+/** All non-cancelled bike blocks overlapping [from, to], excluding Stripe test blocks. */
+export async function getBlocksForPlanning(
+  from: string,
+  to: string
+): Promise<PlanningBlock[]> {
+  const records = await base(Tables.Blocks)
+    .select({
+      filterByFormula: `AND(
+        {Status} != "Cancelled",
+        FIND("cs_test_", {Notes} & "") = 0,
+        ${overlapFormula("Start Date", "End Date", from, to)}
+      )`,
+      fields: ["Type", "Booking ID", "Tour ID", "Start Date", "End Date", "Notes"],
+    })
+    .all();
+
+  return records.map((r) => ({
+    id: r.id,
+    type: (r.get("Type") as BikeBlock["type"]) ?? "RENTAL",
+    bookingId: (r.get("Booking ID") as string) ?? undefined,
+    tourId: (r.get("Tour ID") as string) ?? undefined,
+    startDate: r.get("Start Date") as string,
+    endDate: r.get("End Date") as string,
+    notes: (r.get("Notes") as string) ?? undefined,
+  }));
+}
+
+/** USA Freedom Tours (ID_TOUR contains "USA_" and "F") overlapping [from, to], with pilot counts. */
+export async function getToursForPlanning(
+  from: string,
+  to: string
+): Promise<PlanningTour[]> {
+  const tourRecords = await base(Tables.Tours)
+    .select({
+      filterByFormula: `AND(
+        FIND("USA_", {ID_TOUR}) > 0,
+        FIND("F", {ID_TOUR}) > 0,
+        ${overlapFormula("Start tour", "End tour", from, to)}
+      )`,
+      fields: ["ID_TOUR", "Start tour", "End tour", "Riders"],
+    })
+    .all();
+
+  if (tourRecords.length === 0) return [];
+
+  // Collect every linked rider id, then resolve which ones are pilots in one pass.
+  const riderIds = new Set<string>();
+  for (const tour of tourRecords) {
+    const linked = (tour.get("Riders") as string[] | undefined) ?? [];
+    linked.forEach((id) => riderIds.add(id));
+  }
+
+  const pilotSet = new Set<string>();
+  const idList = Array.from(riderIds);
+  for (let i = 0; i < idList.length; i += 100) {
+    const batch = idList.slice(i, i + 100);
+    const orClauses = batch.map((id) => `RECORD_ID() = "${id}"`).join(", ");
+    const records = await base(Tables.Riders)
+      .select({
+        filterByFormula: `AND(OR(${orClauses}), {Type of rider} = "Pilot")`,
+        fields: ["Type of rider"],
+      })
+      .all();
+    records.forEach((r) => pilotSet.add(r.id));
+  }
+
+  return tourRecords.map((tour) => {
+    const linked = (tour.get("Riders") as string[] | undefined) ?? [];
+    const idTour = (tour.get("ID_TOUR") as string) ?? "";
+    return {
+      id: tour.id,
+      idTour,
+      name: idTour,
+      startDate: tour.get("Start tour") as string,
+      endDate: tour.get("End tour") as string,
+      pilots: linked.filter((id) => pilotSet.has(id)).length,
+    };
+  });
+}
+
+function mapBooking(r: AirtableRecord<FieldSet>): AdminBooking {
+  const bookingId = (r.get("Booking ID") as string) ?? "";
+  const first = (r.get("First Name") as string) ?? "";
+  const last = (r.get("Last Name") as string) ?? "";
+  const internalNotes = (r.get("Internal Notes") as string) ?? "";
+  const platformMatch = internalNotes.match(/Platform:\s*([^|]+)/i);
+  return {
+    id: r.id,
+    bookingId,
+    channel: channelFromBookingId(bookingId),
+    status: (r.get("Status") as RentalBooking["status"]) ?? "Confirmed",
+    customerName: `${first} ${last}`.trim(),
+    email: (r.get("Email") as string) ?? undefined,
+    phone: (r.get("Phone") as string) ?? undefined,
+    startDate: r.get("Start Date") as string,
+    endDate: r.get("End Date") as string,
+    numberOfDays: (r.get("Number of Days") as number) ?? 0,
+    numberOfBikes: (r.get("Number of Bikes") as number) ?? 1,
+    totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
+    partnerPlatform: platformMatch ? platformMatch[1].trim() : undefined,
+    notes: (r.get("Special Requests") as string) ?? undefined,
+  };
+}
+
+/** Rental bookings (website + B2B) overlapping [from, to]. */
+export async function getBookingsForPlanning(
+  from: string,
+  to: string
+): Promise<AdminBooking[]> {
+  const records = await base(Tables.Bookings)
+    .select({
+      filterByFormula: overlapFormula("Start Date", "End Date", from, to),
+      sort: [{ field: "Start Date", direction: "asc" }],
+    })
+    .all();
+
+  return records.map(mapBooking);
+}
+
+/** Every rental booking, newest start first — for the full bookings table. */
+export async function getAllBookings(): Promise<AdminBooking[]> {
+  const records = await base(Tables.Bookings)
+    .select({ sort: [{ field: "Start Date", direction: "desc" }] })
+    .all();
+  return records.map(mapBooking);
+}
+
+// ── Admin backoffice: writes ─────────────────────────────────────────────────
+
+export interface B2BBookingInput {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  startDate: string;
+  endDate: string;
+  bikes: number;
+  platform: string;
+  notes?: string;
+}
+
+function daysBetween(start: string, end: string): number {
+  const d = Math.round(
+    (new Date(end).getTime() - new Date(start).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  return Math.max(1, d);
+}
+
+/**
+ * Creates a manual B2B reservation: one booking record (channel encoded in the
+ * Booking ID prefix + Internal Notes) plus one RENTAL block per bike, so the
+ * existing availability logic counts it and no public double-booking is possible.
+ */
+export async function createB2BBooking(input: B2BBookingInput): Promise<string> {
+  const bookingId = `VR-B2B-${nanoid(8).toUpperCase()}`;
+  const days = daysBetween(input.startDate, input.endDate);
+
+  await base(Tables.Bookings).create([
+    {
+      fields: {
+        "Booking ID": bookingId,
+        Status: "Confirmed",
+        "First Name": input.firstName,
+        "Last Name": input.lastName,
+        Email: input.email ?? "",
+        Phone: input.phone ?? "",
+        "Start Date": input.startDate,
+        "End Date": input.endDate,
+        "Number of Days": days,
+        "Number of Bikes": input.bikes,
+        "Internal Notes": `Channel: B2B | Platform: ${input.platform}${
+          input.notes ? ` | ${input.notes}` : ""
+        }`,
+        "Special Requests": input.notes ?? "",
+      },
+    },
+  ]);
+
+  const blocks = Array.from({ length: input.bikes }, (_, i) => ({
+    fields: {
+      "Block ID": `${bookingId}-BIKE${i + 1}`,
+      Type: "RENTAL",
+      "Booking ID": bookingId,
+      "Start Date": input.startDate,
+      "End Date": input.endDate,
+      Status: "Confirmed",
+      Notes: `B2B ${input.platform}`,
+    },
+  }));
+  // Airtable caps creates at 10 records per call; a B2B booking never exceeds 10 bikes.
+  await base(Tables.Blocks).create(blocks);
+
+  return bookingId;
+}
+
+export interface MaintenanceInput {
+  startDate: string;
+  endDate: string;
+  bikes: number;
+  reason?: string;
+}
+
+/** Blocks N bikes for maintenance over a date range (no booking record). */
+export async function createMaintenanceBlock(input: MaintenanceInput): Promise<void> {
+  const blockId = `MAINT-${nanoid(6).toUpperCase()}`;
+  const blocks = Array.from({ length: input.bikes }, (_, i) => ({
+    fields: {
+      "Block ID": `${blockId}-${i + 1}`,
+      Type: "MAINTENANCE",
+      "Start Date": input.startDate,
+      "End Date": input.endDate,
+      Status: "Confirmed",
+      Notes: input.reason ?? "Maintenance",
+    },
+  }));
+  await base(Tables.Blocks).create(blocks);
+}
+
+async function updateInBatches(
+  table: string,
+  records: { id: string; fields: Record<string, unknown> }[]
+): Promise<void> {
+  for (let i = 0; i < records.length; i += 10) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await base(table).update(records.slice(i, i + 10) as any);
+  }
+}
+
+/** Cancels a booking and all its bike blocks (frees the availability). */
+export async function cancelBooking(bookingId: string): Promise<void> {
+  const bookingRecs = await base(Tables.Bookings)
+    .select({ filterByFormula: `{Booking ID} = "${bookingId}"` })
+    .all();
+  await updateInBatches(
+    Tables.Bookings,
+    bookingRecs.map((r) => ({ id: r.id, fields: { Status: "Cancelled" } }))
+  );
+
+  const blockRecs = await base(Tables.Blocks)
+    .select({ filterByFormula: `{Booking ID} = "${bookingId}"` })
+    .all();
+  await updateInBatches(
+    Tables.Blocks,
+    blockRecs.map((r) => ({ id: r.id, fields: { Status: "Cancelled" } }))
+  );
+}
 
 export async function getAllBikes(): Promise<Bike[]> {
   const records = await base(Tables.Bikes)
