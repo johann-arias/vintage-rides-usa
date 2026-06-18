@@ -7,7 +7,17 @@ import {
   createB2BBooking,
   createMaintenanceBlock,
   cancelBooking,
+  updateBooking,
+  type RentalBooking,
 } from "@/lib/airtable";
+
+const VALID_STATUS = new Set<RentalBooking["status"]>([
+  "Pending Payment",
+  "Confirmed",
+  "In Progress",
+  "Completed",
+  "Cancelled",
+]);
 
 // Server Functions run as POST to the route they live on. The proxy gates
 // /admin, but per the Next.js data-security guidance we re-check auth inside
@@ -57,6 +67,7 @@ export async function createB2BBookingAction(formData: FormData) {
     startDate,
     endDate,
     bikes,
+    assignedBikes: formData.getAll("bike").map(String).filter(Boolean),
     platform,
     notes: String(formData.get("notes") ?? "").trim() || undefined,
   });
@@ -64,6 +75,45 @@ export async function createB2BBookingAction(formData: FormData) {
   revalidatePath("/garage");
   revalidatePath("/garage/bookings");
   redirect("/garage/bookings?created=1");
+}
+
+export async function updateBookingAction(formData: FormData) {
+  await requireAuth();
+
+  const recordId = String(formData.get("recordId") ?? "").trim();
+  const startDate = String(formData.get("startDate") ?? "");
+  const endDate = String(formData.get("endDate") ?? "");
+  const firstName = String(formData.get("firstName") ?? "").trim();
+  const lastName = String(formData.get("lastName") ?? "").trim();
+  const rawStatus = String(formData.get("status") ?? "Confirmed") as RentalBooking["status"];
+  const status = VALID_STATUS.has(rawStatus) ? rawStatus : "Confirmed";
+  const edit = `/garage/bookings/${recordId}/edit`;
+
+  if (!recordId) redirect("/garage/bookings");
+  if (!startDate || !endDate || (!firstName && !lastName)) {
+    redirect(`${edit}?error=missing`);
+  }
+  if (endDate < startDate) {
+    redirect(`${edit}?error=dates`);
+  }
+
+  await updateBooking(recordId, {
+    firstName,
+    lastName,
+    email: String(formData.get("email") ?? "").trim() || undefined,
+    phone: String(formData.get("phone") ?? "").trim() || undefined,
+    startDate,
+    endDate,
+    numberOfBikes: Math.max(1, Math.min(10, Number(formData.get("bikes") ?? 1))),
+    assignedBikes: formData.getAll("bike").map(String).filter(Boolean),
+    status,
+    platform: String(formData.get("platform") ?? "").trim() || undefined,
+    notes: String(formData.get("notes") ?? "").trim() || undefined,
+  });
+
+  revalidatePath("/garage");
+  revalidatePath("/garage/bookings");
+  redirect("/garage/bookings?updated=1");
 }
 
 export async function createMaintenanceAction(formData: FormData) {

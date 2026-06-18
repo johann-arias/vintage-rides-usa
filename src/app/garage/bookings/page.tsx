@@ -42,9 +42,9 @@ function fmt(d: string) {
 export default async function BookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; cancelled?: string }>;
+  searchParams: Promise<{ created?: string; cancelled?: string; updated?: string }>;
 }) {
-  const { created, cancelled } = await searchParams;
+  const { created, cancelled, updated } = await searchParams;
   const bookings = await getAllBookings();
 
   return (
@@ -67,6 +67,11 @@ export default async function BookingsPage({
       {created ? (
         <p className="mb-4 rounded-lg border border-[var(--brand-olive-700)]/30 bg-[var(--brand-olive-700)]/10 px-4 py-2.5 text-sm text-[var(--brand-olive-700)]">
           B2B booking created and bikes blocked.
+        </p>
+      ) : null}
+      {updated ? (
+        <p className="mb-4 rounded-lg border border-[var(--brand-olive-700)]/30 bg-[var(--brand-olive-700)]/10 px-4 py-2.5 text-sm text-[var(--brand-olive-700)]">
+          Booking updated.
         </p>
       ) : null}
       {cancelled ? (
@@ -109,11 +114,25 @@ export default async function BookingsPage({
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {fmt(b.startDate)} → {fmt(b.endDate)}
                   </td>
-                  <td className="px-4 py-3 text-center font-medium">
-                    {b.numberOfBikes}
+                  <td className="px-4 py-3 text-center">
+                    <span className="font-medium">{b.numberOfBikes}</span>
+                    {b.assignedBikes.length > 0 ? (
+                      <div className="text-[0.7rem] whitespace-nowrap text-muted-foreground">
+                        {b.assignedBikes
+                          .map((n) => n.replace("Himalayan 450 ", ""))
+                          .join(", ")}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3">{statusBadge(b.status)}</td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      render={<Link href={`/garage/bookings/${b.id}/edit`} />}
+                    >
+                      Edit
+                    </Button>
                     {b.status !== "Cancelled" ? (
                       <form action={cancelBookingAction} className="inline">
                         <input type="hidden" name="bookingId" value={b.bookingId} />

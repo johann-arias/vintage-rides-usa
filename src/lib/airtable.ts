@@ -287,6 +287,15 @@ export interface AdminBooking {
   totalPrice: number;
   partnerPlatform?: string;
   notes?: string;
+  /** Bike Names pinned to this booking (from the Bike Names text field). */
+  assignedBikes: string[];
+}
+
+/** A booking plus the live per-block bike assignment (read from the blocks). */
+export interface BookingDetail extends AdminBooking {
+  blockType: BikeBlock["type"];
+  firstName: string;
+  lastName: string;
 }
 
 // Channel is derived from the Booking ID prefix so no Airtable schema change is
@@ -409,6 +418,10 @@ function mapBooking(r: AirtableRecord<FieldSet>): AdminBooking {
     totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
     partnerPlatform: platformMatch ? platformMatch[1].trim() : undefined,
     notes: (r.get("Special Requests") as string) ?? undefined,
+    assignedBikes: ((r.get("Bike Names") as string) ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
   };
 }
 
@@ -445,6 +458,8 @@ export interface B2BBookingInput {
   startDate: string;
   endDate: string;
   bikes: number;
+  /** Optional specific bikes to pin (by Bike Name); count drives blocks if larger. */
+  assignedBikes?: string[];
   platform: string;
   notes?: string;
 }
@@ -464,6 +479,8 @@ function daysBetween(start: string, end: string): number {
 export async function createB2BBooking(input: B2BBookingInput): Promise<string> {
   const bookingId = `VR-B2B-${nanoid(8).toUpperCase()}`;
   const days = daysBetween(input.startDate, input.endDate);
+  const assigned = (input.assignedBikes ?? []).filter(Boolean).slice(0, 10);
+  const n = Math.max(1, Math.min(10, Math.max(input.bikes, assigned.length)));
 
   await base(Tables.Bookings).create([
     {
@@ -477,7 +494,8 @@ export async function createB2BBooking(input: B2BBookingInput): Promise<string> 
         "Start Date": input.startDate,
         "End Date": input.endDate,
         "Number of Days": days,
-        "Number of Bikes": input.bikes,
+        "Number of Bikes": n,
+        "Bike Names": assigned.join(", "),
         "Internal Notes": `Channel: B2B | Platform: ${input.platform}${
           input.notes ? ` | ${input.notes}` : ""
         }`,
@@ -486,10 +504,11 @@ export async function createB2BBooking(input: B2BBookingInput): Promise<string> 
     },
   ]);
 
-  const blocks = Array.from({ length: input.bikes }, (_, i) => ({
+  const blocks = Array.from({ length: n }, (_, i) => ({
     fields: {
       "Block ID": `${bookingId}-BIKE${i + 1}`,
       Type: "RENTAL",
+      "Bike ID": assigned[i] ?? "",
       "Booking ID": bookingId,
       "Start Date": input.startDate,
       "End Date": input.endDate,
@@ -555,12 +574,8 @@ export async function cancelBooking(bookingId: string): Promise<void> {
   );
 }
 
-export async function getAllBikes(): Promise<Bike[]> {
-  const records = await base(Tables.Bikes)
-    .select({ filterByFormula: `{Status} = "Available"` })
-    .all();
-
-  return records.map((r) => ({
+function mapBike(r: AirtableRecord<FieldSet>): Bike {
+  return {
     id: r.id,
     name: (r.get("Bike Name") as string) ?? "",
     serialNumber: (r.get("Serial Number") as string) ?? undefined,
@@ -570,5 +585,131 @@ export async function getAllBikes(): Promise<Bike[]> {
     status: (r.get("Status") as Bike["status"]) ?? "Available",
     notes: (r.get("Notes") as string) ?? undefined,
     lastServiceDate: (r.get("Last Service Date") as string) ?? undefined,
-  }));
+  };
+}
+
+const bikeSort = (a: Bike, b: Bike) =>
+  a.name.localeCompare(b.name, undefined, { numeric: true });
+
+export async function getAllBikes(): Promise<Bike[]> {
+  const records = await base(Tables.Bikes)
+    .select({ filterByFormula: `{Status} = "Available"` })
+    .all();
+  return records.map(mapBike).sort(bikeSort);
+}
+
+/** Bikes that can be assigned to a booking (everything except Retired), name-sorted. */
+export async function getAssignableBikes(): Promise<Bike[]> {
+  const records = await base(Tables.Bikes)
+    .select({ filterByFormula: `{Status} != "Retired"` })
+    .all();
+  return records.map(mapBike).sort(bikeSort);
+}
+
+/** A single booking with its live block type, by Airtable record id. */
+export async function getBookingByRecordId(
+  recordId: string
+): Promise<BookingDetail | null> {
+  let rec: AirtableRecord<FieldSet>;
+  try {
+    rec = await base(Tables.Bookings).find(recordId);
+  } catch {
+    return null;
+  }
+  const booking = mapBooking(rec);
+  const blocks = await base(Tables.Blocks)
+    .select({
+      filterByFormula: `AND({Booking ID} = "${booking.bookingId}", {Status} != "Cancelled")`,
+      fields: ["Type"],
+    })
+    .firstPage();
+  const blockType =
+    (blocks[0]?.get("Type") as BikeBlock["type"]) ?? "RENTAL";
+  return {
+    ...booking,
+    blockType,
+    firstName: (rec.get("First Name") as string) ?? "",
+    lastName: (rec.get("Last Name") as string) ?? "",
+  };
+}
+
+async function deleteInBatches(table: string, ids: string[]): Promise<void> {
+  for (let i = 0; i < ids.length; i += 10) {
+    await base(table).destroy(ids.slice(i, i + 10));
+  }
+}
+
+export interface UpdateBookingInput {
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+  startDate: string;
+  endDate: string;
+  numberOfBikes: number;
+  assignedBikes: string[];
+  status: RentalBooking["status"];
+  platform?: string;
+  notes?: string;
+}
+
+/**
+ * Edits a booking and rebuilds its bike blocks. Blocks are deleted and
+ * recreated (one per bike) so the per-bike assignment, dates and count stay in
+ * sync with the booking row. A cancelled booking keeps no active blocks.
+ */
+export async function updateBooking(
+  recordId: string,
+  input: UpdateBookingInput
+): Promise<void> {
+  const rec = await base(Tables.Bookings).find(recordId);
+  const bookingId = (rec.get("Booking ID") as string) ?? "";
+  const channel = channelFromBookingId(bookingId);
+  const days = daysBetween(input.startDate, input.endDate);
+  const assigned = input.assignedBikes.filter(Boolean).slice(0, 10);
+  const n = Math.max(1, Math.min(10, Math.max(input.numberOfBikes, assigned.length)));
+
+  const fields: Record<string, string | number> = {
+    "First Name": input.firstName,
+    "Last Name": input.lastName,
+    Email: input.email ?? "",
+    Phone: input.phone ?? "",
+    "Start Date": input.startDate,
+    "End Date": input.endDate,
+    "Number of Days": days,
+    "Number of Bikes": n,
+    "Bike Names": assigned.join(", "),
+    Status: input.status,
+    "Special Requests": input.notes ?? "",
+  };
+  if (channel === "B2B") {
+    fields["Internal Notes"] = `Channel: B2B | Platform: ${input.platform ?? ""}${
+      input.notes ? ` | ${input.notes}` : ""
+    }`;
+  }
+  await base(Tables.Bookings).update([{ id: recordId, fields }]);
+
+  // Rebuild blocks from scratch — simplest correct reconciliation.
+  const existing = await base(Tables.Blocks)
+    .select({ filterByFormula: `{Booking ID} = "${bookingId}"` })
+    .all();
+  await deleteInBatches(Tables.Blocks, existing.map((r) => r.id));
+
+  if (input.status !== "Cancelled") {
+    const note =
+      channel === "B2B" ? `B2B ${input.platform ?? ""}`.trim() : "Edited via backoffice";
+    const blocks = Array.from({ length: n }, (_, i) => ({
+      fields: {
+        "Block ID": `${bookingId}-BIKE${i + 1}`,
+        Type: "RENTAL",
+        "Bike ID": assigned[i] ?? "",
+        "Booking ID": bookingId,
+        "Start Date": input.startDate,
+        "End Date": input.endDate,
+        Status: "Confirmed",
+        Notes: note,
+      },
+    }));
+    await base(Tables.Blocks).create(blocks);
+  }
 }

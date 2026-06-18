@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { BikePicker } from "@/components/admin/BikePicker";
+import { getAssignableBikes } from "@/lib/airtable";
 import { createB2BBookingAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
@@ -18,6 +20,7 @@ export default async function NewB2BBookingPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
+  const bikes = await getAssignableBikes();
 
   return (
     <div className="mx-auto max-w-xl">
@@ -110,6 +113,14 @@ export default async function NewB2BBookingPage({
               ))}
             </select>
           </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Assign specific bikes (optional)</Label>
+          <BikePicker bikes={bikes} />
+          <p className="text-xs text-muted-foreground">
+            Leave empty to just reserve the count, or pick exact bikes now.
+          </p>
         </div>
 
         <div className="space-y-1.5">

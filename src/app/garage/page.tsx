@@ -215,6 +215,13 @@ export default async function PlanningPage({
                   <span className="ml-auto text-sm font-medium">
                     {b.numberOfBikes} bike{b.numberOfBikes > 1 ? "s" : ""}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    render={<Link href={`/garage/bookings/${b.id}/edit`} />}
+                  >
+                    Edit
+                  </Button>
                   <form action={cancelBookingAction}>
                     <input type="hidden" name="bookingId" value={b.bookingId} />
                     <Button type="submit" variant="ghost" size="sm">
