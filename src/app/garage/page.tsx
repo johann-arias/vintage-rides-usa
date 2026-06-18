@@ -80,7 +80,10 @@ export default async function PlanningPage({
     | { kind: "tour"; data: PlanningTour }
     | { kind: "booking"; data: AdminBooking };
   const rows: Row[] = [
-    ...tours.map((t) => ({ kind: "tour" as const, data: t })),
+    // Hide tours with no pilots yet — they commit 0 bikes.
+    ...tours
+      .filter((t) => t.pilots > 0)
+      .map((t) => ({ kind: "tour" as const, data: t })),
     ...bookings
       .filter((b) => b.status !== "Cancelled")
       .map((b) => ({ kind: "booking" as const, data: b })),
