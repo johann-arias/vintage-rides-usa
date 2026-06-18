@@ -8,6 +8,7 @@ import {
   createMaintenanceBlock,
   cancelBooking,
   updateBooking,
+  updateBikeMileage,
   type RentalBooking,
 } from "@/lib/airtable";
 
@@ -137,6 +138,17 @@ export async function createMaintenanceAction(formData: FormData) {
   revalidatePath("/garage");
   revalidatePath("/garage/fleet");
   redirect("/garage/fleet?maint=1");
+}
+
+export async function updateBikeMileageAction(formData: FormData) {
+  await requireAuth();
+  const bikeId = String(formData.get("bikeId") ?? "").trim();
+  const miles = Number(formData.get("miles") ?? 0);
+  if (bikeId && Number.isFinite(miles) && miles >= 0) {
+    await updateBikeMileage(bikeId, miles);
+    revalidatePath("/garage/fleet");
+  }
+  redirect("/garage/fleet?mileage=1");
 }
 
 export async function cancelBookingAction(formData: FormData) {

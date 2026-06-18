@@ -30,10 +30,13 @@ export default function Navbar() {
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#1f2817]/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
-          <span className="text-white font-semibold tracking-widest text-sm uppercase">
-            Vintage Rides
-          </span>
-          <span className="text-[#d9a32b] font-light text-sm tracking-wider">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/vintage-rides-logo.png"
+            alt="Vintage Rides"
+            className="h-9 w-auto [filter:brightness(0)_invert(1)]"
+          />
+          <span className="text-[#d9a32b] font-light text-sm tracking-wider border-l border-white/20 pl-3">
             USA
           </span>
         </Link>

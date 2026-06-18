@@ -606,6 +606,16 @@ export async function getAssignableBikes(): Promise<Bike[]> {
   return records.map(mapBike).sort(bikeSort);
 }
 
+/** Updates a bike's odometer reading. */
+export async function updateBikeMileage(
+  recordId: string,
+  miles: number
+): Promise<void> {
+  await base(Tables.Bikes).update([
+    { id: recordId, fields: { "Mileage (mi)": Math.max(0, Math.round(miles)) } },
+  ]);
+}
+
 /** A single booking with its live block type, by Airtable record id. */
 export async function getBookingByRecordId(
   recordId: string

@@ -136,8 +136,26 @@ export default async function FleetPage({
                 </Badge>
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {b.year} · {b.color || "—"} · {b.mileage.toLocaleString()} mi
+                {b.year} · {b.color || "—"}
               </p>
+              <form
+                action={updateBikeMileageAction}
+                className="mt-2 flex items-center gap-1.5"
+              >
+                <input type="hidden" name="bikeId" value={b.id} />
+                <Input
+                  name="miles"
+                  type="number"
+                  min={0}
+                  defaultValue={b.mileage}
+                  aria-label={`Mileage for ${b.name}`}
+                  className="h-8 w-24 bg-white"
+                />
+                <span className="text-xs text-muted-foreground">mi</span>
+                <Button type="submit" variant="ghost" size="sm" className="ml-auto">
+                  Save
+                </Button>
+              </form>
             </div>
           ))}
         </div>

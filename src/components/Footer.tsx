@@ -7,14 +7,28 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-white font-semibold tracking-widest text-sm uppercase">Vintage Rides</span>
-              <span className="text-[#d9a32b] font-light text-sm tracking-wider">USA</span>
+            <div className="flex items-center gap-3 mb-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/vintage-rides-logo.png"
+                alt="Vintage Rides"
+                className="h-12 w-auto [filter:brightness(0)_invert(1)]"
+              />
+              <span className="text-[#d9a32b] font-light text-sm tracking-wider border-l border-white/20 pl-3">USA</span>
             </div>
-            <p className="text-sm leading-relaxed">
-              Motorcycle rentals in Rapid City, SD — gateway to the Black Hills,
+            <p className="text-sm leading-relaxed mb-6">
+              Motorcycle rentals in Rapid City, SD, gateway to the Black Hills,
               Badlands, and Spearfish Canyon. A Vintage Rides company.
             </p>
+            <div className="inline-flex items-center gap-3 border border-white/10 rounded-sm bg-white/[0.03] px-4 py-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/royal-enfield-logo.svg"
+                alt="Royal Enfield"
+                className="h-3.5 w-auto [filter:brightness(0)_invert(1)]"
+              />
+              <span className="text-white/60 text-[11px] tracking-wider uppercase">Official Partner</span>
+            </div>
           </div>
 
           <div>

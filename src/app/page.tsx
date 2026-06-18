@@ -69,6 +69,12 @@ export default function HomePage() {
                   <span aria-hidden>🏆</span>
                   Co-founded by an Iron Butt Rally champion
                 </span>
+                <span className="hidden sm:inline text-white/20" aria-hidden>|</span>
+                <span className="flex items-center gap-2 tracking-wider">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/royal-enfield-logo.svg" alt="Royal Enfield" className="h-3 w-auto [filter:brightness(0)_invert(1)]" />
+                  Official Royal Enfield Partner
+                </span>
               </div>
             </div>
           </div>
@@ -170,6 +176,11 @@ export default function HomePage() {
                   Royal Enfield<br />
                   <span className="font-semibold">Himalayan 450</span>
                 </h2>
+                <div className="inline-flex items-center gap-3 border border-[#1a1a17]/15 bg-white rounded-sm px-4 py-2.5 mb-6">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/royal-enfield-logo.svg" alt="Royal Enfield" className="h-4 w-auto" />
+                  <span className="text-[#1a1a17]/70 text-xs font-semibold tracking-wider uppercase">Official Partner</span>
+                </div>
                 <p className="text-[#6e6a5e] text-lg leading-relaxed mb-8">
                   The same bikes we trust to take our riders through the Himalayas
                   and across the Andes. Reliable, capable, and perfectly sized for
