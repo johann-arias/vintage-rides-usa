@@ -1,8 +1,7 @@
-import { getAllBikes, getActivePricingRules } from "@/lib/airtable";
+import { getAssignableBikes, getActivePricingRules } from "@/lib/airtable";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { createMaintenanceAction, updateBikeMileageAction } from "../actions";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +13,7 @@ export default async function FleetPage({
 }) {
   const { maint, error, mileage } = await searchParams;
   const [bikes, pricing] = await Promise.all([
-    getAllBikes(),
+    getAssignableBikes(),
     getActivePricingRules(),
   ]);
 
@@ -134,12 +133,7 @@ export default async function FleetPage({
               key={b.id}
               className="rounded-xl border border-border bg-card p-4 shadow-sm"
             >
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{b.name}</span>
-                <Badge className="bg-[var(--brand-olive-700)]/12 text-[var(--brand-olive-700)]">
-                  {b.status}
-                </Badge>
-              </div>
+              <span className="font-medium">{b.name}</span>
               <p className="mt-1 text-xs text-muted-foreground">
                 {b.year} · {b.color || "—"}
               </p>
