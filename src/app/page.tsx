@@ -6,9 +6,32 @@ import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_LI
 const REVIEWS = [
   {
     quote:
-      "I rented a Royal Enfield Himalayan 450 from Vintage Rides USA to explore the Black Hills and Custer State Park…",
+      "The scenery brought me to the Black Hills, but Vintage Rides USA and the Royal Enfield Himalayan 450 made the trip truly unforgettable. Everything was easy and well organized, the bike perfectly suited to the terrain, and the included park pass and off-road riding made it real value.",
     author: "Trai Hunt",
     badge: "Local Guide",
+  },
+  {
+    quote:
+      "Highly recommend for exploring the Black Hills and surrounding area. I called Mike last second, he had me set up on a bike in no time. We went over the bike and he gave me some guidance on which sites to see and which roads to take. I will be returning to the area and using Vintage Rides!",
+    author: "Brandon Kuuzi",
+    badge: null,
+  },
+  {
+    quote:
+      "Mike was amazing, knowledgeable and couldn't be happier with the service. The bike is everything you need for these amazing hills, perfect on the scenic roads, stable and great suspension for the dirt. Thanks again Mike, the trip was awesome and so was the bike!",
+    author: "Seth Loskot",
+    badge: null,
+  },
+  {
+    quote:
+      "Great experience! Highly recommend. Mike was extremely accommodating and flexible. He gave us his cell and was very responsive. He was also full of local knowledge. Don't forget to pet Katy, the shop dog!",
+    author: "M S",
+    badge: null,
+  },
+  {
+    quote: "Great service, great bikes worth every penny!",
+    author: "Charlie Pearce",
+    badge: null,
   },
   {
     quote: "Recommend! A+++++ service and routes.",
