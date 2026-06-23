@@ -23,13 +23,20 @@ function loadCredentials(): Record<string, unknown> | null {
 
 const authCache = new Map<string, GoogleAuth>();
 
-async function getAccessToken(scopes: string[]): Promise<string | null> {
+// `subject` impersonates a user via domain-wide delegation. Needed for Business
+// Profile: a service account can't accept a GBP manager invite, so once DWD is
+// authorised in Workspace admin we impersonate a real GBP manager instead.
+async function getAccessToken(scopes: string[], subject?: string): Promise<string | null> {
   const credentials = loadCredentials();
   if (!credentials) return null;
-  const key = scopes.join(" ");
+  const key = `${subject ?? ""}|${scopes.join(" ")}`;
   let auth = authCache.get(key);
   if (!auth) {
-    auth = new GoogleAuth({ credentials, scopes });
+    auth = new GoogleAuth({
+      credentials,
+      scopes,
+      ...(subject ? { clientOptions: { subject } } : {}),
+    });
     authCache.set(key, auth);
   }
   const client = await auth.getClient();
@@ -373,7 +380,10 @@ export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
   if (!hasCredentials()) return emptyGbp(rangeDays, "Service account not configured (GOOGLE_SA_KEY_B64).");
 
   try {
-    const token = await getAccessToken(["https://www.googleapis.com/auth/business.manage"]);
+    const token = await getAccessToken(
+      ["https://www.googleapis.com/auth/business.manage"],
+      process.env.GBP_IMPERSONATE // set to a GBP manager email once DWD is authorised
+    );
     if (!token) return emptyGbp(rangeDays, "Could not mint an access token.");
 
     const loc = await resolveGbpLocation(token);
