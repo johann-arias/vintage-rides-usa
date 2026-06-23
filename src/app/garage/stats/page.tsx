@@ -68,17 +68,20 @@ function BarList({
   rows,
   max,
   unit = "",
+  labelClass = "w-36",
 }: {
   rows: { label: string; value: number; right?: string }[];
   max: number;
   unit?: string;
+  /** Tailwind width class for the label column — wider for long labels. */
+  labelClass?: string;
 }) {
   return (
     <div className="space-y-1.5">
       {rows.map((r, i) => (
         <div key={i} className="flex items-center gap-3 text-sm">
           <span
-            className="w-64 shrink-0 cursor-default truncate text-muted-foreground"
+            className={`${labelClass} shrink-0 cursor-default truncate text-muted-foreground`}
             title={r.label}
           >
             {r.label}
@@ -243,6 +246,7 @@ export default async function StatsPage() {
               <BarList
                 rows={ga.topPages.map((p) => ({ label: p.path, value: p.views }))}
                 max={Math.max(1, ...ga.topPages.map((p) => p.views))}
+                labelClass="w-72"
               />
             </div>
           </div>
@@ -279,6 +283,7 @@ export default async function StatsPage() {
                     right: `${int.format(q.clicks)} clk`,
                   }))}
                   max={Math.max(1, ...gsc.topQueries.map((q) => q.clicks))}
+                  labelClass="w-56"
                 />
               </div>
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -290,6 +295,7 @@ export default async function StatsPage() {
                     right: `${int.format(p.clicks)} clk`,
                   }))}
                   max={Math.max(1, ...gsc.topPages.map((p) => p.clicks))}
+                  labelClass="w-56"
                 />
               </div>
             </div>
