@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ClipboardList, PlusCircle, Bike } from "lucide-react";
+import { CalendarDays, ClipboardList, PlusCircle, Bike, BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/garage/bookings", label: "Reservations", icon: ClipboardList },
   { href: "/garage/bookings/new", label: "Add B2B booking", icon: PlusCircle },
   { href: "/garage/fleet", label: "Fleet & maintenance", icon: Bike },
+  { href: "/garage/stats", label: "Statistics", icon: BarChart3 },
 ];
 
 export default function AdminNav() {

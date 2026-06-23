@@ -448,6 +448,98 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
   return records.map(mapBooking);
 }
 
+// ── Turnover stats ───────────────────────────────────────────────────────────
+
+/**
+ * Per Johann (2026-06-23): direct (WEBSITE) bookings count their real stored
+ * total; B2B / marketplace bookings count a flat $100 per bike-day
+ * (days × bikes). Easy to revisit — just one constant + one branch below.
+ */
+export const B2B_BIKE_DAY_RATE = 100;
+
+export interface ChannelTurnover {
+  channel: BookingChannel;
+  bookings: number;
+  bikeDays: number;
+  turnover: number;
+}
+
+export interface TurnoverStats {
+  total: number;
+  bookings: number;
+  byChannel: ChannelTurnover[];
+  /** Last 12 calendar months, oldest → newest, bucketed by rental start date. */
+  byMonth: { month: string; website: number; b2b: number; total: number }[];
+  thisYear: number;
+  thisMonth: number;
+}
+
+/** Turnover contribution of a single booking, per the rules above. */
+export function bookingTurnover(b: AdminBooking): number {
+  if (b.channel === "B2B") {
+    return B2B_BIKE_DAY_RATE * (b.numberOfDays || 0) * (b.numberOfBikes || 1);
+  }
+  return b.totalPrice || 0; // WEBSITE = real stored total (post-tax)
+}
+
+export async function getTurnoverStats(): Promise<TurnoverStats> {
+  const all = await getAllBookings();
+  const live = all.filter((b) => b.status !== "Cancelled");
+
+  // Two display buckets: B2B (marketplace, flat bike-day rate) vs everything
+  // else (WEBSITE/DIRECT = real booking totals).
+  const websiteBucket: ChannelTurnover = { channel: "WEBSITE", bookings: 0, bikeDays: 0, turnover: 0 };
+  const b2bBucket: ChannelTurnover = { channel: "B2B", bookings: 0, bikeDays: 0, turnover: 0 };
+  const bucketFor = (ch: BookingChannel) => (ch === "B2B" ? b2bBucket : websiteBucket);
+
+  // Last 12 months including the current one (YYYY-MM keys, oldest first).
+  const now = new Date();
+  const monthKeys: string[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1));
+    monthKeys.push(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`);
+  }
+  const monthMap = new Map(
+    monthKeys.map((m) => [m, { month: m, website: 0, b2b: 0, total: 0 }])
+  );
+
+  const thisYearKey = String(now.getUTCFullYear());
+  const thisMonthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+  let total = 0;
+  let thisYear = 0;
+  let thisMonth = 0;
+
+  for (const b of live) {
+    const value = bookingTurnover(b);
+    total += value;
+
+    const ch = bucketFor(b.channel);
+    ch.bookings += 1;
+    ch.bikeDays += (b.numberOfDays || 0) * (b.numberOfBikes || 1);
+    ch.turnover += value;
+
+    const monthKey = (b.startDate || "").slice(0, 7); // YYYY-MM
+    if (monthKey.startsWith(thisYearKey)) thisYear += value;
+    if (monthKey === thisMonthKey) thisMonth += value;
+
+    const bucket = monthMap.get(monthKey);
+    if (bucket) {
+      if (b.channel === "B2B") bucket.b2b += value;
+      else bucket.website += value;
+      bucket.total += value;
+    }
+  }
+
+  return {
+    total,
+    bookings: live.length,
+    byChannel: [websiteBucket, b2bBucket],
+    byMonth: monthKeys.map((m) => monthMap.get(m)!),
+    thisYear,
+    thisMonth,
+  };
+}
+
 // ── Admin backoffice: writes ─────────────────────────────────────────────────
 
 export interface B2BBookingInput {
