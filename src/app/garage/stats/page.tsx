@@ -174,18 +174,21 @@ export default async function StatsPage() {
           </div>
           <div className="flex h-44 items-end gap-1.5">
             {turnover.byMonth.map((m) => {
-              const h = (m.total / maxMonth) * 100;
-              const webH = m.total > 0 ? (m.website / m.total) * h : 0;
-              const b2bH = m.total > 0 ? (m.b2b / m.total) * h : 0;
+              // Explicit pixel heights: percentage heights collapse here because
+              // the column's own height is content-derived (no fixed reference).
+              const MAX_BAR_PX = 150;
+              const barPx = m.total > 0 ? Math.max(3, (m.total / maxMonth) * MAX_BAR_PX) : 0;
+              const webPx = m.total > 0 ? (m.website / m.total) * barPx : 0;
+              const b2bPx = m.total > 0 ? (m.b2b / m.total) * barPx : 0;
               return (
-                <div key={m.month} className="flex flex-1 flex-col items-center gap-1">
+                <div key={m.month} className="flex flex-1 flex-col items-center justify-end gap-1">
                   <div
                     className="flex w-full flex-col-reverse overflow-hidden rounded-t"
-                    style={{ height: "100%" }}
+                    style={{ height: `${barPx}px` }}
                     title={`${m.month}: ${usd.format(m.total)}`}
                   >
-                    <div className="w-full bg-[var(--brand-olive-700)]" style={{ height: `${webH}%` }} />
-                    <div className="w-full bg-amber-600" style={{ height: `${b2bH}%` }} />
+                    <div className="w-full bg-[var(--brand-olive-700)]" style={{ height: `${webPx}px` }} />
+                    <div className="w-full bg-amber-600" style={{ height: `${b2bPx}px` }} />
                   </div>
                   <span className="text-[10px] text-muted-foreground">{MONTH_LABEL(m.month)}</span>
                 </div>
