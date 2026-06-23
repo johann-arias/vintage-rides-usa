@@ -52,10 +52,10 @@ export const metadata: Metadata = {
     siteName: "Vintage Rides USA",
     images: [
       {
-        url: "/hero-bike-outdoor.jpg",
-        width: 1024,
-        height: 768,
-        alt: "Royal Enfield Himalayan 450 in the Black Hills",
+        url: "/mike-wendy-garage.jpg",
+        width: 1600,
+        height: 1200,
+        alt: "Mike & Wendy, your Vintage Rides USA hosts in Rapid City, South Dakota",
       },
     ],
   },
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     title: "Motorcycle Rental in Rapid City & Black Hills | Vintage Rides USA",
     description:
       "Rent a Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills. $130/day + tax.",
-    images: ["/hero-bike-outdoor.jpg"],
+    images: ["/mike-wendy-garage.jpg"],
   },
 };
 
