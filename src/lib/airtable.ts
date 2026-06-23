@@ -482,9 +482,14 @@ export function bookingTurnover(b: AdminBooking): number {
   return b.totalPrice || 0; // WEBSITE = real stored total (post-tax)
 }
 
+/** Staff bookings (Platform tagged "Staff") are internal use, not revenue. */
+export function isStaffBooking(b: AdminBooking): boolean {
+  return (b.partnerPlatform ?? "").trim().toLowerCase() === "staff";
+}
+
 export async function getTurnoverStats(): Promise<TurnoverStats> {
   const all = await getAllBookings();
-  const live = all.filter((b) => b.status !== "Cancelled");
+  const live = all.filter((b) => b.status !== "Cancelled" && !isStaffBooking(b));
 
   // Two display buckets: B2B (marketplace, flat bike-day rate) vs everything
   // else (WEBSITE/DIRECT = real booking totals).
