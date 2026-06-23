@@ -77,7 +77,10 @@ function BarList({
     <div className="space-y-1.5">
       {rows.map((r, i) => (
         <div key={i} className="flex items-center gap-3 text-sm">
-          <span className="w-40 shrink-0 truncate text-muted-foreground" title={r.label}>
+          <span
+            className="w-64 shrink-0 cursor-default truncate text-muted-foreground"
+            title={r.label}
+          >
             {r.label}
           </span>
           <div className="h-5 flex-1 overflow-hidden rounded bg-[var(--brand-cream)]">
