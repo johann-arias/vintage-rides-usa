@@ -49,7 +49,7 @@ export default function HomePage() {
         <section className="relative h-screen min-h-[600px] bg-[#1f2817] flex items-center overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ backgroundImage: "url('/hero-bike-outdoor.jpg')" }}
+            style={{ backgroundImage: "url('/hero-himalayan-meadow-rider.jpg')" }}
             aria-hidden
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#1f2817] via-[#1f2817]/70 to-transparent" aria-hidden />
