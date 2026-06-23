@@ -182,6 +182,11 @@ export default async function StatsPage() {
               const b2bPx = m.total > 0 ? (m.b2b / m.total) * barPx : 0;
               return (
                 <div key={m.month} className="flex flex-1 flex-col items-center justify-end gap-1">
+                  {m.total > 0 ? (
+                    <span className="text-[10px] font-medium tabular-nums text-foreground">
+                      {usd.format(m.total)}
+                    </span>
+                  ) : null}
                   <div
                     className="flex w-full flex-col-reverse overflow-hidden rounded-t"
                     style={{ height: `${barPx}px` }}
