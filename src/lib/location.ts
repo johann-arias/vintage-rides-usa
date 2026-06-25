@@ -28,7 +28,7 @@ export const GOOGLE_LISTING_URL = "https://share.google/lzlz2jYsuFtaHkgAO";
 
 // Contact channels.
 export const CONTACT = {
-  phone: { display: "+1 (605) 646-2343", e164: "+16056462343" },
+  phone: { display: "+1 (760) 350-9700", e164: "+17603509700" },
   whatsapp: { display: "+1 (760) 350-9700", e164: "+17603509700" },
   email: "wendy@vintagerides.travel",
 } as const;
