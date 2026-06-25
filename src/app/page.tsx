@@ -48,11 +48,11 @@ export default function HomePage() {
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="relative h-screen min-h-[600px] bg-[#1f2817] flex items-center overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-40"
+            className="absolute inset-0 bg-cover bg-center opacity-70"
             style={{ backgroundImage: "url('/hero-himalayan-meadow-rider.jpg')" }}
             aria-hidden
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1f2817] via-[#1f2817]/70 to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1f2817] via-[#1f2817]/40 to-transparent" aria-hidden />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-transparent to-transparent" aria-hidden />
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
