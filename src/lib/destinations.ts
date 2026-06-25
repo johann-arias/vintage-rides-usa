@@ -90,12 +90,12 @@ export const DESTINATIONS: Record<string, Destination> = {
     routesTitle: "Best Black Hills routes from Rapid City",
     routes: [
       {
-        name: "The Black Hills Loop (classic)",
-        miles: "~250 mi",
-        ridingTime: "Full day or 2-day relaxed",
-        highlights: "Mount Rushmore · Iron Mountain Road · Needles Highway · Custer State Park · Wildlife Loop",
+        name: "The Southern Hills",
+        miles: "~70 mi",
+        ridingTime: "Full day",
+        highlights: "Custer State Park Wildlife Loop · Iron Mountain Road · Sylvan Lake · Needles Highway (SD-87)",
         description:
-          "The non-negotiable. Rapid City → US-16 to Keystone → Iron Mountain Road (pigtail bridges + tunnels framing Mount Rushmore) → Custer State Park Wildlife Loop (bison, pronghorn, donkeys at the road) → Needles Highway → Sylvan Lake → return via Hill City. Plan at least one stop at Sylvan Lake.",
+          "Custer → Custer State Park Wildlife Loop (bison, pronghorn, and burros own the road here) → Iron Mountain Road, with pigtail bridges and tunnels that perfectly frame Mount Rushmore → Sylvan Lake → Needles Highway (SD-87) → return to Custer. A full day of the Black Hills' greatest hits.",
       },
       {
         name: "Spearfish Canyon + Northern Hills",
@@ -188,12 +188,12 @@ export const DESTINATIONS: Record<string, Destination> = {
     routesTitle: "Sturgis Rally rides from Rapid City",
     routes: [
       {
-        name: "Escape the Main Street parade",
-        miles: "~150 mi",
+        name: "The Northern Hills",
+        miles: "~100 mi",
         ridingTime: "Full day",
-        highlights: "Spearfish Canyon · Roughlock Falls · Lead · Deadwood (back roads)",
+        highlights: "Spearfish Canyon Scenic Byway · Historic Deadwood · Vanocker Canyon Road · Galena ghost town (dirt option)",
         description:
-          "Leave Rapid City early via I-90 north, exit at Spearfish, run US-14A through the canyon (waterfalls, sheer cliffs), continue to Lead and Deadwood via the historic mining roads. Return via Sturgis on backroads (skip Main Street unless you want the chaos). The route most rally locals quietly ride.",
+          "Sturgis → US-14A west to Spearfish Canyon Scenic Byway (waterfalls, towering limestone walls, perfect twisties) → explore historic Deadwood → return via Vanocker Canyon Road back to Sturgis. Prefer dirt? The ghost town of Galena makes a worthwhile detour off the pavement before you drop back into Sturgis. Come in August and you're in the middle of the world's largest motorcycle rally, with racing, concerts, events, vendors, and wall-to-wall bikes as far as you can see.",
       },
       {
         name: "Black Hills Backcountry Discovery",
@@ -284,12 +284,12 @@ export const DESTINATIONS: Record<string, Destination> = {
     routesTitle: "Best Badlands rides from Rapid City",
     routes: [
       {
-        name: "Badlands Loop classic",
+        name: "The Badlands Loop",
         miles: "~150 mi roundtrip",
-        ridingTime: "Half-day",
-        highlights: "SD-240 Loop · Pinnacles · Yellow Mounds · Wall Drug",
+        ridingTime: "Full day",
+        highlights: "SD-44 / White River Valley · Badlands Scenic Byway · Wall Drug · Prairie dog towns",
         description:
-          "Rapid City → I-90 east to Wall (Wall Drug if you must) → SD-240 Pinnacles entrance → full Badlands Loop Road past Yellow Mounds, Pinnacles Overlook, Big Badlands Overlook → exit at Cactus Flat → return via I-90. The classic. Doable in 4-5 hours.",
+          "Rapid City → SD-44 east through the White River Valley → Badlands National Park → Scenic Byway through the park → possible side trip for lunch at the famous Wall Drug → easy gravel road through wild prairie dog towns to the town of Scenic → return to Rapid City. Leave time for scenic overlooks and incredible hikes.",
       },
       {
         name: "Badlands + Sage Creek gravel",
