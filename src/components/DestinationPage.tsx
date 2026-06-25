@@ -58,12 +58,12 @@ export default function DestinationPage({ destination: d }: Props) {
         {/* Hero */}
         <section className="relative h-[70vh] min-h-[500px] bg-[#1f2817] flex items-end overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-50"
+            className="absolute inset-0 bg-cover bg-top opacity-70"
             style={{ backgroundImage: `url('${d.heroImage}')` }}
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-[#1f2817]/60 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-[#1f2817]/45 to-transparent"
             aria-hidden
           />
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full pb-16">
