@@ -393,7 +393,7 @@ export const DESTINATIONS: Record<string, Destination> = {
         ridingTime: "Half-day",
         highlights: "Needles Highway · Wildlife Loop · Iron Mountain Road · Stockade Lake",
         description:
-          "Better day. Needles Highway south-to-north → Sylvan Lake → SD-89 to the Wildlife Loop (bison, pronghorn, friendly donkeys at the road) → Iron Mountain Road south to north (pigtail bridges + tunnels framing Mount Rushmore) → return through Custer. The full Custer State Park experience.",
+          "Better day. Needles Highway south-to-north → Sylvan Lake → the Wildlife Loop (bison, pronghorn, and burros own the road here) → Iron Mountain Road south to north (pigtail bridges + tunnels framing Mount Rushmore) → return through Custer. The full Custer State Park experience.",
       },
       {
         name: "Black Hills loop (Needles included)",
