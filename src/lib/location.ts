@@ -53,9 +53,10 @@ function buildTimeSlots(): string[] {
 // e.g. ["8:00 AM", "8:30 AM", … , "6:00 PM"]
 export const RENTAL_TIME_SLOTS = buildTimeSlots();
 
-// Default standard pickup / return time.
+// Default standard pickup time. Drop-off is always arranged by appointment.
 export const DEFAULT_PICKUP_TIME = "9:00 AM";
-export const DEFAULT_DROPOFF_TIME = "9:00 AM";
+export const DROPOFF_BY_APPOINTMENT = "By appointment";
+export const DEFAULT_DROPOFF_TIME = DROPOFF_BY_APPOINTMENT;
 
 export const CONTACT_LINKS = {
   phone: `tel:${CONTACT.phone.e164}`,

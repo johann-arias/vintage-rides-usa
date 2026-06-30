@@ -277,8 +277,8 @@ export default function DestinationPage({ destination: d }: Props) {
                   {PICKUP_LOCATION.zip}
                 </div>
                 <div className="text-white/60 text-sm mb-6">
-                  Pickup &amp; drop-off every half hour,{" "}
-                  <strong className="text-white">8:00 AM to 6:00 PM</strong> · after-hours by appointment
+                  Pickup every half hour,{" "}
+                  <strong className="text-white">8:00 AM to 6:00 PM</strong> · drop-off &amp; after-hours by appointment
                 </div>
                 <a
                   href={PICKUP_DIRECTIONS_URL}

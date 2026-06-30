@@ -11,7 +11,7 @@ import {
   RENTAL_TIME_SLOTS,
   AFTER_HOURS_OPTION,
   DEFAULT_PICKUP_TIME,
-  DEFAULT_DROPOFF_TIME,
+  DROPOFF_BY_APPOINTMENT,
 } from "@/lib/location";
 
 type AvailabilityResult = {
@@ -45,7 +45,8 @@ export default function BookPage() {
   const [endDate, setEndDate] = useState("");
   const [bikeCount, setBikeCount] = useState(1);
   const [pickupTime, setPickupTime] = useState(DEFAULT_PICKUP_TIME);
-  const [dropoffTime, setDropoffTime] = useState(DEFAULT_DROPOFF_TIME);
+  // Drop-off is always arranged by appointment — not a customer-selectable slot.
+  const dropoffTime = DROPOFF_BY_APPOINTMENT;
   const [availability, setAvailability] = useState<AvailabilityResult>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
@@ -235,20 +236,13 @@ export default function BookPage() {
                     <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
                       Drop-off Time
                     </label>
-                    <select
-                      value={dropoffTime}
-                      onChange={(e) => setDropoffTime(e.target.value)}
-                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm bg-white focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                    >
-                      {RENTAL_TIME_SLOTS.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                      <option value={AFTER_HOURS_OPTION}>{AFTER_HOURS_OPTION}</option>
-                    </select>
+                    <div className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#6e6a5e] text-sm bg-[#faf5ea]">
+                      {DROPOFF_BY_APPOINTMENT}
+                    </div>
                   </div>
                 </div>
                 <p className="text-xs text-[#6e6a5e] mb-6">
-                  Pickup &amp; drop-off available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and drop-off by appointment — just pick that option and we&apos;ll confirm a time with you.
+                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you.
                 </p>
 
                 <div className="mb-6">
