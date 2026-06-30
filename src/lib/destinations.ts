@@ -117,7 +117,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     knowBefore: {
       title: "What to know before you ride",
       items: [
-        { label: "Pickup", value: "9:00 AM at 1715 Samco Rd #107, Rapid City, SD" },
+        { label: "Pickup", value: "Every half hour, 8 AM to 6 PM (after-hours by appointment) at 1715 Samco Rd #107, Rapid City, SD" },
         { label: "Daily rate", value: "$130 + 11.9% SD tax" },
         { label: "Park passes", value: "Custer State Park + Black Hills NF passes included" },
         { label: "Best months", value: "Late May to mid-September (June and September are quietest)" },

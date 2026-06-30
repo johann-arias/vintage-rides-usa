@@ -33,6 +33,30 @@ export const CONTACT = {
   email: "wendy@vintagerides.travel",
 } as const;
 
+// Pickup / drop-off time slots offered at checkout.
+// Every 30 minutes from 8:00 AM through 6:00 PM, plus an after-hours option.
+// Anything outside this window is arranged directly with the team.
+export const AFTER_HOURS_OPTION = "After hours (by appointment)";
+
+function buildTimeSlots(): string[] {
+  const slots: string[] = [];
+  for (let minutes = 8 * 60; minutes <= 18 * 60; minutes += 30) {
+    const h24 = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    const period = h24 < 12 ? "AM" : "PM";
+    const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    slots.push(`${h12}:${m.toString().padStart(2, "0")} ${period}`);
+  }
+  return slots;
+}
+
+// e.g. ["8:00 AM", "8:30 AM", … , "6:00 PM"]
+export const RENTAL_TIME_SLOTS = buildTimeSlots();
+
+// Default standard pickup / return time.
+export const DEFAULT_PICKUP_TIME = "9:00 AM";
+export const DEFAULT_DROPOFF_TIME = "9:00 AM";
+
 export const CONTACT_LINKS = {
   phone: `tel:${CONTACT.phone.e164}`,
   whatsapp: `https://wa.me/${CONTACT.whatsapp.e164.replace("+", "")}`,

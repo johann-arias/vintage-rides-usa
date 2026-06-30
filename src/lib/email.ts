@@ -1,4 +1,10 @@
-import { PICKUP_LOCATION, PICKUP_ADDRESS_INLINE, PICKUP_DIRECTIONS_URL } from "./location";
+import {
+  PICKUP_LOCATION,
+  PICKUP_ADDRESS_INLINE,
+  PICKUP_DIRECTIONS_URL,
+  DEFAULT_PICKUP_TIME,
+  DEFAULT_DROPOFF_TIME,
+} from "./location";
 
 interface BookingConfirmationInput {
   bookingId: string;
@@ -7,6 +13,8 @@ interface BookingConfirmationInput {
   email: string;
   startDate: string;
   endDate: string;
+  pickupTime?: string;
+  dropoffTime?: string;
   totalDays: number;
   bikeCount: number;
   totalPrice: number;
@@ -34,6 +42,14 @@ function fmtDate(iso: string): string {
 
 function fmtMoney(amount: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+}
+
+function pickupTimeOf(b: BookingConfirmationInput): string {
+  return b.pickupTime?.trim() || DEFAULT_PICKUP_TIME;
+}
+
+function dropoffTimeOf(b: BookingConfirmationInput): string {
+  return b.dropoffTime?.trim() || DEFAULT_DROPOFF_TIME;
 }
 
 export async function sendBookingConfirmation(b: BookingConfirmationInput): Promise<void> {
@@ -73,6 +89,8 @@ export async function sendBookingConfirmation(b: BookingConfirmationInput): Prom
 
 function renderHtml(b: BookingConfirmationInput): string {
   const bikeWord = b.bikeCount === 1 ? "bike" : "bikes";
+  const pTime = pickupTimeOf(b);
+  const dTime = dropoffTimeOf(b);
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,10 +133,12 @@ function renderHtml(b: BookingConfirmationInput): string {
                         <td style="padding:18px 20px;border-bottom:1px solid #e8e6e0;border-right:1px solid #e8e6e0;width:50%;">
                           <div style="font-size:10px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#8a8a86;margin-bottom:4px;">Pickup</div>
                           <div style="font-size:15px;color:#111110;">${fmtDate(b.startDate)}</div>
+                          <div style="font-size:13px;color:#5b5b58;margin-top:2px;">${escapeHtml(pTime)}</div>
                         </td>
                         <td style="padding:18px 20px;border-bottom:1px solid #e8e6e0;width:50%;">
                           <div style="font-size:10px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#8a8a86;margin-bottom:4px;">Return</div>
                           <div style="font-size:15px;color:#111110;">${fmtDate(b.endDate)}</div>
+                          <div style="font-size:13px;color:#5b5b58;margin-top:2px;">${escapeHtml(dTime)}</div>
                         </td>
                       </tr>
                     </table>
@@ -159,7 +179,7 @@ function renderHtml(b: BookingConfirmationInput): string {
                   <td style="padding:18px 20px;">
                     <div style="font-size:15px;font-weight:600;color:#111110;margin-bottom:4px;">${escapeHtml(PICKUP_LOCATION.name)}</div>
                     <div style="font-size:14px;color:#2a2a28;line-height:1.5;">${escapeHtml(PICKUP_LOCATION.street)}<br />${escapeHtml(PICKUP_LOCATION.city)}, ${escapeHtml(PICKUP_LOCATION.state)} ${escapeHtml(PICKUP_LOCATION.zip)}</div>
-                    <div style="font-size:13px;color:#2a2a28;margin-top:10px;">Pickup at <strong style="color:#111110;">9:00 AM</strong> · Return by <strong style="color:#111110;">9:00 AM</strong></div>
+                    <div style="font-size:13px;color:#2a2a28;margin-top:10px;">Pickup at <strong style="color:#111110;">${escapeHtml(pTime)}</strong> · Return by <strong style="color:#111110;">${escapeHtml(dTime)}</strong></div>
                     <a href="${PICKUP_DIRECTIONS_URL}" style="display:inline-block;margin-top:12px;font-size:13px;color:#c8a45a;text-decoration:none;font-weight:600;">Get directions →</a>
                   </td>
                 </tr>
@@ -173,7 +193,7 @@ function renderHtml(b: BookingConfirmationInput): string {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                 ${[
                   "Save this email — your booking reference is your check-in code.",
-                  `On your start date, head to ${PICKUP_ADDRESS_INLINE} for 9:00 AM pickup. Return by 9:00 AM on your end date.`,
+                  `On your start date, head to ${PICKUP_ADDRESS_INLINE} for ${pTime} pickup. Return by ${dTime} on your end date.`,
                   "Want GPX routes for the Black Hills, Badlands or Needles Highway? Just reply.",
                 ]
                   .map(
@@ -211,6 +231,8 @@ function renderHtml(b: BookingConfirmationInput): string {
 
 function renderText(b: BookingConfirmationInput): string {
   const bikeWord = b.bikeCount === 1 ? "bike" : "bikes";
+  const pTime = pickupTimeOf(b);
+  const dTime = dropoffTimeOf(b);
   return [
     `BOOKING CONFIRMED — Vintage Rides USA`,
     ``,
@@ -219,8 +241,8 @@ function renderText(b: BookingConfirmationInput): string {
     `Thanks for choosing Vintage Rides USA. Your Royal Enfield Himalayan 450 ${b.bikeCount === 1 ? "is" : "are"} reserved.`,
     ``,
     `Booking reference: ${b.bookingId}`,
-    `Pickup:   ${fmtDate(b.startDate)}`,
-    `Return:   ${fmtDate(b.endDate)}`,
+    `Pickup:   ${fmtDate(b.startDate)} · ${pTime}`,
+    `Return:   ${fmtDate(b.endDate)} · ${dTime}`,
     `Duration: ${b.totalDays} ${b.totalDays === 1 ? "day" : "days"}`,
     `Bikes:    ${b.bikeCount} ${bikeWord}`,
     `Total:    ${fmtMoney(b.totalPrice)} (tax included, paid via Stripe)`,
@@ -229,12 +251,12 @@ function renderText(b: BookingConfirmationInput): string {
     `  ${PICKUP_LOCATION.name}`,
     `  ${PICKUP_LOCATION.street}`,
     `  ${PICKUP_LOCATION.city}, ${PICKUP_LOCATION.state} ${PICKUP_LOCATION.zip}`,
-    `  Pickup at 9:00 AM · Return by 9:00 AM`,
+    `  Pickup at ${pTime} · Return by ${dTime}`,
     `  Directions: ${PICKUP_DIRECTIONS_URL}`,
     ``,
     `What's next:`,
     `1. Save this email — your booking reference is your check-in code.`,
-    `2. On your start date, head to ${PICKUP_ADDRESS_INLINE} for 9:00 AM pickup. Return by 9:00 AM on your end date.`,
+    `2. On your start date, head to ${PICKUP_ADDRESS_INLINE} for ${pTime} pickup. Return by ${dTime} on your end date.`,
     `3. Want GPX routes for the Black Hills, Badlands or Needles Highway? Just reply.`,
     ``,
     `Questions? Reply to this email.`,
@@ -255,6 +277,8 @@ export async function sendInternalBookingNotification(b: InternalNotificationInp
   const tag = b.livemode ? "" : " [TEST]";
   const subject = `${b.livemode ? "" : "[TEST] "}New booking · ${b.firstName} ${b.lastName} · ${b.bookingId}`;
   const fullName = `${b.firstName} ${b.lastName}`.trim() || "(no name)";
+  const pTime = pickupTimeOf(b);
+  const dTime = dropoffTimeOf(b);
 
   const lines = [
     `New rental booking on vintageridesusa.com${tag}`,
@@ -266,8 +290,8 @@ export async function sendInternalBookingNotification(b: InternalNotificationInp
     `Email:      ${b.email}`,
     `Phone:      ${b.phone || "(not provided)"}`,
     ``,
-    `Pickup:     ${fmtDate(b.startDate)} (9:00 AM)`,
-    `Return:     ${fmtDate(b.endDate)} (9:00 AM)`,
+    `Pickup:     ${fmtDate(b.startDate)} (${pTime})`,
+    `Return:     ${fmtDate(b.endDate)} (${dTime})`,
     `Duration:   ${b.totalDays} ${b.totalDays === 1 ? "day" : "days"}`,
     `Bikes:      ${b.bikeCount} ${b.bikeCount === 1 ? "bike" : "bikes"}`,
     `Total paid: ${fmtMoney(b.totalPrice)}`,
@@ -291,8 +315,8 @@ export async function sendInternalBookingNotification(b: InternalNotificationInp
         <tr><td style="padding:6px 0;color:#8a8a86;">Email</td><td><a href="mailto:${escapeHtml(b.email)}" style="color:#c8a45a;text-decoration:none;">${escapeHtml(b.email)}</a></td></tr>
         <tr><td style="padding:6px 0;color:#8a8a86;">Phone</td><td>${b.phone ? `<a href="tel:${escapeHtml(b.phone)}" style="color:#c8a45a;text-decoration:none;">${escapeHtml(b.phone)}</a>` : '<span style="color:#8a8a86;">(not provided)</span>'}</td></tr>
         <tr><td colspan="2" style="padding:8px 0;"><div style="border-top:1px solid #e8e6e0;"></div></td></tr>
-        <tr><td style="padding:6px 0;color:#8a8a86;">Pickup</td><td style="color:#111110;">${fmtDate(b.startDate)} · 9:00 AM</td></tr>
-        <tr><td style="padding:6px 0;color:#8a8a86;">Return</td><td style="color:#111110;">${fmtDate(b.endDate)} · 9:00 AM</td></tr>
+        <tr><td style="padding:6px 0;color:#8a8a86;">Pickup</td><td style="color:#111110;">${fmtDate(b.startDate)} · ${escapeHtml(pTime)}</td></tr>
+        <tr><td style="padding:6px 0;color:#8a8a86;">Return</td><td style="color:#111110;">${fmtDate(b.endDate)} · ${escapeHtml(dTime)}</td></tr>
         <tr><td style="padding:6px 0;color:#8a8a86;">Duration</td><td style="color:#111110;">${b.totalDays} ${b.totalDays === 1 ? "day" : "days"}</td></tr>
         <tr><td style="padding:6px 0;color:#8a8a86;">Bikes</td><td style="color:#111110;">${b.bikeCount} ${b.bikeCount === 1 ? "bike" : "bikes"}</td></tr>
         <tr><td style="padding:6px 0;color:#8a8a86;">Total paid</td><td style="color:#111110;font-weight:600;">${fmtMoney(b.totalPrice)}</td></tr>

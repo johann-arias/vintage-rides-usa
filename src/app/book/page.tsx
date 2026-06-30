@@ -4,7 +4,15 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL } from "@/lib/location";
+import {
+  PICKUP_LOCATION,
+  PICKUP_DIRECTIONS_URL,
+  PICKUP_MAP_EMBED_URL,
+  RENTAL_TIME_SLOTS,
+  AFTER_HOURS_OPTION,
+  DEFAULT_PICKUP_TIME,
+  DEFAULT_DROPOFF_TIME,
+} from "@/lib/location";
 
 type AvailabilityResult = {
   availableCount: number;
@@ -36,6 +44,8 @@ export default function BookPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [bikeCount, setBikeCount] = useState(1);
+  const [pickupTime, setPickupTime] = useState(DEFAULT_PICKUP_TIME);
+  const [dropoffTime, setDropoffTime] = useState(DEFAULT_DROPOFF_TIME);
   const [availability, setAvailability] = useState<AvailabilityResult>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
@@ -92,6 +102,8 @@ export default function BookPage() {
           startDate,
           endDate,
           bikeCount,
+          pickupTime,
+          dropoffTime,
           firstName,
           lastName,
           email,
@@ -203,8 +215,40 @@ export default function BookPage() {
                     />
                   </div>
                 </div>
+                <div className="grid md:grid-cols-2 gap-6 mb-3">
+                  <div>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
+                      Pickup Time
+                    </label>
+                    <select
+                      value={pickupTime}
+                      onChange={(e) => setPickupTime(e.target.value)}
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm bg-white focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
+                    >
+                      {RENTAL_TIME_SLOTS.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                      <option value={AFTER_HOURS_OPTION}>{AFTER_HOURS_OPTION}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
+                      Drop-off Time
+                    </label>
+                    <select
+                      value={dropoffTime}
+                      onChange={(e) => setDropoffTime(e.target.value)}
+                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm bg-white focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
+                    >
+                      {RENTAL_TIME_SLOTS.map((t) => (
+                        <option key={t} value={t}>{t}</option>
+                      ))}
+                      <option value={AFTER_HOURS_OPTION}>{AFTER_HOURS_OPTION}</option>
+                    </select>
+                  </div>
+                </div>
                 <p className="text-xs text-[#6e6a5e] mb-6">
-                  Pickup at <span className="text-[#1a1a17] font-medium">9:00 AM</span> · Return by <span className="text-[#1a1a17] font-medium">9:00 AM</span> the following day
+                  Pickup &amp; drop-off available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and drop-off by appointment — just pick that option and we&apos;ll confirm a time with you.
                 </p>
 
                 <div className="mb-6">
@@ -403,8 +447,8 @@ export default function BookPage() {
 
                 <div className="space-y-0 mb-8">
                   {[
-                    { label: "Pickup", value: `${new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · 9:00 AM` },
-                    { label: "Return", value: `${new Date(endDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · 9:00 AM` },
+                    { label: "Pickup", value: `${new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · ${pickupTime}` },
+                    { label: "Return", value: `${new Date(endDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · ${dropoffTime}` },
                     { label: "Duration", value: `${availability.pricing!.totalDays} day${availability.pricing!.totalDays !== 1 ? "s" : ""}` },
                     { label: "Bikes", value: `${bikeCount} × Royal Enfield Himalayan 450` },
                     { label: "Rider", value: `${firstName} ${lastName}` },

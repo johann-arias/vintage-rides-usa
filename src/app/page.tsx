@@ -443,7 +443,7 @@ export default function HomePage() {
                   </span>
                 </address>
                 <p className="text-white/60 text-sm mb-6">
-                  Pickup at <span className="text-white font-medium">9:00 AM</span> · Return by <span className="text-white font-medium">9:00 AM</span>
+                  Pickup &amp; drop-off every half hour, <span className="text-white font-medium">8:00 AM to 6:00 PM</span> · after-hours by appointment
                 </p>
                 <a
                   href={PICKUP_DIRECTIONS_URL}
