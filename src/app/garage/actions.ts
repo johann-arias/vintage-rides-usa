@@ -71,6 +71,8 @@ export async function createB2BBookingAction(formData: FormData) {
     assignedBikes: formData.getAll("bike").map(String).filter(Boolean),
     platform,
     notes: String(formData.get("notes") ?? "").trim() || undefined,
+    pickupTime: String(formData.get("pickupTime") ?? "").trim() || undefined,
+    dropoffTime: String(formData.get("dropoffTime") ?? "").trim() || undefined,
   });
 
   revalidatePath("/garage");
@@ -110,6 +112,8 @@ export async function updateBookingAction(formData: FormData) {
     status,
     platform: String(formData.get("platform") ?? "").trim() || undefined,
     notes: String(formData.get("notes") ?? "").trim() || undefined,
+    pickupTime: String(formData.get("pickupTime") ?? "").trim() || undefined,
+    dropoffTime: String(formData.get("dropoffTime") ?? "").trim() || undefined,
   });
 
   revalidatePath("/garage");

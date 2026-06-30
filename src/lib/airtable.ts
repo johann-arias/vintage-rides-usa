@@ -287,6 +287,8 @@ export interface AdminBooking {
   totalPrice: number;
   partnerPlatform?: string;
   notes?: string;
+  pickupTime?: string;
+  dropoffTime?: string;
   /** Bike Names pinned to this booking (from the Bike Names text field). */
   assignedBikes: string[];
 }
@@ -418,6 +420,8 @@ function mapBooking(r: AirtableRecord<FieldSet>): AdminBooking {
     totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
     partnerPlatform: platformMatch ? platformMatch[1].trim() : undefined,
     notes: (r.get("Special Requests") as string) ?? undefined,
+    pickupTime: (r.get("Pickup Time") as string) || undefined,
+    dropoffTime: (r.get("Drop-off Time") as string) || undefined,
     assignedBikes: ((r.get("Bike Names") as string) ?? "")
       .split(",")
       .map((s) => s.trim())
@@ -559,6 +563,8 @@ export interface B2BBookingInput {
   assignedBikes?: string[];
   platform: string;
   notes?: string;
+  pickupTime?: string;
+  dropoffTime?: string;
 }
 
 function daysBetween(start: string, end: string): number {
@@ -590,6 +596,8 @@ export async function createB2BBooking(input: B2BBookingInput): Promise<string> 
         Phone: input.phone ?? "",
         "Start Date": input.startDate,
         "End Date": input.endDate,
+        "Pickup Time": input.pickupTime ?? "",
+        "Drop-off Time": input.dropoffTime ?? "",
         "Number of Days": days,
         "Number of Bikes": n,
         "Bike Names": assigned.join(", "),
@@ -758,6 +766,8 @@ export interface UpdateBookingInput {
   status: RentalBooking["status"];
   platform?: string;
   notes?: string;
+  pickupTime?: string;
+  dropoffTime?: string;
 }
 
 /**
@@ -783,6 +793,8 @@ export async function updateBooking(
     Phone: input.phone ?? "",
     "Start Date": input.startDate,
     "End Date": input.endDate,
+    "Pickup Time": input.pickupTime ?? "",
+    "Drop-off Time": input.dropoffTime ?? "",
     "Number of Days": days,
     "Number of Bikes": n,
     "Bike Names": assigned.join(", "),

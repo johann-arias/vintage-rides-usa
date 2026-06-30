@@ -5,9 +5,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { BikePicker } from "@/components/admin/BikePicker";
 import { getAssignableBikes } from "@/lib/airtable";
+import {
+  BACKOFFICE_TIME_OPTIONS,
+  DEFAULT_PICKUP_TIME,
+  DROPOFF_BY_APPOINTMENT,
+} from "@/lib/location";
 import { createB2BBookingAction } from "../../actions";
 
 export const dynamic = "force-dynamic";
+
+const selectClass =
+  "h-9 w-full rounded-lg border border-input bg-white px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
 
 const ERRORS: Record<string, string> = {
   missing: "Fill in at least a customer name, the platform, and both dates.",
@@ -109,6 +117,39 @@ export default async function NewB2BBookingPage({
               {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                 <option key={n} value={n}>
                   {n}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="pickupTime">Pickup time</Label>
+            <select
+              id="pickupTime"
+              name="pickupTime"
+              defaultValue={DEFAULT_PICKUP_TIME}
+              className={selectClass}
+            >
+              {BACKOFFICE_TIME_OPTIONS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="dropoffTime">Drop-off time</Label>
+            <select
+              id="dropoffTime"
+              name="dropoffTime"
+              defaultValue={DROPOFF_BY_APPOINTMENT}
+              className={selectClass}
+            >
+              {BACKOFFICE_TIME_OPTIONS.map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>

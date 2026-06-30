@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBookingByRecordId, getAssignableBikes } from "@/lib/airtable";
+import { BACKOFFICE_TIME_OPTIONS } from "@/lib/location";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -44,6 +45,13 @@ export default async function EditBookingPage({
   if (!booking) notFound();
 
   const isB2B = booking.channel === "B2B";
+
+  // Include the booking's stored time even if it's not one of the standard
+  // options, so the select shows the real value instead of silently resetting.
+  const timeOptions = (current?: string) =>
+    current && !BACKOFFICE_TIME_OPTIONS.includes(current)
+      ? [current, ...BACKOFFICE_TIME_OPTIONS]
+      : BACKOFFICE_TIME_OPTIONS;
 
   return (
     <div className="mx-auto max-w-xl">
@@ -128,6 +136,41 @@ export default async function EditBookingPage({
               {STATUSES.map((s) => (
                 <option key={s} value={s}>
                   {s}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="pickupTime">Pickup time</Label>
+            <select
+              id="pickupTime"
+              name="pickupTime"
+              defaultValue={booking.pickupTime ?? ""}
+              className={selectClass}
+            >
+              <option value="">Not set</option>
+              {timeOptions(booking.pickupTime).map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="dropoffTime">Drop-off time</Label>
+            <select
+              id="dropoffTime"
+              name="dropoffTime"
+              defaultValue={booking.dropoffTime ?? ""}
+              className={selectClass}
+            >
+              <option value="">Not set</option>
+              {timeOptions(booking.dropoffTime).map((t) => (
+                <option key={t} value={t}>
+                  {t}
                 </option>
               ))}
             </select>

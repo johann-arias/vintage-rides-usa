@@ -58,6 +58,14 @@ export const DEFAULT_PICKUP_TIME = "9:00 AM";
 export const DROPOFF_BY_APPOINTMENT = "By appointment";
 export const DEFAULT_DROPOFF_TIME = DROPOFF_BY_APPOINTMENT;
 
+// Full option list for the backoffice (staff can set any of these for either
+// pickup or drop-off — unlike the public site, drop-off is not locked).
+export const BACKOFFICE_TIME_OPTIONS = [
+  ...RENTAL_TIME_SLOTS,
+  AFTER_HOURS_OPTION,
+  DROPOFF_BY_APPOINTMENT,
+];
+
 export const CONTACT_LINKS = {
   phone: `tel:${CONTACT.phone.e164}`,
   whatsapp: `https://wa.me/${CONTACT.whatsapp.e164.replace("+", "")}`,

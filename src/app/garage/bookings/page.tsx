@@ -113,6 +113,11 @@ export default async function BookingsPage({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {fmt(b.startDate)} → {fmt(b.endDate)}
+                    {b.pickupTime || b.dropoffTime ? (
+                      <div className="text-[0.7rem] text-muted-foreground">
+                        Pickup {b.pickupTime ?? "—"} · Drop-off {b.dropoffTime ?? "—"}
+                      </div>
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="font-medium">{b.numberOfBikes}</span>
