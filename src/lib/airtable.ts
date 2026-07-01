@@ -493,7 +493,10 @@ export function isStaffBooking(b: AdminBooking): boolean {
 
 export async function getTurnoverStats(): Promise<TurnoverStats> {
   const all = await getAllBookings();
-  const live = all.filter((b) => b.status !== "Cancelled" && !isStaffBooking(b));
+  // Exclude cancelled, staff, and not-yet-captured same-day holds (Pending Payment).
+  const live = all.filter(
+    (b) => b.status !== "Cancelled" && b.status !== "Pending Payment" && !isStaffBooking(b)
+  );
 
   // Two display buckets: B2B (marketplace, flat bike-day rate) vs everything
   // else (WEBSITE/DIRECT = real booking totals).
@@ -658,6 +661,110 @@ async function updateInBatches(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await base(table).update(records.slice(i, i + 10) as any);
   }
+}
+
+/** Everything the accept/decline flow needs about a same-day request. */
+export interface BookingForDecision {
+  recordId: string;
+  bookingId: string;
+  status: RentalBooking["status"];
+  paymentIntentId?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  startDate: string;
+  endDate: string;
+  numberOfDays: number;
+  numberOfBikes: number;
+  totalPrice: number;
+  pickupTime?: string;
+  dropoffTime?: string;
+}
+
+/** Look up a booking (by its public Booking ID) for the accept/decline flow. */
+export async function getBookingForDecision(
+  bookingId: string
+): Promise<BookingForDecision | null> {
+  const recs = await base(Tables.Bookings)
+    .select({ filterByFormula: `{Booking ID} = "${bookingId}"`, maxRecords: 1 })
+    .firstPage();
+  const r = recs[0];
+  if (!r) return null;
+  return {
+    recordId: r.id,
+    bookingId,
+    status: (r.get("Status") as RentalBooking["status"]) ?? "Confirmed",
+    paymentIntentId: (r.get("Stripe Payment Intent ID") as string) || undefined,
+    firstName: (r.get("First Name") as string) ?? "",
+    lastName: (r.get("Last Name") as string) ?? "",
+    email: (r.get("Email") as string) ?? "",
+    startDate: r.get("Start Date") as string,
+    endDate: r.get("End Date") as string,
+    numberOfDays: (r.get("Number of Days") as number) ?? 0,
+    numberOfBikes: (r.get("Number of Bikes") as number) ?? 1,
+    totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
+    pickupTime: (r.get("Pickup Time") as string) || undefined,
+    dropoffTime: (r.get("Drop-off Time") as string) || undefined,
+  };
+}
+
+/**
+ * Confirms a booking after its hold is captured: booking → Confirmed and every
+ * live (non-cancelled) block → Confirmed so the tentative hold becomes firm.
+ */
+export async function confirmBooking(bookingId: string): Promise<void> {
+  const bookingRecs = await base(Tables.Bookings)
+    .select({ filterByFormula: `{Booking ID} = "${bookingId}"` })
+    .all();
+  await updateInBatches(
+    Tables.Bookings,
+    bookingRecs.map((r) => ({ id: r.id, fields: { Status: "Confirmed" } }))
+  );
+
+  const blockRecs = await base(Tables.Blocks)
+    .select({
+      filterByFormula: `AND({Booking ID} = "${bookingId}", {Status} != "Cancelled")`,
+    })
+    .all();
+  await updateInBatches(
+    Tables.Blocks,
+    blockRecs.map((r) => ({ id: r.id, fields: { Status: "Confirmed" } }))
+  );
+}
+
+/**
+ * Same-day website requests still "Pending Payment" older than `hours` — the
+ * auto-release cron cancels their holds and frees the bikes. Website-only
+ * (VR-USA- prefix) so staff/B2B rows are never touched.
+ */
+export async function getExpiredPendingRequests(
+  hours: number
+): Promise<BookingForDecision[]> {
+  const recs = await base(Tables.Bookings)
+    .select({
+      filterByFormula: `AND(
+        {Status} = "Pending Payment",
+        LEFT({Booking ID}, 7) = "VR-USA-",
+        DATETIME_DIFF(NOW(), {Date de création}, 'hours') >= ${hours}
+      )`,
+    })
+    .all();
+  return recs.map((r) => ({
+    recordId: r.id,
+    bookingId: (r.get("Booking ID") as string) ?? "",
+    status: (r.get("Status") as RentalBooking["status"]) ?? "Pending Payment",
+    paymentIntentId: (r.get("Stripe Payment Intent ID") as string) || undefined,
+    firstName: (r.get("First Name") as string) ?? "",
+    lastName: (r.get("Last Name") as string) ?? "",
+    email: (r.get("Email") as string) ?? "",
+    startDate: r.get("Start Date") as string,
+    endDate: r.get("End Date") as string,
+    numberOfDays: (r.get("Number of Days") as number) ?? 0,
+    numberOfBikes: (r.get("Number of Bikes") as number) ?? 1,
+    totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
+    pickupTime: (r.get("Pickup Time") as string) || undefined,
+    dropoffTime: (r.get("Drop-off Time") as string) || undefined,
+  }));
 }
 
 /** Cancels a booking and all its bike blocks (frees the availability). */

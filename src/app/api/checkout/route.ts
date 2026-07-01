@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAvailableBikeCount, getActivePricingRules, calculateRentalPrice } from "@/lib/airtable";
-import { isSameDayOrPast } from "@/lib/booking-window";
+import { isSameDay, isPast } from "@/lib/booking-window";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
@@ -28,13 +28,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
-  // No same-day self-service booking — those are arranged on demand with the team.
-  if (isSameDayOrPast(startDate)) {
-    return NextResponse.json(
-      { error: "Same-day rentals can't be booked online. Please contact us and we'll set it up." },
-      { status: 400 }
-    );
+  // Past pickup dates are never bookable.
+  if (isPast(startDate)) {
+    return NextResponse.json({ error: "That pickup date is in the past." }, { status: 400 });
   }
+
+  // Same-day = request-to-book: authorize the card now, capture only once the
+  // team confirms a bike. Advance bookings are charged immediately as usual.
+  const requestToBook = isSameDay(startDate);
 
   // Re-check availability server-side (never trust client)
   const available = await getAvailableBikeCount(startDate, endDate);
@@ -62,6 +63,10 @@ export async function POST(req: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
+    // Same-day: authorize only (manual capture). Advance: default (auto capture).
+    ...(requestToBook
+      ? { payment_intent_data: { capture_method: "manual" as const } }
+      : {}),
     customer_email: email,
     line_items: [
       {
@@ -91,8 +96,11 @@ export async function POST(req: NextRequest) {
       specialRequests: specialRequests ?? "",
       totalDays: String(pricing.totalDays),
       dailyRate: String(pricing.dailyRate),
+      requestToBook: requestToBook ? "1" : "",
     },
-    success_url: `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}${
+      requestToBook ? "&pending=1" : ""
+    }`,
     cancel_url: `${baseUrl}/book`,
   });
 

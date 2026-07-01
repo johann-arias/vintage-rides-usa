@@ -5,6 +5,11 @@ import {
   DEFAULT_PICKUP_TIME,
   DEFAULT_DROPOFF_TIME,
 } from "./location";
+import { SAME_DAY_REQUEST_EXPIRY_HOURS } from "./booking-window";
+
+const SAME_DAY_REQUEST_EXPIRY_HOURS_LABEL = `${SAME_DAY_REQUEST_EXPIRY_HOURS} hour${
+  (SAME_DAY_REQUEST_EXPIRY_HOURS as number) === 1 ? "" : "s"
+}`;
 
 interface BookingConfirmationInput {
   bookingId: string;
@@ -266,6 +271,184 @@ function renderText(b: BookingConfirmationInput): string {
     `Royal Enfield Himalayan 450 rentals — Rapid City, SD`,
     `https://www.vintageridesusa.com`,
   ].join("\n");
+}
+
+// ── Same-day request-to-book emails ─────────────────────────────────────────
+
+interface BrevoMessage {
+  to: { email: string; name?: string }[];
+  subject: string;
+  html: string;
+  text: string;
+  replyTo?: { email: string; name?: string };
+  tags?: string[];
+}
+
+async function sendBrevo(msg: BrevoMessage, context: string): Promise<void> {
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    console.error(`BREVO_API_KEY missing — skipping ${context}`);
+    return;
+  }
+  const res = await fetch(BREVO_ENDPOINT, {
+    method: "POST",
+    headers: { "api-key": apiKey, "content-type": "application/json", accept: "application/json" },
+    body: JSON.stringify({
+      sender: SENDER,
+      replyTo: msg.replyTo ?? REPLY_TO,
+      to: msg.to,
+      subject: msg.subject,
+      htmlContent: msg.html,
+      textContent: msg.text,
+      tags: msg.tags ?? ["vintage-rides-usa"],
+    }),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Brevo ${context} failed ${res.status}: ${body}`);
+  }
+}
+
+/** Customer email right after a same-day booking is REQUESTED (card authorized, not charged). */
+export async function sendBookingRequestReceived(b: BookingConfirmationInput): Promise<void> {
+  const pTime = pickupTimeOf(b);
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2a2a28;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8e6e0;">
+    <tr><td style="background:#111110;padding:24px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#c8a45a;">Request received</div>
+      <div style="color:#ffffff;font-size:14px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;margin-top:8px;">VINTAGE RIDES <span style="color:#c8a45a;font-weight:400;">USA</span></div>
+    </td></tr>
+    <tr><td style="padding:32px 28px;">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:300;color:#111110;">Hi ${escapeHtml(b.firstName)}, we've got your same-day request.</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5b5b58;">Because you're riding today, your booking is a quick request rather than an instant confirmation. <strong style="color:#111110;">We've authorized ${fmtMoney(b.totalPrice)} on your card but not charged it.</strong> Our team in Rapid City will confirm a bike is ready and only then complete the payment — usually within a couple of hours.</p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5b5b58;">If we can't get you on a bike today, the hold is released automatically and you're charged nothing.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e8e6e0;border-radius:2px;margin-top:8px;">
+        <tr><td style="padding:16px 20px;font-size:14px;line-height:1.7;color:#2a2a28;">
+          <div><span style="color:#8a8a86;">Reference:</span> <strong>${escapeHtml(b.bookingId)}</strong></div>
+          <div><span style="color:#8a8a86;">Pickup:</span> ${fmtDate(b.startDate)} · ${escapeHtml(pTime)}</div>
+          <div><span style="color:#8a8a86;">Bikes:</span> ${b.bikeCount}</div>
+          <div><span style="color:#8a8a86;">Authorized:</span> ${fmtMoney(b.totalPrice)} (not yet charged)</div>
+        </td></tr>
+      </table>
+      <p style="margin:20px 0 0;font-size:13px;color:#8a8a86;">Questions? Just reply — you'll reach the team directly.</p>
+    </td></tr>
+  </table></body></html>`;
+  const text = [
+    `REQUEST RECEIVED — Vintage Rides USA`,
+    ``,
+    `Hi ${b.firstName},`,
+    ``,
+    `Because you're riding today, this is a request rather than an instant booking.`,
+    `We've authorized ${fmtMoney(b.totalPrice)} on your card but NOT charged it. Our team`,
+    `will confirm a bike is ready and only then take payment (usually within a couple hours).`,
+    `If we can't confirm today, the hold is released and you're charged nothing.`,
+    ``,
+    `Reference: ${b.bookingId}`,
+    `Pickup:    ${fmtDate(b.startDate)} · ${pTime}`,
+    `Bikes:     ${b.bikeCount}`,
+    `Authorized: ${fmtMoney(b.totalPrice)} (not yet charged)`,
+    ``,
+    `Questions? Reply to this email.`,
+  ].join("\n");
+  await sendBrevo(
+    { to: [{ email: b.email, name: `${b.firstName} ${b.lastName}`.trim() }], subject: `We've got your same-day request — ${b.bookingId}`, html, text, tags: ["booking-request-received", "vintage-rides-usa"] },
+    "booking request-received email"
+  );
+}
+
+/** Customer email when a same-day request is declined or auto-released (hold cancelled). */
+export async function sendBookingDeclined(b: BookingConfirmationInput): Promise<void> {
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2a2a28;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8e6e0;">
+    <tr><td style="background:#111110;padding:24px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#c8a45a;">Booking update</div>
+      <div style="color:#ffffff;font-size:14px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;margin-top:8px;">VINTAGE RIDES <span style="color:#c8a45a;font-weight:400;">USA</span></div>
+    </td></tr>
+    <tr><td style="padding:32px 28px;">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:300;color:#111110;">Hi ${escapeHtml(b.firstName)}, we couldn't confirm a bike for today.</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5b5b58;">Unfortunately we weren't able to get you on a bike for your same-day request (${escapeHtml(b.bookingId)}). <strong style="color:#111110;">The ${fmtMoney(b.totalPrice)} hold on your card has been released — you have not been charged.</strong></p>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5b5b58;">We'd love to get you riding on another day. Just reply to this email or book again on the site and we'll sort it out.</p>
+      <p style="margin:20px 0 0;font-size:13px;color:#8a8a86;">Sorry for the inconvenience — the team in Rapid City.</p>
+    </td></tr>
+  </table></body></html>`;
+  const text = [
+    `BOOKING UPDATE — Vintage Rides USA`,
+    ``,
+    `Hi ${b.firstName},`,
+    ``,
+    `We weren't able to confirm a bike for your same-day request (${b.bookingId}).`,
+    `The ${fmtMoney(b.totalPrice)} hold on your card has been released — you have NOT been charged.`,
+    ``,
+    `We'd love to get you riding another day. Reply to this email or book again anytime.`,
+    ``,
+    `Sorry for the inconvenience — the team in Rapid City.`,
+  ].join("\n");
+  await sendBrevo(
+    { to: [{ email: b.email, name: `${b.firstName} ${b.lastName}`.trim() }], subject: `Update on your same-day request — ${b.bookingId}`, html, text, tags: ["booking-declined", "vintage-rides-usa"] },
+    "booking declined email"
+  );
+}
+
+interface RequestNotificationInput extends InternalNotificationInput {
+  acceptUrl: string;
+  declineUrl: string;
+}
+
+/** Internal PENDING alert with one-click Accept / Decline for a same-day request. */
+export async function sendInternalBookingRequest(b: RequestNotificationInput): Promise<void> {
+  const fullName = `${b.firstName} ${b.lastName}`.trim() || "(no name)";
+  const pTime = pickupTimeOf(b);
+  const dTime = dropoffTimeOf(b);
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2a2a28;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8e6e0;">
+    <tr><td style="background:#b34b00;padding:20px 24px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#ffd9b3;">Same-day request · action required</div>
+      <div style="color:#ffffff;font-size:13px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;margin-top:6px;">VINTAGE RIDES USA</div>
+    </td></tr>
+    <tr><td style="padding:24px;">
+      <p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#2a2a28;">A customer wants to ride <strong>today</strong>. Their card is <strong>authorized for ${fmtMoney(b.totalPrice)} but not charged</strong>. Accept to capture payment and confirm, or Decline to release the hold.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:14px;line-height:1.6;color:#2a2a28;">
+        <tr><td style="padding:5px 0;color:#8a8a86;width:130px;">Booking</td><td style="font-family:'SF Mono',Menlo,monospace;color:#111110;">${escapeHtml(b.bookingId)}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Customer</td><td style="color:#111110;font-weight:600;">${escapeHtml(fullName)}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Email</td><td><a href="mailto:${escapeHtml(b.email)}" style="color:#c8a45a;text-decoration:none;">${escapeHtml(b.email)}</a></td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Phone</td><td>${b.phone ? escapeHtml(b.phone) : '<span style="color:#8a8a86;">(not provided)</span>'}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Pickup</td><td style="color:#111110;">${fmtDate(b.startDate)} · ${escapeHtml(pTime)}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Return</td><td style="color:#111110;">${fmtDate(b.endDate)} · ${escapeHtml(dTime)}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Bikes</td><td style="color:#111110;">${b.bikeCount}</td></tr>
+        <tr><td style="padding:5px 0;color:#8a8a86;">Authorized</td><td style="color:#111110;font-weight:600;">${fmtMoney(b.totalPrice)} (hold)</td></tr>
+      </table>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0 8px;">
+        <tr>
+          <td style="padding-right:12px;"><a href="${b.acceptUrl}" style="display:inline-block;background:#2e7d32;color:#ffffff;font-weight:600;font-size:14px;text-decoration:none;padding:13px 26px;border-radius:3px;">✓ Accept &amp; charge</a></td>
+          <td><a href="${b.declineUrl}" style="display:inline-block;background:#ffffff;color:#b3261e;border:1px solid #e0c0bc;font-weight:600;font-size:14px;text-decoration:none;padding:12px 24px;border-radius:3px;">✕ Decline &amp; release</a></td>
+        </tr>
+      </table>
+      <p style="margin:14px 0 0;font-size:12px;color:#8a8a86;">If nobody acts, the hold auto-releases in ${SAME_DAY_REQUEST_EXPIRY_HOURS_LABEL}. You can also handle it in the garage.</p>
+    </td></tr>
+  </table></body></html>`;
+  const text = [
+    `SAME-DAY REQUEST — ACTION REQUIRED — Vintage Rides USA`,
+    ``,
+    `A customer wants to ride TODAY. Card authorized for ${fmtMoney(b.totalPrice)}, not charged.`,
+    ``,
+    `Booking:    ${b.bookingId}`,
+    `Customer:   ${fullName}`,
+    `Email:      ${b.email}`,
+    `Phone:      ${b.phone || "(not provided)"}`,
+    `Pickup:     ${fmtDate(b.startDate)} · ${pTime}`,
+    `Return:     ${fmtDate(b.endDate)} · ${dTime}`,
+    `Bikes:      ${b.bikeCount}`,
+    `Authorized: ${fmtMoney(b.totalPrice)} (hold)`,
+    ``,
+    `ACCEPT & charge:   ${b.acceptUrl}`,
+    `DECLINE & release: ${b.declineUrl}`,
+    ``,
+    `If nobody acts, the hold auto-releases in ${SAME_DAY_REQUEST_EXPIRY_HOURS_LABEL}.`,
+  ].join("\n");
+  await sendBrevo(
+    { to: INTERNAL_RECIPIENTS, subject: `${b.livemode ? "" : "[TEST] "}⚡ Same-day request · ${fullName} · ${b.bookingId}`, html, text, replyTo: { email: b.email, name: fullName }, tags: ["booking-request-internal", "vintage-rides-usa", b.livemode ? "live" : "test"] },
+    "internal booking request email"
+  );
 }
 
 export async function sendInternalBookingNotification(b: InternalNotificationInput): Promise<void> {

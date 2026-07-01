@@ -11,6 +11,7 @@ import {
   updateBikeMileage,
   type RentalBooking,
 } from "@/lib/airtable";
+import { resolveBookingDecision } from "@/lib/booking-decision";
 
 const VALID_STATUS = new Set<RentalBooking["status"]>([
   "Pending Payment",
@@ -153,6 +154,32 @@ export async function updateBikeMileageAction(formData: FormData) {
     revalidatePath("/garage/fleet");
   }
   redirect("/garage/fleet?mileage=1");
+}
+
+/** Accept a same-day request: capture the hold, confirm, email the customer. */
+export async function acceptBookingRequestAction(formData: FormData) {
+  await requireAuth();
+  const bookingId = String(formData.get("bookingId") ?? "").trim();
+  if (bookingId) {
+    const result = await resolveBookingDecision(bookingId, "accept");
+    revalidatePath("/garage");
+    revalidatePath("/garage/bookings");
+    if (!result.ok) redirect(`/garage/bookings?decision_error=${encodeURIComponent(result.error ?? "failed")}`);
+  }
+  redirect("/garage/bookings?accepted=1");
+}
+
+/** Decline a same-day request: release the hold, free the bikes, email the customer. */
+export async function declineBookingRequestAction(formData: FormData) {
+  await requireAuth();
+  const bookingId = String(formData.get("bookingId") ?? "").trim();
+  if (bookingId) {
+    const result = await resolveBookingDecision(bookingId, "decline");
+    revalidatePath("/garage");
+    revalidatePath("/garage/bookings");
+    if (!result.ok) redirect(`/garage/bookings?decision_error=${encodeURIComponent(result.error ?? "failed")}`);
+  }
+  redirect("/garage/bookings?declined=1");
 }
 
 export async function cancelBookingAction(formData: FormData) {

@@ -8,21 +8,33 @@ import {
   PICKUP_MAP_EMBED_URL,
 } from "@/lib/location";
 
-export default function ConfirmationPage() {
+export default async function ConfirmationPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ pending?: string }>;
+}) {
+  const { pending } = await searchParams;
+  const isPending = pending === "1";
   return (
     <>
       <Navbar />
       <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
         <div className="max-w-xl mx-auto px-6 py-24 text-center">
           <div className="text-6xl mb-6">🏍</div>
-          <div className="inline-block bg-green-100 text-green-700 text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full mb-6">
-            Booking Confirmed
+          <div
+            className={`inline-block text-xs font-semibold tracking-widest uppercase px-4 py-2 rounded-full mb-6 ${
+              isPending ? "bg-[#f6e6c4] text-[#8a6516]" : "bg-green-100 text-green-700"
+            }`}
+          >
+            {isPending ? "Request received" : "Booking Confirmed"}
           </div>
           <h1 className="text-[#1a1a17] text-3xl md:text-4xl font-light mb-4">
-            You&apos;re all set.
+            {isPending ? "We're on it." : "You're all set."}
           </h1>
           <p className="text-[#6e6a5e] text-lg leading-relaxed mb-8">
-            Your booking is confirmed. A confirmation email is on its way with your booking reference.
+            {isPending
+              ? "Because you're riding today, your card is authorized but not yet charged. Our team is confirming a bike and will finalize your booking shortly — watch your inbox for the confirmation. If we can't confirm, the hold is released and you're not charged."
+              : "Your booking is confirmed. A confirmation email is on its way with your booking reference."}
           </p>
 
           <div className="bg-white border border-[#e8e3d3] rounded-sm overflow-hidden text-left mb-6">

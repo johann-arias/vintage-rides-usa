@@ -12,8 +12,6 @@ import {
   AFTER_HOURS_OPTION,
   DEFAULT_PICKUP_TIME,
   DROPOFF_BY_APPOINTMENT,
-  CONTACT,
-  CONTACT_LINKS,
 } from "@/lib/location";
 import { earliestBookableDate } from "@/lib/booking-window";
 
@@ -22,7 +20,8 @@ type AvailabilityResult = {
   requested: number;
   canBook: boolean;
   outOfSeason?: boolean;
-  sameDay?: boolean;
+  requestToBook?: boolean;
+  pastDate?: boolean;
   pricing: {
     dailyRate: number;
     totalDays: number;
@@ -247,7 +246,7 @@ export default function BookPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[#6e6a5e] mb-6">
-                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you. Online booking starts from tomorrow; for a same-day ride, <a href={CONTACT_LINKS.phone} className="text-[#d9a32b] font-medium hover:underline">contact us</a> and we&apos;ll arrange it on demand.
+                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you. Riding <span className="text-[#1a1a17] font-medium">today</span>? Same-day bookings are a quick request: we authorize your card and only charge once the team confirms your bike.
                 </p>
 
                 <div className="mb-6">
@@ -283,33 +282,15 @@ export default function BookPage() {
                 {availability && !checkingAvailability && (
                   <div
                     className={`rounded-sm px-5 py-5 border ${
-                      availability.sameDay
-                        ? "bg-[#faf5ea] border-[#e8d9b0]"
-                        : availability.canBook && !availability.outOfSeason
+                      availability.canBook && !availability.outOfSeason && !availability.pastDate
                         ? "bg-green-50 border-green-200"
                         : "bg-red-50 border-red-200"
                     }`}
                   >
-                    {availability.sameDay ? (
-                      <div>
-                        <p className="text-[#1a1a17] text-sm font-semibold mb-2">
-                          Riding today? Same-day rentals are arranged on demand.
-                        </p>
-                        <p className="text-[#6e6a5e] text-sm mb-3">
-                          We can&apos;t book same-day pickups online, but the team in Rapid City will get you on a bike fast. Reach out and we&apos;ll set it up.
-                        </p>
-                        <div className="flex flex-wrap gap-3 text-sm">
-                          <a href={CONTACT_LINKS.phone} className="text-[#d9a32b] font-semibold hover:underline">
-                            Call {CONTACT.phone.display}
-                          </a>
-                          <a href={CONTACT_LINKS.whatsapp} className="text-[#d9a32b] font-semibold hover:underline">
-                            WhatsApp
-                          </a>
-                          <a href={CONTACT_LINKS.email} className="text-[#d9a32b] font-semibold hover:underline">
-                            Email us
-                          </a>
-                        </div>
-                      </div>
+                    {availability.pastDate ? (
+                      <p className="text-red-700 text-sm font-medium">
+                        That pickup date is in the past. Please choose today or a later date.
+                      </p>
                     ) : availability.outOfSeason ? (
                       <p className="text-red-700 text-sm font-medium">
                         Bikes are not available for rental during those dates. Please select dates between May and September.
@@ -324,6 +305,13 @@ export default function BookPage() {
                         <p className="text-green-700 text-sm font-semibold mb-4">
                           {availability.availableCount} bike{availability.availableCount !== 1 ? "s" : ""} available — looks good!
                         </p>
+                        {availability.requestToBook && (
+                          <div className="mb-4 rounded-sm border border-[#e8d9b0] bg-[#faf5ea] px-4 py-3 text-sm text-[#8a6516]">
+                            <span className="font-semibold text-[#1a1a17]">Same-day request.</span> We&apos;ll
+                            authorize your card now but only charge once the team confirms your bike (usually within
+                            a couple of hours). If we can&apos;t, the hold is released and you&apos;re not charged.
+                          </div>
+                        )}
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between">
                             <span className="text-[#6e6a5e]">${availability.pricing!.dailyRate} × {availability.pricing!.totalDays} day{availability.pricing!.totalDays !== 1 ? "s" : ""} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
@@ -495,7 +483,10 @@ export default function BookPage() {
                 </div>
 
                 <p className="text-[#6e6a5e] text-xs leading-relaxed border-t border-[#e8e3d3] pt-4">
-                  By proceeding you agree to our Terms & Conditions. Full payment is charged at checkout.
+                  By proceeding you agree to our Terms & Conditions.{" "}
+                  {availability.requestToBook
+                    ? "For same-day rides your card is authorized (a hold) at checkout and only charged once we confirm your bike. If we can't confirm, the hold is released and you're not charged."
+                    : "Full payment is charged at checkout."}{" "}
                   Cancellation policy: 100% refund if cancelled 30+ days before pickup, 50% within 30 days, no refund within 7 days.
                 </p>
               </div>
@@ -517,6 +508,8 @@ export default function BookPage() {
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Redirecting…
                     </>
+                  ) : availability.requestToBook ? (
+                    `Request to Book · Authorize $${availability.pricing!.totalPrice.toLocaleString()}`
                   ) : (
                     `Pay $${availability.pricing!.totalPrice.toLocaleString()}`
                   )}

@@ -4,7 +4,11 @@ import { PlusCircle } from "lucide-react";
 import { getAllBookings, type AdminBooking } from "@/lib/airtable";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cancelBookingAction } from "../actions";
+import {
+  cancelBookingAction,
+  acceptBookingRequestAction,
+  declineBookingRequestAction,
+} from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +28,8 @@ function statusBadge(status: AdminBooking["status"]) {
     return <Badge variant="destructive">Cancelled</Badge>;
   if (status === "Completed")
     return <Badge variant="secondary">Completed</Badge>;
+  if (status === "Pending Payment")
+    return <Badge className="bg-[#b34b00]/12 text-[#b34b00]">Same-day request</Badge>;
   return (
     <Badge className="bg-[var(--brand-olive-700)]/12 text-[var(--brand-olive-700)]">
       {status}
@@ -42,10 +48,18 @@ function fmt(d: string) {
 export default async function BookingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ created?: string; cancelled?: string; updated?: string }>;
+  searchParams: Promise<{
+    created?: string;
+    cancelled?: string;
+    updated?: string;
+    accepted?: string;
+    declined?: string;
+    decision_error?: string;
+  }>;
 }) {
-  const { created, cancelled, updated } = await searchParams;
+  const { created, cancelled, updated, accepted, declined, decision_error } = await searchParams;
   const bookings = await getAllBookings();
+  const pendingCount = bookings.filter((b) => b.status === "Pending Payment").length;
 
   return (
     <div className="mx-auto max-w-5xl">
@@ -64,6 +78,26 @@ export default async function BookingsPage({
         </Button>
       </header>
 
+      {decision_error ? (
+        <p className="mb-4 rounded-lg border border-red-300 bg-red-50 px-4 py-2.5 text-sm text-red-700">
+          Couldn&apos;t complete that action: {decision_error}
+        </p>
+      ) : null}
+      {accepted ? (
+        <p className="mb-4 rounded-lg border border-green-300 bg-green-50 px-4 py-2.5 text-sm text-green-800">
+          Request accepted — payment captured and the customer confirmed.
+        </p>
+      ) : null}
+      {declined ? (
+        <p className="mb-4 rounded-lg border border-[#e8d9b0] bg-[#faf5ea] px-4 py-2.5 text-sm text-[#8a6516]">
+          Request declined — hold released and the customer notified.
+        </p>
+      ) : null}
+      {pendingCount > 0 ? (
+        <p className="mb-4 rounded-lg border border-[#b34b00]/30 bg-[#b34b00]/10 px-4 py-2.5 text-sm font-medium text-[#b34b00]">
+          {pendingCount} same-day request{pendingCount > 1 ? "s" : ""} awaiting your decision — accept to charge, decline to release.
+        </p>
+      ) : null}
       {created ? (
         <p className="mb-4 rounded-lg border border-[var(--brand-olive-700)]/30 bg-[var(--brand-olive-700)]/10 px-4 py-2.5 text-sm text-[var(--brand-olive-700)]">
           B2B booking created and bikes blocked.
@@ -131,21 +165,44 @@ export default async function BookingsPage({
                   </td>
                   <td className="px-4 py-3">{statusBadge(b.status)}</td>
                   <td className="px-4 py-3 text-right whitespace-nowrap">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      render={<Link href={`/garage/bookings/${b.id}/edit`} />}
-                    >
-                      Edit
-                    </Button>
-                    {b.status !== "Cancelled" ? (
-                      <form action={cancelBookingAction} className="inline">
-                        <input type="hidden" name="bookingId" value={b.bookingId} />
-                        <Button type="submit" variant="ghost" size="sm">
-                          Cancel
+                    {b.status === "Pending Payment" ? (
+                      <>
+                        <form action={acceptBookingRequestAction} className="inline">
+                          <input type="hidden" name="bookingId" value={b.bookingId} />
+                          <Button
+                            type="submit"
+                            size="sm"
+                            className="bg-[#2e7d32] text-white hover:bg-[#276b2b]"
+                          >
+                            Accept
+                          </Button>
+                        </form>
+                        <form action={declineBookingRequestAction} className="inline">
+                          <input type="hidden" name="bookingId" value={b.bookingId} />
+                          <Button type="submit" variant="ghost" size="sm" className="text-[#b3261e]">
+                            Decline
+                          </Button>
+                        </form>
+                      </>
+                    ) : (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          render={<Link href={`/garage/bookings/${b.id}/edit`} />}
+                        >
+                          Edit
                         </Button>
-                      </form>
-                    ) : null}
+                        {b.status !== "Cancelled" ? (
+                          <form action={cancelBookingAction} className="inline">
+                            <input type="hidden" name="bookingId" value={b.bookingId} />
+                            <Button type="submit" variant="ghost" size="sm">
+                              Cancel
+                            </Button>
+                          </form>
+                        ) : null}
+                      </>
+                    )}
                   </td>
                 </tr>
               ))}
