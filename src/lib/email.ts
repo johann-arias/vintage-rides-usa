@@ -33,6 +33,7 @@ const REPLY_TO = { name: "Vintage Rides USA", email: "wendy@vintagerides.travel"
 const INTERNAL_RECIPIENTS = [
   { email: "wendy@vintagerides.travel", name: "Wendy" },
   { email: "johann@vintagerides.com", name: "Johann" },
+  { email: "loomeronset@icloud.com", name: "Michael Loomer" },
 ];
 
 function fmtDate(iso: string): string {

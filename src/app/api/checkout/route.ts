@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getAvailableBikeCount, getActivePricingRules, calculateRentalPrice } from "@/lib/airtable";
+import { isSameDayOrPast } from "@/lib/booking-window";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
@@ -25,6 +26,14 @@ export async function POST(req: NextRequest) {
 
   if (!startDate || !endDate || !bikeCount || !firstName || !lastName || !email || !licenseNumber) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  // No same-day self-service booking — those are arranged on demand with the team.
+  if (isSameDayOrPast(startDate)) {
+    return NextResponse.json(
+      { error: "Same-day rentals can't be booked online. Please contact us and we'll set it up." },
+      { status: 400 }
+    );
   }
 
   // Re-check availability server-side (never trust client)

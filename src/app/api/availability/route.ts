@@ -4,6 +4,7 @@ import {
   getActivePricingRules,
   calculateRentalPrice,
 } from "@/lib/airtable";
+import { isSameDayOrPast } from "@/lib/booking-window";
 
 const NO_STORE = { "cache-control": "no-store, no-cache, must-revalidate" };
 
@@ -31,6 +32,20 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "endDate must be after startDate" }, { status: 400, headers: NO_STORE });
   }
 
+  // Same-day (or past) pickups are not self-service bookable — route to the team.
+  if (isSameDayOrPast(startDate)) {
+    return NextResponse.json(
+      {
+        availableCount: 0,
+        requested: bikes,
+        canBook: false,
+        outOfSeason: false,
+        sameDay: true,
+        pricing: null,
+      },
+      { headers: NO_STORE }
+    );
+  }
 
   try {
     const [availableCount, pricingRules] = await Promise.all([
@@ -46,6 +61,7 @@ export async function GET(req: NextRequest) {
         requested: bikes,
         canBook: availableCount >= bikes,
         outOfSeason: false,
+        sameDay: false,
         pricing: {
           dailyRate: pricing.dailyRate,
           totalDays: pricing.totalDays,

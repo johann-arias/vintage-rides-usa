@@ -12,13 +12,17 @@ import {
   AFTER_HOURS_OPTION,
   DEFAULT_PICKUP_TIME,
   DROPOFF_BY_APPOINTMENT,
+  CONTACT,
+  CONTACT_LINKS,
 } from "@/lib/location";
+import { earliestBookableDate } from "@/lib/booking-window";
 
 type AvailabilityResult = {
   availableCount: number;
   requested: number;
   canBook: boolean;
   outOfSeason?: boolean;
+  sameDay?: boolean;
   pricing: {
     dailyRate: number;
     totalDays: number;
@@ -30,7 +34,8 @@ type AvailabilityResult = {
 
 type Step = "dates" | "details" | "review";
 
-const today = new Date().toISOString().split("T")[0];
+// Earliest self-service pickup date (no same-day — those are arranged on demand).
+const earliest = earliestBookableDate();
 const minEnd = (start: string) => {
   const d = new Date(start);
   d.setDate(d.getDate() + 3);
@@ -192,7 +197,7 @@ export default function BookPage() {
                     </label>
                     <input
                       type="date"
-                      min={today}
+                      min={earliest}
                       value={startDate}
                       onChange={(e) => {
                         setStartDate(e.target.value);
@@ -209,7 +214,7 @@ export default function BookPage() {
                     </label>
                     <input
                       type="date"
-                      min={startDate ? minEnd(startDate) : today}
+                      min={startDate ? minEnd(startDate) : earliest}
                       value={endDate}
                       onChange={(e) => setEndDate(e.target.value)}
                       className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
@@ -242,7 +247,7 @@ export default function BookPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[#6e6a5e] mb-6">
-                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you.
+                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you. Online booking starts from tomorrow; for a same-day ride, <a href={CONTACT_LINKS.phone} className="text-[#d9a32b] font-medium hover:underline">contact us</a> and we&apos;ll arrange it on demand.
                 </p>
 
                 <div className="mb-6">
@@ -278,12 +283,34 @@ export default function BookPage() {
                 {availability && !checkingAvailability && (
                   <div
                     className={`rounded-sm px-5 py-5 border ${
-                      availability.canBook && !availability.outOfSeason
+                      availability.sameDay
+                        ? "bg-[#faf5ea] border-[#e8d9b0]"
+                        : availability.canBook && !availability.outOfSeason
                         ? "bg-green-50 border-green-200"
                         : "bg-red-50 border-red-200"
                     }`}
                   >
-                    {availability.outOfSeason ? (
+                    {availability.sameDay ? (
+                      <div>
+                        <p className="text-[#1a1a17] text-sm font-semibold mb-2">
+                          Riding today? Same-day rentals are arranged on demand.
+                        </p>
+                        <p className="text-[#6e6a5e] text-sm mb-3">
+                          We can&apos;t book same-day pickups online, but the team in Rapid City will get you on a bike fast. Reach out and we&apos;ll set it up.
+                        </p>
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          <a href={CONTACT_LINKS.phone} className="text-[#d9a32b] font-semibold hover:underline">
+                            Call {CONTACT.phone.display}
+                          </a>
+                          <a href={CONTACT_LINKS.whatsapp} className="text-[#d9a32b] font-semibold hover:underline">
+                            WhatsApp
+                          </a>
+                          <a href={CONTACT_LINKS.email} className="text-[#d9a32b] font-semibold hover:underline">
+                            Email us
+                          </a>
+                        </div>
+                      </div>
+                    ) : availability.outOfSeason ? (
                       <p className="text-red-700 text-sm font-medium">
                         Bikes are not available for rental during those dates. Please select dates between May and September.
                       </p>
