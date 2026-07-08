@@ -3,7 +3,7 @@ import { PICKUP_LOCATION, PICKUP_MAPS_URL, GOOGLE_REVIEW_URL } from "@/lib/locat
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1f2817] text-white/60 mt-auto">
+    <footer className="bg-[#2e3b23] text-white/60 mt-auto">
       <div className="max-w-7xl mx-auto px-6 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
           <div>

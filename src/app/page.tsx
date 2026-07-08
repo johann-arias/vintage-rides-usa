@@ -46,14 +46,14 @@ export default function HomePage() {
       <Navbar />
       <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
-        <section className="relative h-screen min-h-[600px] bg-[#1f2817] flex items-center overflow-hidden">
+        <section className="relative h-screen min-h-[600px] bg-[#2e3b23] flex items-center overflow-hidden">
           <div
-            className="absolute inset-0 bg-cover bg-center opacity-70"
+            className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: "url('/hero-himalayan-meadow-rider.jpg')" }}
             aria-hidden
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1f2817] via-[#1f2817]/40 to-transparent" aria-hidden />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-transparent to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#2e3b23]/85 via-[#2e3b23]/25 to-transparent" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#2e3b23]/55 via-transparent to-transparent" aria-hidden />
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
             <div className="max-w-2xl">
@@ -64,35 +64,35 @@ export default function HomePage() {
                 Ride the<br />
                 <span className="italic text-[#d9a32b]">Black Hills</span>
               </h1>
-              <p className="text-white/70 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
+              <p className="text-white/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
                 Rent a Royal Enfield Himalayan 450 in Rapid City and explore
                 the Black Hills, Badlands, and beyond.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link
                   href="/book"
-                  className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase"
+                  className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase shadow-sm"
                 >
                   Book Your Bike
                 </Link>
                 <Link
                   href="/fleet"
-                  className="border border-white/30 hover:border-white text-white font-medium tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase"
+                  className="border border-white/40 hover:border-white hover:bg-white/[0.06] text-white font-medium tracking-wider px-8 py-4 rounded-sm transition-colors text-center text-sm uppercase"
                 >
                   Explore the Fleet
                 </Link>
               </div>
-              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 text-sm text-white/70">
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-8 text-sm text-white/75">
                 <span className="flex items-center gap-2 tracking-wider">
                   <span className="text-[#d9a32b] tracking-[0.18em]" aria-hidden>★★★★★</span>
                   5.0 on Google
                 </span>
-                <span className="hidden sm:inline text-white/20" aria-hidden>|</span>
+                <span className="hidden sm:inline text-white/25" aria-hidden>|</span>
                 <span className="flex items-center gap-2 tracking-wider">
                   <span aria-hidden>🏆</span>
                   Co-founded by an Iron Butt Rally champion
                 </span>
-                <span className="hidden sm:inline text-white/20" aria-hidden>|</span>
+                <span className="hidden sm:inline text-white/25" aria-hidden>|</span>
                 <span className="flex items-center gap-2 tracking-wider">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/royal-enfield-logo.svg" alt="Royal Enfield" className="h-3 w-auto [filter:brightness(0)_invert(1)]" />
@@ -108,7 +108,7 @@ export default function HomePage() {
         </section>
 
         {/* ── Stats bar ────────────────────────────────────────────────────── */}
-        <section className="bg-[#26301c] border-y border-white/10">
+        <section className="bg-[#2e3b23] border-b border-white/10">
           <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
               { value: "10", label: "Bikes Available" },
@@ -125,34 +125,34 @@ export default function HomePage() {
         </section>
 
         {/* ── Meet Mike & Wendy ────────────────────────────────────────────── */}
-        <section id="our-story" className="bg-[#1f2817] py-24">
+        <section id="our-story" className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div className="relative order-2 md:order-1">
                 <div
-                  className="aspect-[4/3] bg-[#26301c] bg-cover bg-center rounded-sm overflow-hidden border border-white/10"
+                  className="aspect-[4/3] bg-[#e8e3d3] bg-cover bg-center rounded-sm overflow-hidden border border-[#e8e3d3]"
                   style={{ backgroundImage: "url('/mike-wendy-garage.jpg')" }}
                   role="img"
                   aria-label="Mike and Wendy with their dog Katie in the Vintage Rides USA garage in Rapid City"
                 />
-                <div className="absolute -bottom-6 -right-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm hidden md:block">
+                <div className="absolute -bottom-6 -right-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm shadow-md hidden md:block">
                   <div className="text-sm font-semibold italic">Mike &amp; Wendy</div>
                   <div className="text-xs tracking-wider uppercase opacity-70">Rapid City, SD</div>
                 </div>
               </div>
               <div className="order-1 md:order-2">
-                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts · Black Hills since 2018</p>
-                <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-5">
+                <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Your Local Hosts · Black Hills since 2018</p>
+                <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light leading-tight mb-5">
                   Meet Mike<br />
                   <span className="font-semibold">&amp; Wendy</span>
                 </h2>
-                <div className="inline-flex items-center gap-2.5 border border-[#d9a32b]/40 bg-[#d9a32b]/5 rounded-sm px-3.5 py-2 mb-7">
-                  <span className="text-[#d9a32b] text-base leading-none" aria-hidden>🏆</span>
-                  <span className="text-white/85 text-xs tracking-wider uppercase">
+                <div className="inline-flex items-center gap-2.5 border border-[#d9a32b]/50 bg-[#d9a32b]/10 rounded-sm px-3.5 py-2 mb-7">
+                  <span className="text-[#a9781a] text-base leading-none" aria-hidden>🏆</span>
+                  <span className="text-[#57534a] text-xs tracking-wider uppercase">
                     Wendy: first woman to win the Iron Butt Rally · 2019
                   </span>
                 </div>
-                <div className="space-y-5 text-white/70 text-lg leading-relaxed mb-8">
+                <div className="space-y-5 text-[#57534a] text-lg leading-relaxed mb-8">
                   <p>
                     Mike was born and raised right here in the Black Hills. He went off to
                     work in Hollywood for a while, but these roads have a way of calling you
@@ -181,7 +181,7 @@ export default function HomePage() {
                     the meat pies to match.
                   </p>
                 </div>
-                <p className="text-white text-base italic">
+                <p className="text-[#1a1a17] text-base italic">
                   Come ride with us. We&apos;ll treat you like a neighbor, not a number.
                 </p>
               </div>
@@ -190,11 +190,11 @@ export default function HomePage() {
         </section>
 
         {/* ── The Bike Feature ─────────────────────────────────────────────── */}
-        <section className="bg-[#faf5ea] py-24">
+        <section className="bg-white py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div>
-                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Machine</p>
+                <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Machine</p>
                 <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light leading-tight mb-6">
                   Royal Enfield<br />
                   <span className="font-semibold">Himalayan 450</span>
@@ -248,7 +248,7 @@ export default function HomePage() {
         </section>
 
         {/* ── How It Works ─────────────────────────────────────────────────── */}
-        <section id="how-it-works" className="bg-[#1f2817] py-24">
+        <section id="how-it-works" className="bg-[#2e3b23] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
               <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Process</p>
@@ -301,7 +301,7 @@ export default function HomePage() {
         <section className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="text-center mb-16">
-              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why Us</p>
+              <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why Us</p>
               <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light">
                 Born from 20 years of<br />guided adventures
               </h2>
@@ -379,10 +379,10 @@ export default function HomePage() {
         </section>
 
         {/* ── FAQ ──────────────────────────────────────────────────────────── */}
-        <section id="faq" className="bg-[#faf5ea] py-24">
+        <section id="faq" className="bg-white py-24">
           <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-14">
-              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">FAQ</p>
+              <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">FAQ</p>
               <h2 className="text-[#1a1a17] text-4xl font-light">Common Questions</h2>
             </div>
             <div className="space-y-6">
@@ -422,39 +422,39 @@ export default function HomePage() {
         </section>
 
         {/* ── Find Us ──────────────────────────────────────────────────────── */}
-        <section className="bg-[#26301c] py-24">
+        <section className="bg-[#faf5ea] py-24">
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Find Us</p>
-                <h2 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">
+                <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Find Us</p>
+                <h2 className="text-[#1a1a17] text-4xl md:text-5xl font-light leading-tight mb-6">
                   Our garage in<br />
                   <span className="font-semibold">Rapid City</span>
                 </h2>
-                <p className="text-white/60 text-lg leading-relaxed mb-8 max-w-md">
+                <p className="text-[#57534a] text-lg leading-relaxed mb-8 max-w-md">
                   Pick up your bike at our base on the western edge of Rapid City — minutes from
                   Highway 16 and the gateway to Mount Rushmore, the Black Hills, and beyond.
                 </p>
-                <address className="not-italic text-white text-base leading-relaxed mb-4">
+                <address className="not-italic text-[#1a1a17] text-base leading-relaxed mb-4">
                   <span className="block font-semibold tracking-wide">{PICKUP_LOCATION.name}</span>
-                  <span className="block text-white/70">{PICKUP_LOCATION.street}</span>
-                  <span className="block text-white/70">
+                  <span className="block text-[#57534a]">{PICKUP_LOCATION.street}</span>
+                  <span className="block text-[#57534a]">
                     {PICKUP_LOCATION.city}, {PICKUP_LOCATION.state} {PICKUP_LOCATION.zip}
                   </span>
                 </address>
-                <p className="text-white/60 text-sm mb-6">
-                  Pickup every half hour, <span className="text-white font-medium">8:00 AM to 6:00 PM</span> · drop-off &amp; after-hours by appointment
+                <p className="text-[#57534a] text-sm mb-6">
+                  Pickup every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span> · drop-off &amp; after-hours by appointment
                 </p>
                 <a
                   href={PICKUP_DIRECTIONS_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-block border border-[#d9a32b] text-[#d9a32b] hover:bg-[#d9a32b] hover:text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
+                  className="inline-block border border-[#455324] text-[#455324] hover:bg-[#455324] hover:text-white font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
                 >
                   Get Directions
                 </a>
               </div>
-              <div className="aspect-[4/3] md:aspect-auto md:h-[420px] rounded-sm overflow-hidden border border-white/10">
+              <div className="aspect-[4/3] md:aspect-auto md:h-[420px] rounded-sm overflow-hidden border border-[#e8e3d3]">
                 <iframe
                   title="Vintage Rides USA pickup location"
                   src={PICKUP_MAP_EMBED_URL}
@@ -476,7 +476,7 @@ export default function HomePage() {
             </p>
             <Link
               href="/book"
-              className="bg-[#1f2817] hover:bg-[#3a4a2c] text-white font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+              className="bg-[#2e3b23] hover:bg-[#3a4a2c] text-white font-semibold tracking-wider px-10 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
             >
               Book Now
             </Link>

@@ -33,7 +33,7 @@ export default function ContactButton() {
     <div ref={panelRef} className="fixed bottom-6 right-6 z-50">
       {open && (
         <div className="mb-3 w-80 bg-white border border-[#e8e3d3] rounded-sm shadow-xl overflow-hidden">
-          <div className="bg-[#1f2817] px-5 py-4 flex items-center justify-between">
+          <div className="bg-[#2e3b23] px-5 py-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#d9a32b]">Get in touch</p>
               <p className="text-white text-sm font-medium mt-0.5">Vintage Rides USA</p>

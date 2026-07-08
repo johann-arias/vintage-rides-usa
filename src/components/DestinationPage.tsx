@@ -56,14 +56,14 @@ export default function DestinationPage({ destination: d }: Props) {
       <Navbar />
       <main className="flex-1 pt-16">
         {/* Hero */}
-        <section className="relative h-[70vh] min-h-[500px] bg-[#1f2817] flex items-end overflow-hidden">
+        <section className="relative h-[70vh] min-h-[500px] bg-[#2e3b23] flex items-end overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-top opacity-70"
             style={{ backgroundImage: `url('${d.heroImage}')` }}
             aria-hidden
           />
           <div
-            className="absolute inset-0 bg-gradient-to-t from-[#1f2817] via-[#1f2817]/45 to-transparent"
+            className="absolute inset-0 bg-gradient-to-t from-[#2e3b23] via-[#2e3b23]/45 to-transparent"
             aria-hidden
           />
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full pb-16">
@@ -302,7 +302,7 @@ export default function DestinationPage({ destination: d }: Props) {
         </section>
 
         {/* CTA */}
-        <section className="bg-[#1f2817] py-20">
+        <section className="bg-[#2e3b23] py-20">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">
               Ready to ride

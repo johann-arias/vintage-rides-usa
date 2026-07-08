@@ -50,7 +50,7 @@ export default function FleetPage() {
       <Navbar />
       <main className="flex-1 pt-16">
         {/* Header */}
-        <section className="bg-[#1f2817] py-20">
+        <section className="bg-[#2e3b23] py-20">
           <div className="max-w-7xl mx-auto px-6">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
             <h1 className="text-white text-4xl md:text-6xl font-light leading-tight mb-4">
@@ -156,7 +156,7 @@ export default function FleetPage() {
         </section>
 
         {/* Pricing */}
-        <section className="bg-[#1f2817] py-20">
+        <section className="bg-[#2e3b23] py-20">
           <div className="max-w-4xl mx-auto px-6 text-center">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Pricing</p>
             <h2 className="text-white text-4xl font-light mb-12">Simple, transparent rates</h2>

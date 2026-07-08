@@ -27,7 +27,7 @@ export default function Navbar() {
   }, [ridesOpen]);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-[#1f2817]/90 backdrop-blur-md border-b border-white/10">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-[#2e3b23]/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -110,7 +110,7 @@ export default function Navbar() {
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden bg-[#1f2817] border-t border-white/10 px-6 py-4 flex flex-col gap-4">
+        <div className="md:hidden bg-[#2e3b23] border-t border-white/10 px-6 py-4 flex flex-col gap-4">
           <Link
             href="/#our-story"
             onClick={() => setOpen(false)}

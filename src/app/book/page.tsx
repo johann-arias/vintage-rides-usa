@@ -140,7 +140,7 @@ export default function BookPage() {
       <Navbar />
       <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
         {/* Header */}
-        <section className="bg-[#1f2817] py-14">
+        <section className="bg-[#2e3b23] py-14">
           <div className="max-w-3xl mx-auto px-6">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-3">Rental Booking</p>
             <h1 className="text-white text-3xl md:text-4xl font-light">Book Your Bike</h1>
@@ -501,7 +501,7 @@ export default function BookPage() {
                 <button
                   onClick={handleCheckout}
                   disabled={submitting}
-                  className="flex-[2] bg-[#1f2817] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
+                  className="flex-[2] bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>
