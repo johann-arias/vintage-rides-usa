@@ -278,7 +278,7 @@ export default function HomePage() {
                 },
               ].map((item) => (
                 <div key={item.step}>
-                  <div className="text-[#d9a32b]/20 text-7xl font-bold leading-none mb-4 select-none">
+                  <div className="text-[#d9a32b]/35 text-7xl font-bold leading-none mb-4 select-none">
                     {item.step}
                   </div>
                   <h3 className="text-white font-semibold mb-2">{item.title}</h3>
