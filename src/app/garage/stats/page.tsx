@@ -63,6 +63,49 @@ function NotConnected({ error, hint }: { error?: string; hint: string }) {
   );
 }
 
+/** Compact note for a sub-panel that failed while the rest of the section works. */
+function PanelNote({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs text-amber-900/80">
+      <AlertCircle className="size-4 shrink-0 translate-y-px text-amber-700" />
+      <p>{children}</p>
+    </div>
+  );
+}
+
+/** Daily bar chart, one thin column per day. */
+function DailyBars({ rows }: { rows: { date: string; views: number }[] }) {
+  const max = Math.max(1, ...rows.map((r) => r.views));
+  const MAX_BAR_PX = 80;
+  const label = (d: string) =>
+    new Date(`${d}T00:00:00Z`).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      timeZone: "UTC",
+    });
+  return (
+    <div>
+      <div className="flex h-20 items-end gap-px">
+        {rows.map((r) => (
+          <div
+            key={r.date}
+            className="flex-1 rounded-t bg-[var(--brand-olive-700)]"
+            style={{ height: `${r.views > 0 ? Math.max(2, (r.views / max) * MAX_BAR_PX) : 1}px` }}
+            title={`${label(r.date)}: ${int.format(r.views)} views`}
+          />
+        ))}
+      </div>
+      {rows.length > 0 ? (
+        <div className="mt-1.5 flex justify-between text-[10px] text-muted-foreground">
+          <span>{label(rows[0].date)}</span>
+          <span>Peak {int.format(max)} / day</span>
+          <span>{label(rows[rows.length - 1].date)}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /** Horizontal labelled bar, value-proportional. */
 function BarList({
   rows,
@@ -115,6 +158,13 @@ export default async function StatsPage() {
   const maxMonth = Math.max(1, ...turnover.byMonth.map((m) => m.total));
   const website = turnover.byChannel.find((c) => c.channel === "WEBSITE")!;
   const b2b = turnover.byChannel.find((c) => c.channel === "B2B")!;
+
+  const totalViews = gbp.performance.searchImpressions + gbp.performance.mapsImpressions;
+  const totalActions =
+    gbp.performance.callClicks + gbp.performance.websiteClicks + gbp.performance.directionRequests;
+  // Google reports exact counts only above a threshold; the rest are "fewer than N".
+  const rankedKeywords = gbp.searchKeywords.filter((k) => !k.isThreshold);
+  const lowVolumeKeywords = gbp.searchKeywords.filter((k) => k.isThreshold);
 
   return (
     <div className="mx-auto max-w-5xl space-y-12">
@@ -313,56 +363,162 @@ export default async function StatsPage() {
         <SectionHeader
           icon={Star}
           title="Google Business Profile"
-          meta={`reviews · performance last ${gbp.rangeDays} days`}
+          meta={
+            gbp.connected
+              ? `${gbp.profile?.title ?? "profile"} · ${gbp.startDate} → ${gbp.endDate}`
+              : `last ${gbp.rangeDays} days`
+          }
         />
         {gbp.connected ? (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               <Kpi
                 label="Rating"
                 value={gbp.reviews.totalCount ? `${gbp.reviews.averageRating.toFixed(1)}★` : "—"}
-                sub={gbp.reviews.totalCount ? `${gbp.reviews.totalCount} reviews` : undefined}
+                sub={gbp.reviews.totalCount ? `${gbp.reviews.totalCount} reviews` : "No reviews yet"}
               />
-              <Kpi label="Calls" value={int.format(gbp.performance.callClicks)} />
-              <Kpi label="Website clicks" value={int.format(gbp.performance.websiteClicks)} />
-              <Kpi label="Directions" value={int.format(gbp.performance.directionRequests)} />
-              <Kpi label="Search views" value={int.format(gbp.performance.searchImpressions)} />
-              <Kpi label="Maps views" value={int.format(gbp.performance.mapsImpressions)} />
+              <Kpi label="Total views" value={int.format(totalViews)} sub="search + maps" />
+              <Kpi label="Actions" value={int.format(totalActions)} sub="calls, clicks, directions" />
               <Kpi
-                label="Total views"
-                value={int.format(
-                  gbp.performance.searchImpressions + gbp.performance.mapsImpressions
-                )}
+                label="Action rate"
+                value={totalViews ? pct(totalActions / totalViews) : "—"}
+                sub="actions per view"
               />
             </div>
 
-            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-              <p className="mb-3 font-medium">Recent reviews</p>
-              {gbp.reviews.recent.length > 0 ? (
-                <ul className="space-y-3">
-                  {gbp.reviews.recent.map((r, i) => (
-                    <li key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">{r.author}</span>
-                        <span className="text-amber-600">{"★".repeat(r.rating)}</span>
-                      </div>
-                      {r.comment ? (
-                        <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
-                      ) : (
-                        <p className="mt-1 text-sm text-muted-foreground italic">No comment</p>
-                      )}
-                      <p className="mt-1 text-xs text-muted-foreground">{r.date}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : gbp.reviewsError ? (
-                <p className="font-mono text-xs break-words text-muted-foreground">
-                  Reviews unavailable: {gbp.reviewsError}
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground">No reviews yet.</p>
-              )}
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">Where people see you</p>
+                <BarList
+                  rows={[
+                    { label: "Google Search", value: gbp.performance.searchImpressions },
+                    { label: "Google Maps", value: gbp.performance.mapsImpressions },
+                  ]}
+                  max={Math.max(1, gbp.performance.searchImpressions, gbp.performance.mapsImpressions)}
+                />
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">What they do next</p>
+                <BarList
+                  rows={[
+                    { label: "Directions", value: gbp.performance.directionRequests },
+                    { label: "Website clicks", value: gbp.performance.websiteClicks },
+                    { label: "Calls", value: gbp.performance.callClicks },
+                  ]}
+                  max={Math.max(
+                    1,
+                    gbp.performance.directionRequests,
+                    gbp.performance.websiteClicks,
+                    gbp.performance.callClicks
+                  )}
+                />
+              </div>
             </div>
+
+            {gbp.byDay.length > 0 ? (
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">Daily views</p>
+                <DailyBars rows={gbp.byDay} />
+              </div>
+            ) : null}
+
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {/* Search keywords */}
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">How people found you</p>
+                {gbp.keywordsError ? (
+                  <PanelNote>{gbp.keywordsError}</PanelNote>
+                ) : gbp.searchKeywords.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No keyword data yet.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {rankedKeywords.length > 0 ? (
+                      <BarList
+                        rows={rankedKeywords.map((k) => ({ label: k.keyword, value: k.impressions }))}
+                        max={Math.max(1, ...rankedKeywords.map((k) => k.impressions))}
+                        labelClass="w-56"
+                      />
+                    ) : null}
+                    {lowVolumeKeywords.length > 0 ? (
+                      <div>
+                        <p className="mb-2 text-xs text-muted-foreground">
+                          Also found via {lowVolumeKeywords.length} low-volume searches (Google withholds
+                          exact counts below {lowVolumeKeywords[0].impressions} impressions):
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {lowVolumeKeywords.map((k) => (
+                            <span
+                              key={k.keyword}
+                              className="rounded-full bg-[var(--brand-cream)] px-2.5 py-1 text-xs text-muted-foreground"
+                            >
+                              {k.keyword}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+              </div>
+
+              {/* Reviews */}
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="mb-3 flex items-baseline justify-between gap-3">
+                  <p className="font-medium">Recent reviews</p>
+                  {gbp.profile?.newReviewUri ? (
+                    <a
+                      href={gbp.profile.newReviewUri}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-[var(--brand-olive-700)] underline underline-offset-2"
+                    >
+                      Review link
+                    </a>
+                  ) : null}
+                </div>
+                {gbp.reviews.recent.length > 0 ? (
+                  <ul className="space-y-3">
+                    {gbp.reviews.recent.map((r, i) => (
+                      <li key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{r.author}</span>
+                          <span className="text-amber-600">
+                            {"★".repeat(r.rating)}
+                            <span className="text-muted-foreground">{"☆".repeat(5 - r.rating)}</span>
+                          </span>
+                        </div>
+                        {r.comment ? (
+                          <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
+                        ) : (
+                          <p className="mt-1 text-sm text-muted-foreground italic">No comment</p>
+                        )}
+                        <p className="mt-1 text-xs text-muted-foreground">{r.date}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : gbp.reviewsError ? (
+                  <PanelNote>{gbp.reviewsError}</PanelNote>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    No reviews yet. Share the review link with customers after their ride.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {gbp.error ? <PanelNote>{gbp.error}</PanelNote> : null}
+            {gbp.profile?.mapsUri ? (
+              <p className="text-xs text-muted-foreground">
+                <a
+                  href={gbp.profile.mapsUri}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="underline underline-offset-2"
+                >
+                  View the profile on Google Maps
+                </a>
+              </p>
+            ) : null}
           </div>
         ) : (
           <NotConnected

@@ -308,7 +308,11 @@ export interface GbpStats {
   connected: boolean;
   error?: string;
   reviewsError?: string;
+  keywordsError?: string;
   rangeDays: number;
+  startDate: string;
+  endDate: string;
+  profile?: { title: string; mapsUri?: string; newReviewUri?: string };
   performance: {
     callClicks: number;
     websiteClicks: number;
@@ -316,6 +320,14 @@ export interface GbpStats {
     searchImpressions: number;
     mapsImpressions: number;
   };
+  /** Daily series over the window, for the trend chart. */
+  byDay: { date: string; views: number; actions: number }[];
+  /**
+   * Keywords people searched before landing on the profile. Google withholds
+   * exact counts for low-volume terms and returns a threshold instead, so
+   * `isThreshold` means "fewer than `impressions`", not "equal to".
+   */
+  searchKeywords: { keyword: string; impressions: number; isThreshold: boolean }[];
   reviews: {
     averageRating: number;
     totalCount: number;
@@ -328,6 +340,8 @@ function emptyGbp(rangeDays: number, error?: string): GbpStats {
     connected: false,
     error,
     rangeDays,
+    startDate: "",
+    endDate: "",
     performance: {
       callClicks: 0,
       websiteClicks: 0,
@@ -335,49 +349,138 @@ function emptyGbp(rangeDays: number, error?: string): GbpStats {
       searchImpressions: 0,
       mapsImpressions: 0,
     },
+    byDay: [],
+    searchKeywords: [],
     reviews: { averageRating: 0, totalCount: 0, recent: [] },
   };
 }
 
 const STAR_TO_NUM: Record<string, number> = { ONE: 1, TWO: 2, THREE: 3, FOUR: 4, FIVE: 5 };
 
+/**
+ * Unwrap a Google API error body to its `error.message`. Raw bodies are JSON
+ * blobs that read as gibberish when surfaced in the dashboard.
+ */
+async function googleErrorMessage(res: Response): Promise<string> {
+  const text = await res.text();
+  try {
+    const parsed = JSON.parse(text) as { error?: { message?: string } };
+    return parsed.error?.message ?? text.slice(0, 200);
+  } catch {
+    return text.slice(0, 200);
+  }
+}
+
+/** A disabled-API 403 is an ops task, not a bug — say so in plain words. */
+function explainApiError(message: string, apiLabel: string, consoleApi: string): string {
+  if (/has not been used in project|is disabled/i.test(message)) {
+    return `${apiLabel} is not enabled on the Google Cloud project. Enable "${consoleApi}" in the API library, then reload.`;
+  }
+  if (/quota|429/i.test(message)) {
+    return `${apiLabel} has no quota on this project yet. Request access via the Business Profile API form.`;
+  }
+  return message;
+}
+
+interface GbpLocation {
+  accountName: string;
+  locationId: string;
+  title: string;
+  mapsUri?: string;
+  newReviewUri?: string;
+}
+
+const LOCATION_READ_MASK = "name,title,metadata";
+
 /** Resolve the account + location resource names, honouring env overrides. */
-async function resolveGbpLocation(
-  token: string
-): Promise<{ accountName: string; locationId: string } | null> {
-  const envLoc = process.env.GBP_LOCATION_ID; // "locations/123" or "123"
+async function resolveGbpLocation(token: string): Promise<GbpLocation> {
+  const headers = { Authorization: `Bearer ${token}` };
+  const envLoc = process.env.GBP_LOCATION_ID?.replace(/^locations\//, ""); // "locations/123" or "123"
   const envAcc = process.env.GBP_ACCOUNT_ID; // "accounts/123" or "123"
+
+  const toLocation = (
+    accountName: string,
+    loc: { name?: string; title?: string; metadata?: { mapsUri?: string; newReviewUri?: string } }
+  ): GbpLocation => ({
+    accountName,
+    locationId: (loc.name ?? "").replace(/^locations\//, ""),
+    title: loc.title ?? "Business Profile",
+    mapsUri: loc.metadata?.mapsUri,
+    newReviewUri: loc.metadata?.newReviewUri,
+  });
+
+  // Explicit location: fetch it directly so we still get title + maps links.
   if (envLoc && envAcc) {
-    return {
-      accountName: envAcc.startsWith("accounts/") ? envAcc : `accounts/${envAcc}`,
-      locationId: envLoc.replace(/^locations\//, ""),
-    };
+    const accountName = envAcc.startsWith("accounts/") ? envAcc : `accounts/${envAcc}`;
+    const res = await fetch(
+      `https://mybusinessbusinessinformation.googleapis.com/v1/locations/${envLoc}?readMask=${LOCATION_READ_MASK}`,
+      { headers, cache: "no-store" }
+    );
+    // Env pins the id, so a failed detail lookup shouldn't break the whole panel.
+    if (!res.ok) return { accountName, locationId: envLoc, title: "Business Profile" };
+    const loc = (await res.json()) as { name?: string; title?: string };
+    return toLocation(accountName, { ...loc, name: `locations/${envLoc}` });
   }
 
   const accRes = await fetch("https://mybusinessaccountmanagement.googleapis.com/v1/accounts", {
-    headers: { Authorization: `Bearer ${token}` },
+    headers,
     cache: "no-store",
   });
-  if (!accRes.ok) throw new Error(`accounts ${accRes.status}: ${(await accRes.text()).slice(0, 160)}`);
+  if (!accRes.ok) {
+    throw new Error(
+      explainApiError(await googleErrorMessage(accRes), "The Business Profile API", "My Business Account Management API")
+    );
+  }
   const accJson = (await accRes.json()) as { accounts?: { name: string }[] };
   const accountName = accJson.accounts?.[0]?.name;
-  if (!accountName) throw new Error("Service account sees no Business Profile accounts (not granted manager access yet).");
-
-  if (envLoc) return { accountName, locationId: envLoc.replace(/^locations\//, "") };
+  if (!accountName) {
+    throw new Error("Service account sees no Business Profile accounts (not granted manager access yet).");
+  }
 
   const locRes = await fetch(
-    `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations?readMask=name,title&pageSize=10`,
-    { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
+    `https://mybusinessbusinessinformation.googleapis.com/v1/${accountName}/locations?readMask=${LOCATION_READ_MASK}&pageSize=10`,
+    { headers, cache: "no-store" }
   );
-  if (!locRes.ok) throw new Error(`locations ${locRes.status}: ${(await locRes.text()).slice(0, 160)}`);
-  const locJson = (await locRes.json()) as { locations?: { name: string }[] };
-  const locName = locJson.locations?.[0]?.name; // "locations/123"
-  if (!locName) throw new Error("No locations found for the Business Profile account.");
-  return { accountName, locationId: locName.replace(/^locations\//, "") };
+  if (!locRes.ok) {
+    throw new Error(
+      explainApiError(await googleErrorMessage(locRes), "The Business Information API", "My Business Business Information API")
+    );
+  }
+  const locJson = (await locRes.json()) as {
+    locations?: { name?: string; title?: string; metadata?: { mapsUri?: string; newReviewUri?: string } }[];
+  };
+  const match = envLoc
+    ? locJson.locations?.find((l) => l.name?.endsWith(envLoc))
+    : locJson.locations?.[0];
+  if (!match) throw new Error("No locations found for the Business Profile account.");
+  return toLocation(accountName, match);
+}
+
+const PERF_METRICS = [
+  "CALL_CLICKS",
+  "WEBSITE_CLICKS",
+  "BUSINESS_DIRECTION_REQUESTS",
+  "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
+  "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
+  "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
+  "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
+] as const;
+
+type DatedValue = { date?: { year?: number; month?: number; day?: number }; value?: string };
+
+function ymdKey(d?: { year?: number; month?: number; day?: number }): string {
+  if (!d?.year || !d.month || !d.day) return "";
+  return `${d.year}-${String(d.month).padStart(2, "0")}-${String(d.day).padStart(2, "0")}`;
 }
 
 export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
   if (!hasCredentials()) return emptyGbp(rangeDays, "Service account not configured (GOOGLE_SA_KEY_B64).");
+
+  // Performance lags ~1 day, so end the window yesterday.
+  const end = new Date();
+  end.setUTCDate(end.getUTCDate() - 1);
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - rangeDays);
 
   try {
     const token = await getAccessToken(
@@ -385,62 +488,76 @@ export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
       process.env.GBP_IMPERSONATE // set to a GBP manager email once DWD is authorised
     );
     if (!token) return emptyGbp(rangeDays, "Could not mint an access token.");
+    const headers = { Authorization: `Bearer ${token}` };
 
     const loc = await resolveGbpLocation(token);
-    if (!loc) return emptyGbp(rangeDays, "Could not resolve a Business Profile location.");
 
     const out = emptyGbp(rangeDays);
     out.connected = true;
+    out.startDate = start.toISOString().slice(0, 10);
+    out.endDate = end.toISOString().slice(0, 10);
+    out.profile = { title: loc.title, mapsUri: loc.mapsUri, newReviewUri: loc.newReviewUri };
 
-    // Performance metrics (last `rangeDays`, ending 1 day ago — GBP also lags).
-    const end = new Date();
-    end.setUTCDate(end.getUTCDate() - 1);
-    const start = new Date(end);
-    start.setUTCDate(start.getUTCDate() - rangeDays);
-    const ymd = (d: Date) => ({ y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() });
-    const s = ymd(start);
-    const e = ymd(end);
-    const metrics = [
-      "CALL_CLICKS",
-      "WEBSITE_CLICKS",
-      "BUSINESS_DIRECTION_REQUESTS",
-      "BUSINESS_IMPRESSIONS_DESKTOP_SEARCH",
-      "BUSINESS_IMPRESSIONS_MOBILE_SEARCH",
-      "BUSINESS_IMPRESSIONS_DESKTOP_MAPS",
-      "BUSINESS_IMPRESSIONS_MOBILE_MAPS",
-    ];
-    const params = new URLSearchParams();
-    metrics.forEach((m) => params.append("dailyMetrics", m));
-    params.set("dailyRange.start_date.year", String(s.y));
-    params.set("dailyRange.start_date.month", String(s.m));
-    params.set("dailyRange.start_date.day", String(s.d));
-    params.set("dailyRange.end_date.year", String(e.y));
-    params.set("dailyRange.end_date.month", String(e.m));
-    params.set("dailyRange.end_date.day", String(e.d));
+    const perfParams = new URLSearchParams();
+    PERF_METRICS.forEach((m) => perfParams.append("dailyMetrics", m));
+    perfParams.set("dailyRange.start_date.year", String(start.getUTCFullYear()));
+    perfParams.set("dailyRange.start_date.month", String(start.getUTCMonth() + 1));
+    perfParams.set("dailyRange.start_date.day", String(start.getUTCDate()));
+    perfParams.set("dailyRange.end_date.year", String(end.getUTCFullYear()));
+    perfParams.set("dailyRange.end_date.month", String(end.getUTCMonth() + 1));
+    perfParams.set("dailyRange.end_date.day", String(end.getUTCDate()));
 
-    const perfRes = await fetch(
-      `https://businessprofileperformance.googleapis.com/v1/locations/${loc.locationId}:fetchMultiDailyMetricsTimeSeries?${params}`,
-      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
-    );
+    // Search keywords are monthly-only; span the same months as the daily window.
+    const kwParams = new URLSearchParams({
+      "monthlyRange.start_month.year": String(start.getUTCFullYear()),
+      "monthlyRange.start_month.month": String(start.getUTCMonth() + 1),
+      "monthlyRange.end_month.year": String(end.getUTCFullYear()),
+      "monthlyRange.end_month.month": String(end.getUTCMonth() + 1),
+      pageSize: "25",
+    });
+
+    const [perfRes, revRes, kwRes] = await Promise.all([
+      fetch(
+        `https://businessprofileperformance.googleapis.com/v1/locations/${loc.locationId}:fetchMultiDailyMetricsTimeSeries?${perfParams}`,
+        { headers, cache: "no-store" }
+      ),
+      // Reviews live only on the legacy v4 API, enabled separately from the rest.
+      fetch(
+        `https://mybusiness.googleapis.com/v4/${loc.accountName}/locations/${loc.locationId}/reviews?pageSize=20&orderBy=updateTime%20desc`,
+        { headers, cache: "no-store" }
+      ),
+      fetch(
+        `https://businessprofileperformance.googleapis.com/v1/locations/${loc.locationId}/searchkeywords/impressions/monthly?${kwParams}`,
+        { headers, cache: "no-store" }
+      ),
+    ]);
+
     if (perfRes.ok) {
       const perfJson = (await perfRes.json()) as {
         multiDailyMetricTimeSeries?: {
           dailyMetricTimeSeries?: {
             dailyMetric?: string;
-            timeSeries?: { datedValues?: { value?: string }[] };
+            timeSeries?: { datedValues?: DatedValue[] };
           }[];
         }[];
       };
-      const sumFor = (metric: string) => {
-        let total = 0;
-        for (const multi of perfJson.multiDailyMetricTimeSeries ?? []) {
-          for (const series of multi.dailyMetricTimeSeries ?? []) {
-            if (series.dailyMetric !== metric) continue;
-            for (const dv of series.timeSeries?.datedValues ?? []) total += Number(dv.value ?? 0);
+
+      const series = new Map<string, Map<string, number>>();
+      for (const multi of perfJson.multiDailyMetricTimeSeries ?? []) {
+        for (const s of multi.dailyMetricTimeSeries ?? []) {
+          if (!s.dailyMetric) continue;
+          const byDate = series.get(s.dailyMetric) ?? new Map<string, number>();
+          for (const dv of s.timeSeries?.datedValues ?? []) {
+            const key = ymdKey(dv.date);
+            if (key) byDate.set(key, (byDate.get(key) ?? 0) + Number(dv.value ?? 0));
           }
+          series.set(s.dailyMetric, byDate);
         }
-        return total;
-      };
+      }
+      const sumFor = (metric: string) =>
+        [...(series.get(metric)?.values() ?? [])].reduce((a, b) => a + b, 0);
+      const on = (metric: string, date: string) => series.get(metric)?.get(date) ?? 0;
+
       out.performance = {
         callClicks: sumFor("CALL_CLICKS"),
         websiteClicks: sumFor("WEBSITE_CLICKS"),
@@ -450,15 +567,26 @@ export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
         mapsImpressions:
           sumFor("BUSINESS_IMPRESSIONS_DESKTOP_MAPS") + sumFor("BUSINESS_IMPRESSIONS_MOBILE_MAPS"),
       };
+
+      const dates = [...new Set([...series.values()].flatMap((m) => [...m.keys()]))].sort();
+      out.byDay = dates.map((date) => ({
+        date,
+        views:
+          on("BUSINESS_IMPRESSIONS_DESKTOP_SEARCH", date) +
+          on("BUSINESS_IMPRESSIONS_MOBILE_SEARCH", date) +
+          on("BUSINESS_IMPRESSIONS_DESKTOP_MAPS", date) +
+          on("BUSINESS_IMPRESSIONS_MOBILE_MAPS", date),
+        actions:
+          on("CALL_CLICKS", date) + on("WEBSITE_CLICKS", date) + on("BUSINESS_DIRECTION_REQUESTS", date),
+      }));
     } else {
-      out.error = `Performance API ${perfRes.status}: ${(await perfRes.text()).slice(0, 160)}`;
+      out.error = explainApiError(
+        await googleErrorMessage(perfRes),
+        "The Business Profile Performance API",
+        "Business Profile Performance API"
+      );
     }
 
-    // Reviews (legacy My Business v4 — may require allowlisting; handled softly).
-    const revRes = await fetch(
-      `https://mybusiness.googleapis.com/v4/${loc.accountName}/locations/${loc.locationId}/reviews?pageSize=20&orderBy=updateTime%20desc`,
-      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
-    );
     if (revRes.ok) {
       const revJson = (await revRes.json()) as {
         averageRating?: number;
@@ -481,7 +609,42 @@ export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
         })),
       };
     } else {
-      out.reviewsError = `Reviews API ${revRes.status}: ${(await revRes.text()).slice(0, 160)}`;
+      out.reviewsError = explainApiError(
+        await googleErrorMessage(revRes),
+        "The reviews API",
+        "Google My Business API"
+      );
+    }
+
+    if (kwRes.ok) {
+      const kwJson = (await kwRes.json()) as {
+        searchKeywordsCounts?: {
+          searchKeyword?: string;
+          insightsValue?: { value?: string; threshold?: string };
+        }[];
+      };
+      out.searchKeywords = (kwJson.searchKeywordsCounts ?? [])
+        .map((r) => {
+          const exact = r.insightsValue?.value;
+          return {
+            keyword: r.searchKeyword ?? "—",
+            impressions: Number(exact ?? r.insightsValue?.threshold ?? 0),
+            isThreshold: exact === undefined,
+          };
+        })
+        .filter((k) => k.keyword !== "—")
+        // Exact counts first (descending), then the withheld low-volume terms.
+        .sort((a, b) => {
+          if (a.isThreshold !== b.isThreshold) return a.isThreshold ? 1 : -1;
+          if (a.impressions !== b.impressions) return b.impressions - a.impressions;
+          return a.keyword.localeCompare(b.keyword);
+        });
+    } else {
+      out.keywordsError = explainApiError(
+        await googleErrorMessage(kwRes),
+        "The search keywords API",
+        "Business Profile Performance API"
+      );
     }
 
     return out;
