@@ -331,7 +331,9 @@ export interface GbpStats {
   reviews: {
     averageRating: number;
     totalCount: number;
-    recent: { author: string; rating: number; comment: string; date: string }[];
+    /** Fetched reviews with no owner reply — these need answering. */
+    unanswered: number;
+    recent: { author: string; rating: number; comment: string; date: string; replied: boolean }[];
   };
 }
 
@@ -351,7 +353,7 @@ function emptyGbp(rangeDays: number, error?: string): GbpStats {
     },
     byDay: [],
     searchKeywords: [],
-    reviews: { averageRating: 0, totalCount: 0, recent: [] },
+    reviews: { averageRating: 0, totalCount: 0, unanswered: 0, recent: [] },
   };
 }
 
@@ -596,16 +598,20 @@ export async function getGbpStats(rangeDays = 90): Promise<GbpStats> {
           starRating?: string;
           comment?: string;
           createTime?: string;
+          reviewReply?: { comment?: string };
         }[];
       };
+      const reviews = revJson.reviews ?? [];
       out.reviews = {
         averageRating: revJson.averageRating ?? 0,
         totalCount: revJson.totalReviewCount ?? 0,
-        recent: (revJson.reviews ?? []).slice(0, 6).map((r) => ({
+        unanswered: reviews.filter((r) => !r.reviewReply).length,
+        recent: reviews.slice(0, 6).map((r) => ({
           author: r.reviewer?.displayName ?? "Anonymous",
           rating: STAR_TO_NUM[r.starRating ?? ""] ?? 0,
           comment: r.comment ?? "",
           date: r.createTime?.slice(0, 10) ?? "",
+          replied: Boolean(r.reviewReply),
         })),
       };
     } else {

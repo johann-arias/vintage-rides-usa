@@ -464,7 +464,14 @@ export default async function StatsPage() {
               {/* Reviews */}
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div className="mb-3 flex items-baseline justify-between gap-3">
-                  <p className="font-medium">Recent reviews</p>
+                  <p className="font-medium">
+                    Recent reviews
+                    {gbp.reviews.unanswered > 0 ? (
+                      <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-800">
+                        {gbp.reviews.unanswered} to answer
+                      </span>
+                    ) : null}
+                  </p>
                   {gbp.profile?.newReviewUri ? (
                     <a
                       href={gbp.profile.newReviewUri}
@@ -480,19 +487,28 @@ export default async function StatsPage() {
                   <ul className="space-y-3">
                     {gbp.reviews.recent.map((r, i) => (
                       <li key={i} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium">{r.author}</span>
-                          <span className="text-amber-600">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="truncate font-medium">{r.author}</span>
+                          <span className="shrink-0 text-amber-600">
                             {"★".repeat(r.rating)}
                             <span className="text-muted-foreground">{"☆".repeat(5 - r.rating)}</span>
                           </span>
                         </div>
                         {r.comment ? (
-                          <p className="mt-1 text-sm text-muted-foreground">{r.comment}</p>
+                          <p className="mt-1 line-clamp-3 text-sm text-muted-foreground" title={r.comment}>
+                            {r.comment}
+                          </p>
                         ) : (
                           <p className="mt-1 text-sm text-muted-foreground italic">No comment</p>
                         )}
-                        <p className="mt-1 text-xs text-muted-foreground">{r.date}</p>
+                        <p className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          <span>{r.date}</span>
+                          {r.replied ? (
+                            <span className="text-[var(--brand-olive-700)]">· Replied</span>
+                          ) : (
+                            <span className="font-medium text-amber-700">· Needs a reply</span>
+                          )}
+                        </p>
                       </li>
                     ))}
                   </ul>
