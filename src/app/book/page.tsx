@@ -37,7 +37,7 @@ type Step = "dates" | "details" | "review";
 const earliest = earliestBookableDate();
 const minEnd = (start: string) => {
   const d = new Date(start);
-  d.setDate(d.getDate() + 3);
+  d.setDate(d.getDate() + 1);
   return d.toISOString().split("T")[0];
 };
 
