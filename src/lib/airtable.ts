@@ -236,7 +236,11 @@ export function calculateRentalPrice(
 ): { dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number; minDays: number } {
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const totalDays = Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+  // Same-day return (end === start) still bills as a full 1-day rental.
+  const totalDays = Math.max(
+    1,
+    Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+  );
 
   const rule = getPriceForDate(start, rules);
   const dailyRate = rule.dailyRateUsd;

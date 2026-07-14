@@ -35,11 +35,8 @@ type Step = "dates" | "details" | "review";
 
 // Earliest self-service pickup date (no same-day — those are arranged on demand).
 const earliest = earliestBookableDate();
-const minEnd = (start: string) => {
-  const d = new Date(start);
-  d.setDate(d.getDate() + 1);
-  return d.toISOString().split("T")[0];
-};
+// Return date can be the pickup date itself (same-day / day rental).
+const minEnd = (start: string) => start;
 
 export default function BookPage() {
   const router = useRouter();

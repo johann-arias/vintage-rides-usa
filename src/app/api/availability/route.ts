@@ -28,8 +28,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid date format" }, { status: 400, headers: NO_STORE });
   }
 
-  if (end <= start) {
-    return NextResponse.json({ error: "endDate must be after startDate" }, { status: 400, headers: NO_STORE });
+  if (end < start) {
+    return NextResponse.json({ error: "endDate cannot be before startDate" }, { status: 400, headers: NO_STORE });
   }
 
   // Past pickup dates are never bookable.
