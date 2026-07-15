@@ -202,20 +202,33 @@ function mmddOrdinal(mmdd: string): number {
   return m * 31 + d;
 }
 
+// Picks the pricing rule for a rental spanning [startDate, endDate] (inclusive).
+// Any day the rental touches a special window (e.g. Sturgis Rally) makes that
+// window apply to the WHOLE rental — so a rental that merely clips the rally
+// still gets the surge rate + minimum, not just one that starts inside it.
 export function getPriceForDate(
-  date: Date,
+  startDate: Date,
+  endDate: Date,
   rules: PricingRule[]
 ): PricingRule {
-  const mmdd = `${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+  const matching = new Map<string, PricingRule>();
+  const cursor = new Date(startDate);
+  // Cap the walk defensively; a rental is at most a few weeks in practice.
+  for (let i = 0; i <= 400 && cursor <= endDate; i++) {
+    const mmdd = `${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+    for (const r of rules) {
+      if (r.seasonStart && r.seasonEnd && mmdd >= r.seasonStart && mmdd <= r.seasonEnd) {
+        matching.set(r.id, r);
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
 
-  const matching = rules.filter(
-    (r) => r.seasonStart && r.seasonEnd && mmdd >= r.seasonStart && mmdd <= r.seasonEnd
-  );
-
-  if (matching.length > 0) {
+  const matched = [...matching.values()];
+  if (matched.length > 0) {
     // Most specific (narrowest) window wins, so a short rally window overrides the
-    // broad standard season when dates overlap (e.g. Sturgis week inside May–Sep).
-    return matching.sort(
+    // broad standard season when dates overlap (e.g. Sturgis week inside May-Sep).
+    return matched.sort(
       (a, b) =>
         mmddOrdinal(a.seasonEnd!) - mmddOrdinal(a.seasonStart!) -
         (mmddOrdinal(b.seasonEnd!) - mmddOrdinal(b.seasonStart!))
@@ -242,7 +255,7 @@ export function calculateRentalPrice(
     Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  const rule = getPriceForDate(start, rules);
+  const rule = getPriceForDate(start, end, rules);
   const dailyRate = rule.dailyRateUsd;
   const subtotal = dailyRate * totalDays * numberOfBikes;
   const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
