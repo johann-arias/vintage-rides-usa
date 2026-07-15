@@ -28,6 +28,8 @@ type AvailabilityResult = {
     subtotal: number;
     tax: number;
     totalPrice: number;
+    minDays: number;
+    seasonName: string;
   } | null;
 } | null;
 
@@ -88,7 +90,8 @@ export default function BookPage() {
   }, [startDate, endDate, bikeCount]);
 
   useEffect(() => {
-    if (startDate && endDate && new Date(endDate) > new Date(startDate)) {
+    // >= so same-day (return === pickup) day rentals also trigger a check.
+    if (startDate && endDate && new Date(endDate) >= new Date(startDate)) {
       checkAvailability();
     }
   }, [startDate, endDate, bikeCount, checkAvailability]);
@@ -129,8 +132,15 @@ export default function BookPage() {
     }
   }
 
+  const belowMinDays =
+    availability?.pricing != null &&
+    availability.pricing.totalDays < availability.pricing.minDays;
+
   const canProceedToDetails =
-    availability?.canBook && !availability?.outOfSeason && availability?.pricing != null;
+    availability?.canBook &&
+    !availability?.outOfSeason &&
+    availability?.pricing != null &&
+    !belowMinDays;
 
   return (
     <>
@@ -279,7 +289,7 @@ export default function BookPage() {
                 {availability && !checkingAvailability && (
                   <div
                     className={`rounded-sm px-5 py-5 border ${
-                      availability.canBook && !availability.outOfSeason && !availability.pastDate
+                      availability.canBook && !availability.outOfSeason && !availability.pastDate && !belowMinDays
                         ? "bg-green-50 border-green-200"
                         : "bg-red-50 border-red-200"
                     }`}
@@ -296,6 +306,13 @@ export default function BookPage() {
                       <p className="text-red-700 text-sm font-medium">
                         Only {availability.availableCount} bike{availability.availableCount !== 1 ? "s" : ""} available
                         for those dates. Please reduce your selection or choose different dates.
+                      </p>
+                    ) : belowMinDays ? (
+                      <p className="text-red-700 text-sm font-medium">
+                        {availability.pricing!.seasonName === "Sturgis Rally"
+                          ? `The Sturgis Rally period requires a minimum ${availability.pricing!.minDays}-day rental.`
+                          : `This period requires a minimum ${availability.pricing!.minDays}-day rental.`}{" "}
+                        Please extend your return date.
                       </p>
                     ) : (
                       <div>

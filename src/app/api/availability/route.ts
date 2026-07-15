@@ -70,6 +70,8 @@ export async function GET(req: NextRequest) {
           subtotal: pricing.subtotal,
           tax: pricing.tax,
           totalPrice: pricing.totalPrice,
+          minDays: pricing.minDays,
+          seasonName: pricing.seasonName,
         },
       },
       { headers: NO_STORE }

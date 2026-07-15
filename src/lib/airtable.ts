@@ -233,7 +233,7 @@ export function calculateRentalPrice(
   endDate: string,
   numberOfBikes: number,
   rules: PricingRule[]
-): { dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number; minDays: number } {
+): { dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number; minDays: number; seasonName: string } {
   const start = new Date(startDate);
   const end = new Date(endDate);
   // Same-day return (end === start) still bills as a full 1-day rental.
@@ -248,7 +248,11 @@ export function calculateRentalPrice(
   const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
   const totalPrice = Math.round((subtotal + tax) * 100) / 100;
 
-  return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays: 1 };
+  // Minimum rental duration is data-driven per pricing rule (Airtable "Min Rental
+  // Days"): Standard = 1 (day rentals OK), Sturgis Rally = 3.
+  const minDays = Math.max(1, rule.minRentalDays || 1);
+
+  return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName: rule.seasonName };
 }
 
 // ── Bikes ──────────────────────────────────────────────────────────────────
