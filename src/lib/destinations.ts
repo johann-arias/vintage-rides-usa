@@ -242,7 +242,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "How much does motorcycle rental cost during Sturgis?",
-        a: "During the Sturgis Rally (August 7-16) our rate is $250/day plus tax, with no minimum rental duration — book a single day if that's all you need. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
+        a: "During the Sturgis Rally (August 7-16) our rate is $250/day plus tax, with no minimum rental duration, so you can book a single day if that's all you need. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [
