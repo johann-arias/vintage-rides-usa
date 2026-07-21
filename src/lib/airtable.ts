@@ -189,7 +189,7 @@ export async function getActivePricingRules(): Promise<PricingRule[]> {
     seasonName: (r.get("Season Name") as string) ?? "",
     isActive: true,
     dailyRateUsd: (r.get("Daily Rate USD") as number) ?? 0,
-    minRentalDays: (r.get("Min Rental Days") as number) ?? 3,
+    minRentalDays: (r.get("Min Rental Days") as number) ?? 1,
     seasonStart: (r.get("Season Start MM-DD") as string) ?? undefined,
     seasonEnd: (r.get("Season End MM-DD") as string) ?? undefined,
     notes: (r.get("Notes") as string) ?? undefined,
@@ -204,8 +204,8 @@ function mmddOrdinal(mmdd: string): number {
 
 // Picks the pricing rule for a rental spanning [startDate, endDate] (inclusive).
 // Any day the rental touches a special window (e.g. Sturgis Rally) makes that
-// window apply to the WHOLE rental — so a rental that merely clips the rally
-// still gets the surge rate + minimum, not just one that starts inside it.
+// window apply to the WHOLE rental, so a rental that merely clips the rally
+// still gets the surge rate, not just one that starts inside it.
 export function getPriceForDate(
   startDate: Date,
   endDate: Date,
@@ -262,7 +262,8 @@ export function calculateRentalPrice(
   const totalPrice = Math.round((subtotal + tax) * 100) / 100;
 
   // Minimum rental duration is data-driven per pricing rule (Airtable "Min Rental
-  // Days"): Standard = 1 (day rentals OK), Sturgis Rally = 3.
+  // Days"). All active rules are at 1 today (day rentals OK, rally week included);
+  // the check stays so a minimum can be reinstated from Airtable without a deploy.
   const minDays = Math.max(1, rule.minRentalDays || 1);
 
   return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName: rule.seasonName };

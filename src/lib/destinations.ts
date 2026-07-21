@@ -230,7 +230,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "Why rent in Rapid City instead of Sturgis itself?",
-        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open year-round; the rate is $130/day, or $250/day during the rally (August 7-16, 3-day minimum).",
+        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open year-round; the rate is $130/day, or $250/day during the rally (August 7-16), with no minimum rental duration.",
       },
       {
         q: "Can I ride to Sturgis on a Royal Enfield Himalayan?",
@@ -242,7 +242,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "How much does motorcycle rental cost during Sturgis?",
-        a: "During the Sturgis Rally (August 7-16) our rate is $250/day plus tax, with a 3-day minimum rental. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
+        a: "During the Sturgis Rally (August 7-16) our rate is $250/day plus tax, with no minimum rental duration — book a single day if that's all you need. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [
