@@ -691,9 +691,12 @@ export interface BookingForDecision {
   bookingId: string;
   status: RentalBooking["status"];
   paymentIntentId?: string;
+  /** Needed to recover the Meta CAPI signals stashed in the checkout metadata. */
+  sessionId?: string;
   firstName: string;
   lastName: string;
   email: string;
+  phone?: string;
   startDate: string;
   endDate: string;
   numberOfDays: number;
@@ -717,9 +720,11 @@ export async function getBookingForDecision(
     bookingId,
     status: (r.get("Status") as RentalBooking["status"]) ?? "Confirmed",
     paymentIntentId: (r.get("Stripe Payment Intent ID") as string) || undefined,
+    sessionId: (r.get("Stripe Session ID") as string) || undefined,
     firstName: (r.get("First Name") as string) ?? "",
     lastName: (r.get("Last Name") as string) ?? "",
     email: (r.get("Email") as string) ?? "",
+    phone: (r.get("Phone") as string) || undefined,
     startDate: r.get("Start Date") as string,
     endDate: r.get("End Date") as string,
     numberOfDays: (r.get("Number of Days") as number) ?? 0,
@@ -776,9 +781,11 @@ export async function getExpiredPendingRequests(
     bookingId: (r.get("Booking ID") as string) ?? "",
     status: (r.get("Status") as RentalBooking["status"]) ?? "Pending Payment",
     paymentIntentId: (r.get("Stripe Payment Intent ID") as string) || undefined,
+    sessionId: (r.get("Stripe Session ID") as string) || undefined,
     firstName: (r.get("First Name") as string) ?? "",
     lastName: (r.get("Last Name") as string) ?? "",
     email: (r.get("Email") as string) ?? "",
+    phone: (r.get("Phone") as string) || undefined,
     startDate: r.get("Start Date") as string,
     endDate: r.get("End Date") as string,
     numberOfDays: (r.get("Number of Days") as number) ?? 0,

@@ -6,6 +6,7 @@ import {
   type BookingForDecision,
 } from "./airtable";
 import { sendBookingConfirmation, sendBookingDeclined } from "./email";
+import { sendMetaPurchase, readMetaSignals } from "./meta-capi";
 import type { BookingDecision } from "./booking-token";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -37,6 +38,36 @@ function toEmailInput(b: BookingForDecision) {
     bikeCount: b.numberOfBikes,
     totalPrice: b.totalPrice,
   };
+}
+
+/**
+ * Fire the Meta Purchase for an accepted same-day request. Best-effort: the
+ * booking is already confirmed and paid, so nothing here may throw.
+ */
+async function reportMetaPurchaseForAcceptedRequest(b: BookingForDecision) {
+  try {
+    const session = b.sessionId
+      ? await stripe.checkout.sessions.retrieve(b.sessionId).catch(() => null)
+      : null;
+    const signals = readMetaSignals(session?.metadata);
+    await sendMetaPurchase({
+      eventId: signals.metaEventId ?? b.bookingId,
+      value: b.totalPrice,
+      currency: "USD",
+      email: b.email,
+      phone: b.phone,
+      firstName: b.firstName,
+      lastName: b.lastName,
+      fbp: signals.fbp,
+      fbc: signals.fbc,
+      clientIpAddress: signals.clientIp,
+      clientUserAgent: signals.clientUserAgent,
+      eventSourceUrl: signals.eventSourceUrl,
+      numItems: b.numberOfBikes,
+    });
+  } catch (err) {
+    console.error("Accept: Meta Purchase reporting failed:", err);
+  }
 }
 
 /**
@@ -74,6 +105,10 @@ export async function resolveBookingDecision(
       };
     }
     await confirmBooking(bookingId);
+    // Money has actually moved now, so this is the Purchase moment for a
+    // same-day request. The Meta signals were stashed on the checkout session
+    // at /api/checkout; recover them so attribution survives the delay.
+    await reportMetaPurchaseForAcceptedRequest(b);
     try {
       await sendBookingConfirmation(toEmailInput(b));
     } catch (err) {

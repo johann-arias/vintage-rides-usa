@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { randomUUID } from "crypto";
 import { getAvailableBikeCount, getActivePricingRules, calculateRentalPrice } from "@/lib/airtable";
 import { isSameDay, isPast } from "@/lib/booking-window";
 
@@ -60,6 +61,17 @@ export async function POST(req: NextRequest) {
   const baseUrl =
     originHeader ?? process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
 
+  // Meta Conversions API: the browser signals only exist here (the purchase
+  // itself completes on Stripe's domain, then a webhook). Capture them now and
+  // carry them through Stripe metadata so the Purchase can be attributed.
+  // metaEventId is generated once so a webhook retry can't double-count.
+  const metaEventId = randomUUID();
+  const fbp = req.cookies.get("_fbp")?.value ?? "";
+  const fbc = req.cookies.get("_fbc")?.value ?? "";
+  const clientIp = (req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim();
+  // Stripe caps metadata values at 500 chars; user agents are well under, but clamp anyway.
+  const clientUserAgent = (req.headers.get("user-agent") ?? "").slice(0, 480);
+
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
@@ -97,6 +109,12 @@ export async function POST(req: NextRequest) {
       totalDays: String(pricing.totalDays),
       dailyRate: String(pricing.dailyRate),
       requestToBook: requestToBook ? "1" : "",
+      metaEventId,
+      fbp,
+      fbc,
+      clientIp,
+      clientUserAgent,
+      eventSourceUrl: `${baseUrl}/book`,
     },
     success_url: `${baseUrl}/booking/confirmation?session_id={CHECKOUT_SESSION_ID}${
       requestToBook ? "&pending=1" : ""

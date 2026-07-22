@@ -8,6 +8,7 @@ import {
   sendInternalBookingRequest,
 } from "@/lib/email";
 import { signBookingToken } from "@/lib/booking-token";
+import { sendMetaPurchase, readMetaSignals, shouldReportPurchase } from "@/lib/meta-capi";
 import { nanoid } from "nanoid";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
@@ -139,6 +140,28 @@ export async function POST(req: NextRequest) {
       console.error("Internal request notification failed:", err);
     }
     return NextResponse.json({ received: true, bookingId, pending: true });
+  }
+
+  // Meta Purchase, advance bookings only, because the card is captured now.
+  // Same-day requests are only authorized here; their Purchase fires from
+  // resolveBookingDecision() once the team accepts and the money actually moves.
+  const metaSignals = readMetaSignals(meta);
+  if (shouldReportPurchase(event.livemode)) {
+    await sendMetaPurchase({
+      eventId: metaSignals.metaEventId ?? bookingId,
+      value: totalPrice,
+      currency: session.currency ?? "usd",
+      email: meta.email,
+      phone: meta.phone,
+      firstName: meta.firstName,
+      lastName: meta.lastName,
+      fbp: metaSignals.fbp,
+      fbc: metaSignals.fbc,
+      clientIpAddress: metaSignals.clientIp,
+      clientUserAgent: metaSignals.clientUserAgent,
+      eventSourceUrl: metaSignals.eventSourceUrl,
+      numItems: bikeCount,
+    });
   }
 
   // Immediate booking: confirm the customer + notify the team (LIVE only).
