@@ -29,17 +29,30 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[#2e3b23]/90 backdrop-blur-md border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/vintage-rides-logo.png"
-            alt="Vintage Rides"
-            className="h-9 w-auto [filter:brightness(0)_invert(1)]"
-          />
-          <span className="text-[#d9a32b] font-light text-sm tracking-wider border-l border-white/20 pl-3">
-            USA
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center group">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/vintage-rides-logo.png"
+              alt="Vintage Rides"
+              className="h-9 w-auto [filter:brightness(0)_invert(1)]"
+            />
+          </Link>
+          {/* Trust marker — kept visible on phones and desktop; hidden only in the crowded tablet band */}
+          <span className="flex md:hidden lg:flex items-center gap-2 border-l border-white/20 pl-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/royal-enfield-logo.svg"
+              alt="Royal Enfield"
+              className="h-3 w-auto [filter:brightness(0)_invert(1)]"
+            />
+            <span className="text-white/60 text-[10px] leading-tight tracking-wider uppercase">
+              Official Rental
+              <br />
+              Partner
+            </span>
           </span>
-        </Link>
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-8">
