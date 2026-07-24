@@ -121,6 +121,31 @@ export default function BookPage() {
     }
   }, [startDate, endDate, bikeCount, checkAvailability]);
 
+  // Upper-funnel signal for Meta: the visitor has valid dates and is moving to
+  // the details step. Fired browser-side through the GTM pixel (window.fbq).
+  // Purchase is server-side (CAPI); InitiateCheckout has no server twin, so no
+  // event_id / dedup is needed here. Best-effort — never blocks the flow.
+  function fireInitiateCheckout() {
+    const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
+    if (typeof fbq !== "function" || !availability?.pricing) return;
+    try {
+      fbq("track", "InitiateCheckout", {
+        value: availability.pricing.totalPrice,
+        currency: "USD",
+        num_items: bikeCount,
+        content_ids: ["himalayan-450-rental"],
+        content_type: "product",
+      });
+    } catch {
+      /* analytics must never break the booking flow */
+    }
+  }
+
+  function handleProceedToDetails() {
+    fireInitiateCheckout();
+    setStep("details");
+  }
+
   async function handleCheckout() {
     setSubmitting(true);
     setError("");
@@ -395,7 +420,7 @@ export default function BookPage() {
 
               <div>
                 <button
-                  onClick={() => setStep("details")}
+                  onClick={handleProceedToDetails}
                   disabled={!canProceedToDetails}
                   className="w-full bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
                 >
