@@ -25,6 +25,7 @@ const SPECS = [
 ];
 
 const INCLUDED = [
+  "Full-face helmet in your size",
   "Custer State Park entrance pass",
   "Black Hills National Forest trail pass",
   "Panniers (2× 28L side cases)",
@@ -37,7 +38,7 @@ const INCLUDED = [
 ];
 
 const NOT_INCLUDED = [
-  "Helmet (available on request for a deposit)",
+  "Riding gear beyond the helmet (bring your jacket, gloves and boots)",
   "Fuel",
   "Accommodation",
   "Insurance (required — see FAQ)",
