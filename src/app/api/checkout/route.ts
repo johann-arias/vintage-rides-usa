@@ -3,6 +3,7 @@ import Stripe from "stripe";
 import { randomUUID } from "crypto";
 import { getAvailableBikeCount, getActivePricingRules, calculateRentalPrice } from "@/lib/airtable";
 import { isSameDay, isPast } from "@/lib/booking-window";
+import { sendMetaInitiateCheckout, shouldReportPreCheckout } from "@/lib/meta-capi";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
@@ -121,6 +122,28 @@ export async function POST(req: NextRequest) {
     }`,
     cancel_url: `${baseUrl}/book`,
   });
+
+  // Mid-funnel signal for the ad optimizer. Sent here rather than from the
+  // browser because this is the last moment we hold both the visitor's Meta
+  // cookies and the quoted value. Awaited (one fetch, never throws) so it is
+  // not cut short when the serverless function returns.
+  if (shouldReportPreCheckout()) {
+    await sendMetaInitiateCheckout({
+      eventId: `${metaEventId}-ic`,
+      value: pricing.totalPrice,
+      currency: "USD",
+      email,
+      phone: phone ?? undefined,
+      firstName,
+      lastName,
+      fbp: fbp || undefined,
+      fbc: fbc || undefined,
+      clientIpAddress: clientIp || undefined,
+      clientUserAgent: clientUserAgent || undefined,
+      eventSourceUrl: `${baseUrl}/book`,
+      numItems: bikeCount,
+    });
+  }
 
   return NextResponse.json({ url: session.url });
 }

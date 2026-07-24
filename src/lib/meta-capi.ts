@@ -1,12 +1,18 @@
 import crypto from "crypto";
 
 /**
- * Meta Conversions API: server-side Purchase reporting.
+ * Meta Conversions API: server-side conversion reporting.
  *
- * Why server-side: payment completes on Stripe's hosted checkout, so the
- * browser pixel never sees the purchase. The only reliable "money confirmed"
- * moments are the Stripe webhook (advance bookings) and the accept path of a
- * same-day request-to-book. Both call sendMetaPurchase.
+ * Two events are sent from the server:
+ *
+ *  - Purchase, when money actually moves. Payment completes on Stripe's hosted
+ *    checkout, so the browser pixel never sees it. The reliable "money
+ *    confirmed" moments are the Stripe webhook (advance bookings) and the
+ *    accept path of a same-day request-to-book.
+ *  - InitiateCheckout, when a visitor leaves /book for Stripe. Purchase volume
+ *    alone (a 10-bike fleet) is far below the ~50 conversions per week an ad
+ *    set needs to leave Meta's learning phase, so this gives the optimizer a
+ *    denser mid-funnel signal to work with.
  *
  * The browser pixel lives in GTM (container GTM-T22FLRVR) and only handles
  * PageView + the _fbp cookie. Do NOT add a second pixel in layout.tsx.
@@ -55,6 +61,16 @@ export function shouldReportPurchase(livemode: boolean): boolean {
   return livemode || Boolean(TEST_EVENT_CODE);
 }
 
+/**
+ * Same gate for events fired before Stripe knows anything, where there is no
+ * event.livemode to read. The Stripe key tells us which world we are in: the
+ * dev branch runs on sk_test, production on sk_live.
+ */
+export function shouldReportPreCheckout(): boolean {
+  const live = (process.env.STRIPE_SECRET_KEY ?? "").startsWith("sk_live");
+  return live || Boolean(TEST_EVENT_CODE);
+}
+
 function sha256(value: string): string {
   return crypto.createHash("sha256").update(value).digest("hex");
 }
@@ -77,17 +93,8 @@ function hashPhone(phone?: string): string | undefined {
   return sha256(e164);
 }
 
-/**
- * Fire a Purchase event. Resolves to true when Meta accepted it. Never throws
- * and never rejects, because callers are payment paths that must not fail on
- * our analytics.
- */
-export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<boolean> {
-  if (!ACCESS_TOKEN) {
-    // Inert until the token is configured. Not an error.
-    return false;
-  }
-
+/** Assemble the hashed + raw identifiers Meta uses to match a person. */
+function buildUserData(input: MetaPurchaseInput): Record<string, string | string[]> {
   const userData: Record<string, string | string[]> = {};
   const em = hashNormalized(input.email);
   const ph = hashPhone(input.phone);
@@ -101,16 +108,32 @@ export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<boolea
   if (input.fbc) userData.fbc = input.fbc;
   if (input.clientIpAddress) userData.client_ip_address = input.clientIpAddress;
   if (input.clientUserAgent) userData.client_user_agent = input.clientUserAgent;
+  return userData;
+}
+
+/**
+ * POST one event to the dataset. Resolves to true when Meta accepted it. Never
+ * throws and never rejects, because callers sit on payment paths that must not
+ * fail on our analytics.
+ */
+async function sendMetaEvent(
+  eventName: "Purchase" | "InitiateCheckout",
+  input: MetaPurchaseInput
+): Promise<boolean> {
+  if (!ACCESS_TOKEN) {
+    // Inert until the token is configured. Not an error.
+    return false;
+  }
 
   const payload = {
     data: [
       {
-        event_name: "Purchase",
+        event_name: eventName,
         event_time: input.eventTime ?? Math.floor(Date.now() / 1000),
         event_id: input.eventId,
         action_source: "website",
         ...(input.eventSourceUrl ? { event_source_url: input.eventSourceUrl } : {}),
-        user_data: userData,
+        user_data: buildUserData(input),
         custom_data: {
           currency: (input.currency ?? "USD").toUpperCase(),
           value: Number(input.value.toFixed(2)),
@@ -135,14 +158,34 @@ export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<boolea
       }
     );
     if (!res.ok) {
-      console.error("Meta CAPI rejected Purchase:", res.status, await res.text());
+      console.error(`Meta CAPI rejected ${eventName}:`, res.status, await res.text());
       return false;
     }
     return true;
   } catch (err) {
-    console.error("Meta CAPI Purchase failed:", err);
+    console.error(`Meta CAPI ${eventName} failed:`, err);
     return false;
   }
+}
+
+/** Money confirmed. Fired from the Stripe webhook and the same-day accept path. */
+export async function sendMetaPurchase(input: MetaPurchaseInput): Promise<boolean> {
+  return sendMetaEvent("Purchase", input);
+}
+
+/**
+ * Visitor is leaving /book for Stripe's checkout. Intent, not revenue: the
+ * value carried is the quoted rental total, which Meta uses for value-based
+ * optimization, but no money has moved yet.
+ *
+ * Pass an event_id distinct from the Purchase one. Meta deduplicates on the
+ * (event_name, event_id) pair, so reusing the id is technically safe, but
+ * keeping them separate makes the two events legible in Events Manager.
+ */
+export async function sendMetaInitiateCheckout(
+  input: MetaPurchaseInput
+): Promise<boolean> {
+  return sendMetaEvent("InitiateCheckout", input);
 }
 
 /** Stripe metadata keys carrying the browser-side Meta signals through checkout. */
