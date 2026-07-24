@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -12,8 +13,32 @@ import {
   AFTER_HOURS_OPTION,
   DEFAULT_PICKUP_TIME,
   DROPOFF_BY_APPOINTMENT,
+  GOOGLE_LISTING_URL,
 } from "@/lib/location";
 import { earliestBookableDate } from "@/lib/booking-window";
+
+// Short testimonials for the trust rail on the dates step (cold ad traffic).
+// Trimmed from the full set on the homepage — same reviewers, same voice.
+const RAIL_REVIEWS = [
+  {
+    quote:
+      "I called Mike last second, he had me set up on a bike in no time. We went over the bike and he gave me guidance on which roads to take. I'll be returning and using Vintage Rides.",
+    author: "Brandon Kuuzi",
+  },
+  {
+    quote:
+      "Mike was extremely accommodating and flexible, gave us his cell and was very responsive, and was full of local knowledge. Don't forget to pet Katy, the shop dog!",
+    author: "M S",
+  },
+];
+
+// What's included, condensed for the rail. Fuller spec list lives on /fleet.
+const RAIL_INCLUDED = [
+  "452cc · 40 hp · 6-speed",
+  "Long-travel suspension, built for pavement & dirt",
+  "Panniers, phone mount & tank bag included",
+  "Custer State Park + Black Hills passes included",
+];
 
 type AvailabilityResult = {
   availableCount: number;
@@ -148,15 +173,31 @@ export default function BookPage() {
       <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
         {/* Header */}
         <section className="bg-[#2e3b23] py-14">
-          <div className="max-w-3xl mx-auto px-6">
+          <div className="max-w-6xl mx-auto px-6">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-3">Rental Booking</p>
-            <h1 className="text-white text-3xl md:text-4xl font-light">Book Your Bike</h1>
+            <h1 className="text-white text-3xl md:text-4xl font-light">
+              Book your <span className="font-semibold">Himalayan 450</span>
+            </h1>
+            {/* Trust strip — instant context for visitors arriving cold from an ad. */}
+            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+              <span className="inline-flex items-center gap-1.5 text-[#f4e9cf]">
+                <span className="text-[#d9a32b] tracking-tight" aria-hidden>★★★★★</span>
+                <span className="font-medium">5.0</span>
+                <span className="text-white/50">on Google</span>
+              </span>
+              <span className="text-white/20" aria-hidden>·</span>
+              <span className="text-[#f4e9cf]">$130<span className="text-white/50">/day + tax</span></span>
+              <span className="text-white/20" aria-hidden>·</span>
+              <span className="text-[#f4e9cf]">Free Custer + Black Hills park passes</span>
+              <span className="text-white/20" aria-hidden>·</span>
+              <span className="text-[#f4e9cf]">Free cancellation 30+ days out</span>
+            </div>
           </div>
         </section>
 
         {/* Progress steps */}
         <div className="bg-[#26301c] border-b border-white/10">
-          <div className="max-w-3xl mx-auto px-6 py-4 flex items-center gap-6">
+          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-6">
             {(["dates", "details", "review"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
                 <div
@@ -183,16 +224,22 @@ export default function BookPage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-6 py-10">
+        <div className="max-w-6xl mx-auto px-6 py-10">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm mb-6">
+            <div className="max-w-3xl mx-auto bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm mb-6">
               {error}
             </div>
           )}
 
           {/* ── Step 1: Dates ──────────────────────────────────────────────── */}
+          {/* Two columns on desktop: booking form + a trust rail for cold ad
+              traffic. On mobile everything stacks, form first (offer visible),
+              proof below. Only this step is enriched — steps 2 & 3 stay lean. */}
           {step === "dates" && (
-            <div className="space-y-8">
+            <div className="lg:grid lg:grid-cols-5 lg:gap-10 lg:items-start">
+             {/* Form column stays pinned on desktop while the taller proof rail scrolls,
+                 keeping the CTA in view and absorbing the height difference. */}
+             <div className="lg:col-span-3 space-y-8 lg:sticky lg:top-6 lg:self-start">
               <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
                 <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
 
@@ -346,19 +393,142 @@ export default function BookPage() {
                 )}
               </div>
 
-              <button
-                onClick={() => setStep("details")}
-                disabled={!canProceedToDetails}
-                className="w-full bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
-              >
-                Continue to Details
-              </button>
+              <div>
+                <button
+                  onClick={() => setStep("details")}
+                  disabled={!canProceedToDetails}
+                  className="w-full bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
+                >
+                  Continue to Details
+                </button>
+                <p className="mt-3 text-center text-xs text-[#6e6a5e]">
+                  🔒 Secure checkout · Free cancellation 30+ days before pickup · No account needed
+                </p>
+              </div>
+
+              {/* The fleet — scale + availability, reinforces a real shop with bikes ready. */}
+              <div className="relative rounded-sm overflow-hidden border border-[#e8e3d3]">
+                <div
+                  className="aspect-[16/9] bg-[#e8e3d3] bg-cover bg-center"
+                  style={{ backgroundImage: "url('/fleet-lineup-side.jpg')" }}
+                  role="img"
+                  aria-label="The Vintage Rides USA fleet of Royal Enfield Himalayan 450s"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <p className="text-white font-semibold">10 × 2025 Royal Enfield Himalayan 450</p>
+                  <p className="text-white/80 text-sm">The same bikes we run in the Himalayas and the Andes.</p>
+                </div>
+              </div>
+             </div>
+
+              {/* ── Trust rail ─────────────────────────────────────────────── */}
+              <aside className="lg:col-span-2 mt-10 lg:mt-0 space-y-6">
+                {/* What you're renting — the single bike + what's included */}
+                <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
+                  <div
+                    className="aspect-[16/10] bg-[#e8e3d3] bg-cover bg-center"
+                    style={{ backgroundImage: "url('/bike-studio.jpg')" }}
+                    role="img"
+                    aria-label="Royal Enfield Himalayan 450"
+                  />
+                  <div className="p-6">
+                    <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#a9781a] mb-2">What you&apos;re renting</p>
+                    <h3 className="text-[#1a1a17] font-semibold text-lg leading-snug mb-3">Royal Enfield Himalayan 450</h3>
+                    <ul className="space-y-1.5 mb-4">
+                      {RAIL_INCLUDED.map((s) => (
+                        <li key={s} className="flex items-start gap-2 text-sm text-[#2a2a24]">
+                          <span className="text-[#d9a32b] mt-0.5 shrink-0">—</span>
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                    <Link href="/fleet" className="text-sm text-[#a9781a] hover:text-[#966b14] font-medium">
+                      See full specs →
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Meet your local hosts — the trust anchor for cold traffic */}
+                <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
+                  <div
+                    className="aspect-[16/10] bg-[#e8e3d3] bg-cover bg-center"
+                    style={{ backgroundImage: "url('/mike-wendy-garage.jpg')" }}
+                    role="img"
+                    aria-label="Mike and Wendy in their Rapid City garage"
+                  />
+                  <div className="p-6">
+                    <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#a9781a] mb-2">Your local hosts</p>
+                    <h3 className="text-[#1a1a17] font-semibold text-lg mb-3">Mike &amp; Wendy · Rapid City</h3>
+                    <div className="inline-flex items-center gap-2 border border-[#d9a32b]/50 bg-[#d9a32b]/10 rounded-sm px-3 py-1.5 mb-4">
+                      <span className="text-base leading-none" aria-hidden>🏆</span>
+                      <span className="text-[#57534a] text-[11px] tracking-wider uppercase">
+                        Wendy: first woman to win the Iron Butt Rally · 2019
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#57534a] leading-relaxed mb-3">
+                      Born-and-raised Black Hills locals since 2018. You get the keys from us in person,
+                      plus the honest rundown on which roads are riding best that week.
+                    </p>
+                    <p className="text-sm text-[#1a1a17] italic">We&apos;ll treat you like a neighbor, not a number.</p>
+                  </div>
+                </div>
+
+                {/* Where you pick up — the map, surfaced early instead of only at review */}
+                <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
+                  <div className="p-6 pb-4">
+                    <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#a9781a] mb-2">Where you pick up</p>
+                    <p className="text-[#1a1a17] font-semibold">{PICKUP_LOCATION.name}</p>
+                    <p className="text-[#2a2a24] text-sm mt-1">{PICKUP_LOCATION.street}</p>
+                    <p className="text-[#2a2a24] text-sm">{PICKUP_LOCATION.city}, {PICKUP_LOCATION.state} {PICKUP_LOCATION.zip}</p>
+                    <a
+                      href={PICKUP_DIRECTIONS_URL}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block mt-3 text-sm text-[#a9781a] hover:text-[#966b14] font-medium"
+                    >
+                      Get directions →
+                    </a>
+                  </div>
+                  <iframe
+                    title="Pickup location map"
+                    src={PICKUP_MAP_EMBED_URL}
+                    className="w-full h-52 border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  />
+                </div>
+
+                {/* Reviews */}
+                <div className="bg-[#2e3b23] rounded-sm p-6 text-white">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="text-[#d9a32b]" aria-hidden>★★★★★</span>
+                    <span className="text-sm font-medium">5.0 on Google</span>
+                  </div>
+                  <div className="space-y-4">
+                    {RAIL_REVIEWS.map((r) => (
+                      <figure key={r.author}>
+                        <blockquote className="text-sm text-white/85 leading-relaxed">&ldquo;{r.quote}&rdquo;</blockquote>
+                        <figcaption className="text-xs text-[#d9a32b] mt-1.5">{r.author}</figcaption>
+                      </figure>
+                    ))}
+                  </div>
+                  <a
+                    href={GOOGLE_LISTING_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block mt-5 text-sm text-white/70 hover:text-white font-medium border-b border-white/30"
+                  >
+                    Read all reviews →
+                  </a>
+                </div>
+              </aside>
             </div>
           )}
 
           {/* ── Step 2: Details ────────────────────────────────────────────── */}
           {step === "details" && (
-            <div className="space-y-8">
+            <div className="space-y-8 max-w-3xl mx-auto">
               <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
                 <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Your Details</h2>
 
@@ -464,7 +634,7 @@ export default function BookPage() {
 
           {/* ── Step 3: Review ─────────────────────────────────────────────── */}
           {step === "review" && availability && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-w-3xl mx-auto">
               <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
                 <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Review Your Booking</h2>
 
