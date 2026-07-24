@@ -127,7 +127,9 @@ export async function POST(req: NextRequest) {
   // browser because this is the last moment we hold both the visitor's Meta
   // cookies and the quoted value. Awaited (one fetch, never throws) so it is
   // not cut short when the serverless function returns.
-  if (shouldReportPreCheckout()) {
+  const reportPreCheckout = shouldReportPreCheckout();
+  console.log("[checkout] InitiateCheckout gate:", reportPreCheckout);
+  if (reportPreCheckout) {
     await sendMetaInitiateCheckout({
       eventId: `${metaEventId}-ic`,
       value: pricing.totalPrice,

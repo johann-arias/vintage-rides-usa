@@ -157,10 +157,14 @@ async function sendMetaEvent(
         body: JSON.stringify(payload),
       }
     );
+    const body = await res.text();
     if (!res.ok) {
-      console.error(`Meta CAPI rejected ${eventName}:`, res.status, await res.text());
+      console.error(`Meta CAPI rejected ${eventName}:`, res.status, body);
       return false;
     }
+    // Logged on success too: without this, a silently dropped event is
+    // indistinguishable from one that was never attempted.
+    console.log(`Meta CAPI ${eventName} accepted:`, body);
     return true;
   } catch (err) {
     console.error(`Meta CAPI ${eventName} failed:`, err);
