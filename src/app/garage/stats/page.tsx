@@ -21,13 +21,87 @@ const MONTH_LABEL = (key: string) => {
 
 // ── Small presentational helpers ─────────────────────────────────────────────
 
-function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Kpi({
+  label,
+  value,
+  sub,
+  delta,
+}: {
+  label: string;
+  value: string;
+  sub?: string;
+  delta?: React.ReactNode;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
       <p className="text-xs tracking-wide text-muted-foreground uppercase">{label}</p>
       <p className="mt-1.5 font-serif text-2xl text-[var(--brand-olive-700)]">{value}</p>
-      {sub ? <p className="mt-0.5 text-xs text-muted-foreground">{sub}</p> : null}
+      {delta || sub ? (
+        <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1.5 text-xs text-muted-foreground">
+          {delta}
+          {sub ? <span>{sub}</span> : null}
+        </p>
+      ) : null}
     </div>
+  );
+}
+
+interface DeltaOptions {
+  /** pct = relative change · points = percentage-point gap · abs = raw difference */
+  mode?: "pct" | "points" | "abs";
+  /** Set when a lower number is the better outcome (e.g. average search position). */
+  invert?: boolean;
+  /** Used for the "vs X previously" tooltip only. */
+  format?: (n: number) => string;
+}
+
+/**
+ * Change against the previous period, or `undefined` when there is no
+ * comparison data — callers use that to drop the column entirely rather than
+ * reserving space for a blank.
+ */
+function deltaOf(current: number, previous: number | null, opts: DeltaOptions = {}) {
+  return previous === null ? undefined : <Delta current={current} previous={previous} {...opts} />;
+}
+
+function Delta({
+  current,
+  previous,
+  mode = "pct",
+  invert = false,
+  format = (n: number) => int.format(Math.round(n)),
+}: DeltaOptions & { current: number; previous: number }) {
+  const title = `vs ${format(previous)} in the previous period`;
+  const muted = "text-muted-foreground";
+  if (previous === 0) {
+    return (
+      <span className={current > 0 ? "font-medium text-[var(--brand-olive-700)]" : muted} title={title}>
+        {current > 0 ? "New" : "—"}
+      </span>
+    );
+  }
+
+  const diff = current - previous;
+  if (diff === 0) return <span className={muted} title={title}>= 0%</span>;
+
+  const improved = invert ? diff < 0 : diff > 0;
+  const magnitude =
+    mode === "pct"
+      ? (() => {
+          const rel = Math.abs(diff / previous) * 100;
+          return `${rel >= 10 ? rel.toFixed(0) : rel.toFixed(1)}%`;
+        })()
+      : mode === "points"
+        ? `${Math.abs(diff * 100).toFixed(1)} pts`
+        : Math.abs(diff).toFixed(1);
+
+  return (
+    <span
+      className={`font-medium tabular-nums ${improved ? "text-[var(--brand-olive-700)]" : "text-[#9a3b21]"}`}
+      title={title}
+    >
+      {diff > 0 ? "↑" : "↓"} {magnitude}
+    </span>
   );
 }
 
@@ -113,12 +187,15 @@ function BarList({
   unit = "",
   labelClass = "w-36",
 }: {
-  rows: { label: string; value: number; right?: string }[];
+  rows: { label: string; value: number; right?: string; delta?: React.ReactNode }[];
   max: number;
   unit?: string;
   /** Tailwind width class for the label column — wider for long labels. */
   labelClass?: string;
 }) {
+  // Only reserve the comparison column when at least one row has a delta,
+  // so panels without a previous period keep their full label width.
+  const withDeltas = rows.some((r) => r.delta !== undefined);
   return (
     <div className="space-y-1.5">
       {rows.map((r, i) => (
@@ -138,6 +215,9 @@ function BarList({
           <span className="w-20 shrink-0 text-right tabular-nums">
             {r.right ?? `${int.format(r.value)}${unit}`}
           </span>
+          {withDeltas ? (
+            <span className="w-16 shrink-0 text-right text-xs">{r.delta}</span>
+          ) : null}
         </div>
       ))}
       {rows.length === 0 ? <p className="text-sm text-muted-foreground">No data.</p> : null}
@@ -158,6 +238,10 @@ export default async function StatsPage() {
   const maxMonth = Math.max(1, ...turnover.byMonth.map((m) => m.total));
   const website = turnover.byChannel.find((c) => c.channel === "WEBSITE")!;
   const b2b = turnover.byChannel.find((c) => c.channel === "B2B")!;
+
+  // Previous-period figures, null when the comparison call didn't come back.
+  const gaPrev = ga.previousTotals;
+  const gscPrev = gsc.previousTotals;
 
   const totalViews = gbp.performance.searchImpressions + gbp.performance.mapsImpressions;
   const totalActions =
@@ -261,32 +345,72 @@ export default async function StatsPage() {
 
       {/* ── Google Analytics ───────────────────────────────────────────────── */}
       <section>
-        <SectionHeader icon={Globe} title="Website traffic" meta={`Google Analytics · last ${ga.rangeDays} days`} />
+        <SectionHeader
+          icon={Globe}
+          title="Website traffic"
+          meta={`Google Analytics · last ${ga.rangeDays} days${
+            ga.previousRange ? ` · vs ${ga.previousRange.startDate} → ${ga.previousRange.endDate}` : ""
+          }`}
+        />
         {ga.connected ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-              <Kpi label="Sessions" value={int.format(ga.totals.sessions)} />
-              <Kpi label="Users" value={int.format(ga.totals.activeUsers)} />
-              <Kpi label="New users" value={int.format(ga.totals.newUsers)} />
-              <Kpi label="Page views" value={int.format(ga.totals.pageViews)} />
-              <Kpi label="Engagement" value={pct(ga.totals.engagementRate)} />
+              <Kpi
+                label="Sessions"
+                value={int.format(ga.totals.sessions)}
+                delta={deltaOf(ga.totals.sessions, gaPrev?.sessions ?? null)}
+              />
+              <Kpi
+                label="Users"
+                value={int.format(ga.totals.activeUsers)}
+                delta={deltaOf(ga.totals.activeUsers, gaPrev?.activeUsers ?? null)}
+              />
+              <Kpi
+                label="New users"
+                value={int.format(ga.totals.newUsers)}
+                delta={deltaOf(ga.totals.newUsers, gaPrev?.newUsers ?? null)}
+              />
+              <Kpi
+                label="Page views"
+                value={int.format(ga.totals.pageViews)}
+                delta={deltaOf(ga.totals.pageViews, gaPrev?.pageViews ?? null)}
+              />
+              <Kpi
+                label="Engagement"
+                value={pct(ga.totals.engagementRate)}
+                delta={deltaOf(ga.totals.engagementRate, gaPrev?.engagementRate ?? null, {
+                  mode: "points",
+                  format: pct,
+                })}
+              />
               <Kpi
                 label="Avg session"
                 value={`${Math.round(ga.totals.avgSessionDurationSec)}s`}
+                delta={deltaOf(ga.totals.avgSessionDurationSec, gaPrev?.avgSessionDurationSec ?? null, {
+                  format: (n) => `${Math.round(n)}s`,
+                })}
               />
             </div>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <p className="mb-3 font-medium">Top channels</p>
                 <BarList
-                  rows={ga.topChannels.map((c) => ({ label: c.label, value: c.sessions }))}
+                  rows={ga.topChannels.map((c) => ({
+                    label: c.label,
+                    value: c.sessions,
+                    delta: deltaOf(c.sessions, c.previous),
+                  }))}
                   max={Math.max(1, ...ga.topChannels.map((c) => c.sessions))}
                 />
               </div>
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <p className="mb-3 font-medium">Top countries</p>
                 <BarList
-                  rows={ga.topCountries.map((c) => ({ label: c.label, value: c.sessions }))}
+                  rows={ga.topCountries.map((c) => ({
+                    label: c.label,
+                    value: c.sessions,
+                    delta: deltaOf(c.sessions, c.previous),
+                  }))}
                   max={Math.max(1, ...ga.topCountries.map((c) => c.sessions))}
                 />
               </div>
@@ -294,7 +418,11 @@ export default async function StatsPage() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-3 font-medium">Top pages</p>
               <BarList
-                rows={ga.topPages.map((p) => ({ label: p.path, value: p.views }))}
+                rows={ga.topPages.map((p) => ({
+                  label: p.path,
+                  value: p.views,
+                  delta: deltaOf(p.views, p.previous),
+                }))}
                 max={Math.max(1, ...ga.topPages.map((p) => p.views))}
                 labelClass="w-72"
               />
@@ -313,15 +441,38 @@ export default async function StatsPage() {
         <SectionHeader
           icon={Search}
           title="Search performance"
-          meta={`Search Console · ${gsc.startDate} → ${gsc.endDate}`}
+          meta={`Search Console · ${gsc.startDate} → ${gsc.endDate}${
+            gsc.previousRange ? ` · vs ${gsc.previousRange.startDate} → ${gsc.previousRange.endDate}` : ""
+          }`}
         />
         {gsc.connected ? (
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <Kpi label="Clicks" value={int.format(gsc.totals.clicks)} />
-              <Kpi label="Impressions" value={int.format(gsc.totals.impressions)} />
-              <Kpi label="CTR" value={pct(gsc.totals.ctr)} />
-              <Kpi label="Avg position" value={gsc.totals.position.toFixed(1)} />
+              <Kpi
+                label="Clicks"
+                value={int.format(gsc.totals.clicks)}
+                delta={deltaOf(gsc.totals.clicks, gscPrev?.clicks ?? null)}
+              />
+              <Kpi
+                label="Impressions"
+                value={int.format(gsc.totals.impressions)}
+                delta={deltaOf(gsc.totals.impressions, gscPrev?.impressions ?? null)}
+              />
+              <Kpi
+                label="CTR"
+                value={pct(gsc.totals.ctr)}
+                delta={deltaOf(gsc.totals.ctr, gscPrev?.ctr ?? null, { mode: "points", format: pct })}
+              />
+              <Kpi
+                label="Avg position"
+                value={gsc.totals.position.toFixed(1)}
+                // Position 3 beats position 8, so a drop in the number is a win.
+                delta={deltaOf(gsc.totals.position, gscPrev?.position ?? null, {
+                  mode: "abs",
+                  invert: true,
+                  format: (n) => n.toFixed(1),
+                })}
+              />
             </div>
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
               <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
@@ -331,6 +482,7 @@ export default async function StatsPage() {
                     label: q.query,
                     value: q.clicks,
                     right: `${int.format(q.clicks)} clk`,
+                    delta: deltaOf(q.clicks, q.previousClicks),
                   }))}
                   max={Math.max(1, ...gsc.topQueries.map((q) => q.clicks))}
                   labelClass="w-56"
@@ -343,6 +495,7 @@ export default async function StatsPage() {
                     label: p.page.replace(/^https?:\/\/[^/]+/, "") || "/",
                     value: p.clicks,
                     right: `${int.format(p.clicks)} clk`,
+                    delta: deltaOf(p.clicks, p.previousClicks),
                   }))}
                   max={Math.max(1, ...gsc.topPages.map((p) => p.clicks))}
                   labelClass="w-56"

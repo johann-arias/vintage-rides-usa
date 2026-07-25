@@ -57,22 +57,44 @@ function daysAgo(n: number): string {
 
 // ── Google Analytics 4 (Data API) ────────────────────────────────────────────
 
+export interface GaTotals {
+  sessions: number;
+  activeUsers: number;
+  newUsers: number;
+  pageViews: number;
+  engagementRate: number; // 0..1
+  avgSessionDurationSec: number;
+}
+
 export interface GaStats {
   connected: boolean;
   error?: string;
   rangeDays: number;
-  totals: {
-    sessions: number;
-    activeUsers: number;
-    newUsers: number;
-    pageViews: number;
-    engagementRate: number; // 0..1
-    avgSessionDurationSec: number;
-  };
+  totals: GaTotals;
+  /**
+   * Same metrics over the window of equal length immediately before this one.
+   * `null` when the comparison call failed — the dashboard then just hides the
+   * deltas instead of pretending the previous period was zero.
+   */
+  previousTotals: GaTotals | null;
+  /** Bounds of the comparison window, for the "vs …" label. */
+  previousRange: { startDate: string; endDate: string } | null;
   byDay: { date: string; sessions: number }[];
-  topChannels: { label: string; sessions: number }[];
-  topPages: { path: string; views: number }[];
-  topCountries: { label: string; sessions: number }[];
+  // `previous` is null when unavailable, 0 when the row genuinely didn't exist.
+  topChannels: { label: string; sessions: number; previous: number | null }[];
+  topPages: { path: string; views: number; previous: number | null }[];
+  topCountries: { label: string; sessions: number; previous: number | null }[];
+}
+
+function zeroTotals(): GaTotals {
+  return {
+    sessions: 0,
+    activeUsers: 0,
+    newUsers: 0,
+    pageViews: 0,
+    engagementRate: 0,
+    avgSessionDurationSec: 0,
+  };
 }
 
 function emptyGa(rangeDays: number, error?: string): GaStats {
@@ -80,14 +102,9 @@ function emptyGa(rangeDays: number, error?: string): GaStats {
     connected: false,
     error,
     rangeDays,
-    totals: {
-      sessions: 0,
-      activeUsers: 0,
-      newUsers: 0,
-      pageViews: 0,
-      engagementRate: 0,
-      avgSessionDurationSec: 0,
-    },
+    totals: zeroTotals(),
+    previousTotals: null,
+    previousRange: null,
     byDay: [],
     topChannels: [],
     topPages: [],
@@ -108,10 +125,19 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
     const token = await getAccessToken(["https://www.googleapis.com/auth/analytics.readonly"]);
     if (!token) return emptyGa(rangeDays, "Could not mint an access token.");
 
-    const dateRanges = [{ startDate: `${rangeDays}daysAgo`, endDate: "today" }];
-    const body = {
-      requests: [
-        // 0: headline totals
+    // Current window is `rangeDays`+1 days long (inclusive of today), so the
+    // comparison window is shifted back by exactly that many days.
+    const span = rangeDays + 1;
+    const current = [{ startDate: `${rangeDays}daysAgo`, endDate: "today" }];
+    const previous = [{ startDate: `${rangeDays + span}daysAgo`, endDate: `${span}daysAgo` }];
+
+    // The comparison batch reaches deeper into each dimension than the current
+    // one: a row that ranks 4th today may have ranked 30th before, and we still
+    // want its previous value to compute the delta.
+    const COMPARE_LIMIT = "100";
+    const requests = (dateRanges: typeof current, withByDay: boolean, limits: [string, string, string]) =>
+      [
+        // headline totals
         {
           dateRanges,
           metrics: [
@@ -123,54 +149,89 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
             { name: "averageSessionDuration" },
           ],
         },
-        // 1: sessions by day
-        {
-          dateRanges,
-          dimensions: [{ name: "date" }],
-          metrics: [{ name: "sessions" }],
-          orderBys: [{ dimension: { dimensionName: "date" } }],
-        },
-        // 2: channels
+        // sessions by day (current window only — the comparison needs totals, not a series)
+        ...(withByDay
+          ? [
+              {
+                dateRanges,
+                dimensions: [{ name: "date" }],
+                metrics: [{ name: "sessions" }],
+                orderBys: [{ dimension: { dimensionName: "date" } }],
+              },
+            ]
+          : []),
+        // channels
         {
           dateRanges,
           dimensions: [{ name: "sessionDefaultChannelGroup" }],
           metrics: [{ name: "sessions" }],
           orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-          limit: "8",
+          limit: limits[0],
         },
-        // 3: top pages
+        // top pages
         {
           dateRanges,
           dimensions: [{ name: "pagePath" }],
           metrics: [{ name: "screenPageViews" }],
           orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
-          limit: "10",
+          limit: limits[1],
         },
-        // 4: top countries
+        // top countries
         {
           dateRanges,
           dimensions: [{ name: "country" }],
           metrics: [{ name: "sessions" }],
           orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
-          limit: "6",
+          limit: limits[2],
         },
-      ],
-    };
+      ];
 
-    const res = await fetch(
-      `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`,
-      {
+    const runBatch = async (reqs: unknown[]) =>
+      fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ requests: reqs }),
         cache: "no-store",
-      }
-    );
+      });
+
+    const [res, prevRes] = await Promise.all([
+      runBatch(requests(current, true, ["8", "10", "6"])),
+      runBatch(requests(previous, false, [COMPARE_LIMIT, COMPARE_LIMIT, COMPARE_LIMIT])),
+    ]);
     if (!res.ok) return emptyGa(rangeDays, `GA4 API ${res.status}: ${(await res.text()).slice(0, 200)}`);
 
     const json = (await res.json()) as { reports?: GaReport[] };
     const reports = json.reports ?? [];
     const num = (v?: string) => (v ? Number(v) : 0);
+
+    // A failed comparison call is not fatal: show the period on its own.
+    const prevReports = prevRes.ok ? ((await prevRes.json()) as { reports?: GaReport[] }).reports ?? [] : null;
+    const prevTotalValues = prevReports?.[0]?.rows?.[0]?.metricValues;
+    const previousTotals: GaTotals | null = prevReports
+      ? {
+          sessions: num(prevTotalValues?.[0]?.value),
+          activeUsers: num(prevTotalValues?.[1]?.value),
+          newUsers: num(prevTotalValues?.[2]?.value),
+          pageViews: num(prevTotalValues?.[3]?.value),
+          engagementRate: num(prevTotalValues?.[4]?.value),
+          avgSessionDurationSec: num(prevTotalValues?.[5]?.value),
+        }
+      : null;
+    // Previous-window lookups keyed by dimension value. Index 0 is the totals
+    // report, so the three dimension reports sit at 1, 2, 3.
+    const prevMap = (reportIndex: number): Map<string, number> | null => {
+      if (!prevReports) return null;
+      const m = new Map<string, number>();
+      for (const r of prevReports[reportIndex]?.rows ?? []) {
+        m.set(r.dimensionValues?.[0]?.value ?? "—", num(r.metricValues?.[0]?.value));
+      }
+      return m;
+    };
+    const prevChannels = prevMap(1);
+    const prevPages = prevMap(2);
+    const prevCountries = prevMap(3);
+    /** 0 (not null) for a key absent from a successful comparison call: it really was zero. */
+    const lookup = (m: Map<string, number> | null, key: string) => (m ? (m.get(key) ?? 0) : null);
 
     const t = reports[0]?.rows?.[0]?.metricValues ?? [];
     const byDay = (reports[1]?.rows ?? []).map((r) => {
@@ -178,18 +239,18 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
       const date = raw.length === 8 ? `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}` : raw;
       return { date, sessions: num(r.metricValues?.[0]?.value) };
     });
-    const topChannels = (reports[2]?.rows ?? []).map((r) => ({
-      label: r.dimensionValues?.[0]?.value ?? "—",
-      sessions: num(r.metricValues?.[0]?.value),
-    }));
-    const topPages = (reports[3]?.rows ?? []).map((r) => ({
-      path: r.dimensionValues?.[0]?.value ?? "—",
-      views: num(r.metricValues?.[0]?.value),
-    }));
-    const topCountries = (reports[4]?.rows ?? []).map((r) => ({
-      label: r.dimensionValues?.[0]?.value ?? "—",
-      sessions: num(r.metricValues?.[0]?.value),
-    }));
+    const topChannels = (reports[2]?.rows ?? []).map((r) => {
+      const label = r.dimensionValues?.[0]?.value ?? "—";
+      return { label, sessions: num(r.metricValues?.[0]?.value), previous: lookup(prevChannels, label) };
+    });
+    const topPages = (reports[3]?.rows ?? []).map((r) => {
+      const path = r.dimensionValues?.[0]?.value ?? "—";
+      return { path, views: num(r.metricValues?.[0]?.value), previous: lookup(prevPages, path) };
+    });
+    const topCountries = (reports[4]?.rows ?? []).map((r) => {
+      const label = r.dimensionValues?.[0]?.value ?? "—";
+      return { label, sessions: num(r.metricValues?.[0]?.value), previous: lookup(prevCountries, label) };
+    });
 
     return {
       connected: true,
@@ -202,6 +263,10 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
         engagementRate: num(t[4]?.value),
         avgSessionDurationSec: num(t[5]?.value),
       },
+      previousTotals,
+      previousRange: previousTotals
+        ? { startDate: daysAgo(rangeDays + span), endDate: daysAgo(span) }
+        : null,
       byDay,
       topChannels,
       topPages,
@@ -214,14 +279,31 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
 
 // ── Search Console ───────────────────────────────────────────────────────────
 
+export interface GscTotals {
+  clicks: number;
+  impressions: number;
+  ctr: number;
+  position: number;
+}
+
 export interface GscStats {
   connected: boolean;
   error?: string;
   startDate: string;
   endDate: string;
-  totals: { clicks: number; impressions: number; ctr: number; position: number };
-  topQueries: { query: string; clicks: number; impressions: number; ctr: number; position: number }[];
-  topPages: { page: string; clicks: number; impressions: number }[];
+  totals: GscTotals;
+  /** Same window length immediately before this one; null if the call failed. */
+  previousTotals: GscTotals | null;
+  previousRange: { startDate: string; endDate: string } | null;
+  topQueries: {
+    query: string;
+    clicks: number;
+    impressions: number;
+    ctr: number;
+    position: number;
+    previousClicks: number | null;
+  }[];
+  topPages: { page: string; clicks: number; impressions: number; previousClicks: number | null }[];
 }
 
 function emptyGsc(startDate: string, endDate: string, error?: string): GscStats {
@@ -231,6 +313,8 @@ function emptyGsc(startDate: string, endDate: string, error?: string): GscStats 
     startDate,
     endDate,
     totals: { clicks: 0, impressions: 0, ctr: 0, position: 0 },
+    previousTotals: null,
+    previousRange: null,
     topQueries: [],
     topPages: [],
   };
@@ -254,24 +338,57 @@ export async function getGscStats(rangeDays = 28): Promise<GscStats> {
       siteUrl
     )}/searchAnalytics/query`;
 
-    const query = async (dimensions: string[], rowLimit: number) => {
+    type GscRows = {
+      rows?: { keys?: string[]; clicks: number; impressions: number; ctr: number; position: number }[];
+    };
+
+    const query = async (dimensions: string[], rowLimit: number, range = { startDate, endDate }) => {
       const res = await fetch(base, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ startDate, endDate, dimensions, rowLimit }),
+        body: JSON.stringify({ ...range, dimensions, rowLimit }),
         cache: "no-store",
       });
       if (!res.ok) throw new Error(`GSC API ${res.status}: ${(await res.text()).slice(0, 200)}`);
-      return (await res.json()) as {
-        rows?: { keys?: string[]; clicks: number; impressions: number; ctr: number; position: number }[];
-      };
+      return (await res.json()) as GscRows;
     };
 
-    const [totalsRes, queriesRes, pagesRes] = await Promise.all([
+    // Window of equal length ending the day before the current one starts.
+    const previousRange = {
+      startDate: daysAgo(3 + rangeDays * 2 + 1),
+      endDate: daysAgo(3 + rangeDays + 1),
+    };
+    // Deeper row limits on the comparison side: today's #3 query may have been
+    // ranked far lower before, and we still need its old click count.
+    const compare = async (): Promise<[GscRows, GscRows, GscRows] | null> => {
+      try {
+        return await Promise.all([
+          query([], 1, previousRange),
+          query(["query"], 500, previousRange),
+          query(["page"], 500, previousRange),
+        ]);
+      } catch {
+        return null; // comparison is a nicety, never a reason to blank the panel
+      }
+    };
+
+    const [totalsRes, queriesRes, pagesRes, prev] = await Promise.all([
       query([], 1),
       query(["query"], 10),
       query(["page"], 10),
+      compare(),
     ]);
+
+    const prevTot = prev?.[0].rows?.[0];
+    const clicksByKey = (rows: GscRows | undefined) => {
+      if (!rows) return null;
+      const m = new Map<string, number>();
+      for (const r of rows.rows ?? []) m.set(r.keys?.[0] ?? "—", r.clicks);
+      return m;
+    };
+    const prevQueryClicks = clicksByKey(prev?.[1]);
+    const prevPageClicks = clicksByKey(prev?.[2]);
+    const lookup = (m: Map<string, number> | null, key: string) => (m ? (m.get(key) ?? 0) : null);
 
     const tot = totalsRes.rows?.[0];
     return {
@@ -284,17 +401,28 @@ export async function getGscStats(rangeDays = 28): Promise<GscStats> {
         ctr: tot?.ctr ?? 0,
         position: tot?.position ?? 0,
       },
+      previousTotals: prev
+        ? {
+            clicks: prevTot?.clicks ?? 0,
+            impressions: prevTot?.impressions ?? 0,
+            ctr: prevTot?.ctr ?? 0,
+            position: prevTot?.position ?? 0,
+          }
+        : null,
+      previousRange: prev ? previousRange : null,
       topQueries: (queriesRes.rows ?? []).map((r) => ({
         query: r.keys?.[0] ?? "—",
         clicks: r.clicks,
         impressions: r.impressions,
         ctr: r.ctr,
         position: r.position,
+        previousClicks: lookup(prevQueryClicks, r.keys?.[0] ?? "—"),
       })),
       topPages: (pagesRes.rows ?? []).map((r) => ({
         page: r.keys?.[0] ?? "—",
         clicks: r.clicks,
         impressions: r.impressions,
+        previousClicks: lookup(prevPageClicks, r.keys?.[0] ?? "—"),
       })),
     };
   } catch (e) {
