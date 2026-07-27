@@ -135,8 +135,10 @@ export default function BookPage() {
   }, [step]);
 
   // Every step entry, including the first render: this is the funnel spine.
+  // The step lives in the event NAME, not in a parameter, so the /garage report
+  // can read it straight from the GA4 API with no custom dimension to register.
   useEffect(() => {
-    trackEvent("book_step_view", { step, step_number: STEP_NUMBER[step] });
+    trackEvent(`book_step_${step}`, { step, step_number: STEP_NUMBER[step] });
   }, [step]);
 
   // Keep the exit snapshot current without re-subscribing the listener.
@@ -164,13 +166,18 @@ export default function BookPage() {
       if (leavingForCheckoutRef.current || exitSentRef.current) return;
       exitSentRef.current = true;
       const s = snapshotRef.current;
-      trackEvent("book_exit", {
+      trackEvent(`book_exit_${s.step}`, {
         step: s.step,
         step_number: STEP_NUMBER[s.step],
         has_dates: s.hasDates,
         outcome: s.outcome,
         missing_required: s.step === "details" ? s.missing : undefined,
       });
+      // One event per required field still empty when they left. Field names
+      // only, never their values — this says which question killed the form.
+      if (s.step === "details" && s.missing) {
+        for (const field of s.missing.split(",")) trackEvent(`book_missing_${field}`);
+      }
     };
     const onVisibility = () => onExit(false);
     const onPageHide = () => onExit(true);
@@ -210,15 +217,18 @@ export default function BookPage() {
       const data = await res.json();
       if (!res.ok || typeof data?.canBook !== "boolean") {
         setError("Could not check availability. Please try again in a moment.");
-        trackEvent("book_availability_result", { ...shared, outcome: "error" });
+        trackEvent("book_avail_error", { ...shared, outcome: "error" });
         return;
       }
       setAvailability(data);
       // The moment the visitor learns whether they can ride and at what price.
-      trackEvent("book_availability_result", {
+      // Outcome in the event name: sold out, too short, wrong season or a price
+      // they walked away from are four very different problems.
+      const outcome = availabilityOutcome(data);
+      trackEvent(`book_avail_${outcome}`, {
         ...shared,
         days: data.pricing?.totalDays ?? shared.days,
-        outcome: availabilityOutcome(data),
+        outcome,
         available_count: data.availableCount,
         season: data.pricing?.seasonName,
         daily_rate: data.pricing?.dailyRate,
@@ -227,7 +237,7 @@ export default function BookPage() {
       });
     } catch {
       setError("Could not check availability. Please try again.");
-      trackEvent("book_availability_result", { ...shared, outcome: "error" });
+      trackEvent("book_avail_error", { ...shared, outcome: "error" });
     } finally {
       setCheckingAvailability(false);
     }

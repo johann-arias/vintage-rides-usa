@@ -1,6 +1,7 @@
 import { getTurnoverStats, B2B_BIKE_DAY_RATE } from "@/lib/airtable";
-import { getGaStats, getGscStats, getGbpStats } from "@/lib/google-stats";
-import { Globe, Search, Star, TrendingUp, AlertCircle } from "lucide-react";
+import { getGaStats, getGscStats, getGbpStats, getBookingFunnel } from "@/lib/google-stats";
+import type { FunnelStep } from "@/lib/google-stats";
+import { Globe, Search, Star, TrendingUp, AlertCircle, Filter } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -225,14 +226,57 @@ function BarList({
   );
 }
 
+/**
+ * Funnel steps as stacked bars, each width relative to the first step, with the
+ * step-to-step rate called out. The biggest drop is the one worth reading, so
+ * anything losing more than half its visitors is flagged.
+ */
+function FunnelList({ steps }: { steps: FunnelStep[] }) {
+  const top = steps[0]?.users ?? 0;
+  return (
+    <div className="space-y-1.5">
+      {steps.map((s) => {
+        const bad = s.ofPrevious !== null && s.ofPrevious < 0.5;
+        return (
+          <div key={s.key} className="flex items-center gap-3 text-sm">
+            <span className="w-40 shrink-0 cursor-default truncate text-muted-foreground" title={s.label}>
+              {s.label}
+            </span>
+            <div className="h-5 flex-1 overflow-hidden rounded bg-[var(--brand-cream)]">
+              <div
+                className="h-full rounded bg-[var(--brand-olive-700)]"
+                style={{ width: `${top > 0 ? Math.max(s.users > 0 ? 2 : 0, (s.users / top) * 100) : 0}%` }}
+              />
+            </div>
+            <span className="w-14 shrink-0 text-right tabular-nums">{int.format(s.users)}</span>
+            <span
+              className={`w-16 shrink-0 text-right text-xs tabular-nums ${
+                bad ? "font-medium text-[#9a3b21]" : "text-muted-foreground"
+              }`}
+              title="Share of the step above"
+            >
+              {s.ofPrevious === null ? "—" : pct(s.ofPrevious)}
+            </span>
+            <span className="w-14 shrink-0 text-right text-xs tabular-nums text-muted-foreground" title="Share of arrivals">
+              {s.ofTop === null ? "—" : pct(s.ofTop)}
+            </span>
+          </div>
+        );
+      })}
+      {steps.length === 0 ? <p className="text-sm text-muted-foreground">No data.</p> : null}
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function StatsPage() {
-  const [turnover, ga, gsc, gbp] = await Promise.all([
+  const [turnover, ga, gsc, gbp, funnel] = await Promise.all([
     getTurnoverStats(),
     getGaStats(30),
     getGscStats(28),
     getGbpStats(90),
+    getBookingFunnel(30),
   ]);
 
   const maxMonth = Math.max(1, ...turnover.byMonth.map((m) => m.total));
@@ -432,6 +476,105 @@ export default async function StatsPage() {
           <NotConnected
             error={ga.error}
             hint="Grant the service account Viewer access in GA4 Admin → Property Access, then set GA4_PROPERTY_ID (numeric)."
+          />
+        )}
+      </section>
+
+      {/* ── Booking funnel ─────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={Filter}
+          title="Booking funnel"
+          meta={`/book · last ${funnel.rangeDays} days · unique visitors per step`}
+        />
+        {funnel.connected ? (
+          funnel.empty ? (
+            <PanelNote>
+              No booking events yet. They start landing a few hours after the first visit that
+              follows the instrumentation going live.
+            </PanelNote>
+          ) : (
+            <div className="space-y-3">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="mb-3 flex items-baseline justify-between">
+                  <p className="font-medium">All traffic</p>
+                  <p className="text-xs text-muted-foreground">
+                    step-to-step · share of arrivals
+                  </p>
+                </div>
+                <FunnelList steps={funnel.steps} />
+              </div>
+
+              {funnel.paidSocialSteps.length > 0 ? (
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <div className="mb-3 flex items-baseline justify-between">
+                    <p className="font-medium">{funnel.paidSocialLabel} only</p>
+                    <p className="text-xs text-muted-foreground">the Meta campaigns</p>
+                  </div>
+                  <FunnelList steps={funnel.paidSocialSteps} />
+                </div>
+              ) : null}
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <p className="mb-1 font-medium">What the price check told them</p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Every availability answer, counted per search.
+                  </p>
+                  <BarList
+                    rows={funnel.outcomes.map((o) => ({ label: o.label, value: o.events }))}
+                    max={Math.max(1, ...funnel.outcomes.map((o) => o.events))}
+                    labelClass="w-52"
+                  />
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <p className="mb-1 font-medium">Where they left the page</p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Step they were on when the page went away. Leaving for Stripe does not count.
+                  </p>
+                  <BarList
+                    rows={funnel.exits.map((e) => ({ label: e.label, value: e.users }))}
+                    max={Math.max(1, ...funnel.exits.map((e) => e.users))}
+                    labelClass="w-52"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <p className="mb-1 font-medium">Fields still empty when they gave up</p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Required fields on step 2. Field names only, never their content.
+                  </p>
+                  {funnel.missingFields.length > 0 ? (
+                    <BarList
+                      rows={funnel.missingFields.map((f) => ({ label: f.label, value: f.users }))}
+                      max={Math.max(1, ...funnel.missingFields.map((f) => f.users))}
+                      labelClass="w-52"
+                    />
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Nobody has abandoned the details form yet.
+                    </p>
+                  )}
+                </div>
+                <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                  <p className="mb-1 font-medium">Checkout errors</p>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Payment refused by our own API: dates taken in the meantime, minimum duration,
+                    network.
+                  </p>
+                  <p className="font-serif text-3xl tabular-nums text-[var(--brand-olive-700)]">
+                    {int.format(funnel.checkoutErrors)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )
+        ) : (
+          <NotConnected
+            error={funnel.error}
+            hint="Same GA4 service account as the traffic section above."
           />
         )}
       </section>

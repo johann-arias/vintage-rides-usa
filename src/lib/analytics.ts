@@ -23,13 +23,22 @@ declare global {
   }
 }
 
+/** GA4 measurement id, also configured in the root layout. */
+export const GA_MEASUREMENT_ID = "G-M87DWZQ2B4";
+
 export function trackEvent(name: string, params: EventParams = {}): void {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   try {
     const payload = Object.fromEntries(
       Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
     );
-    window.gtag("event", name, payload);
+    // `send_to` is REQUIRED here, not optional politeness. This site loads both
+    // the GTM container and the gtag.js snippet, and GTM owns the dataLayer:
+    // an untargeted gtag('event', …) is queued and silently dropped, while the
+    // same call with an explicit destination is delivered. Verified against the
+    // live property: two identical probes, only the one carrying send_to showed
+    // up in the GA4 realtime report.
+    window.gtag("event", name, { ...payload, send_to: GA_MEASUREMENT_ID });
   } catch {
     /* analytics must never break the booking flow */
   }

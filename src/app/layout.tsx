@@ -5,8 +5,9 @@ import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import ContactButton from "@/components/ContactButton";
 import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 
-const GA_ID = "G-M87DWZQ2B4";
+const GA_ID = GA_MEASUREMENT_ID;
 const GTM_ID = "GTM-T22FLRVR";
 
 const inter = Inter({

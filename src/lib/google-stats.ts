@@ -277,6 +277,222 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
   }
 }
 
+// ── Booking funnel (GA4 events fired by /book) ───────────────────────────────
+//
+// The /book page encodes every breakdown in the event NAME (book_step_details,
+// book_avail_sold_out, book_missing_license_number, …) rather than in event
+// parameters. GA4 exposes event names through the Data API out of the box,
+// while parameters would each have to be registered as a custom dimension in
+// the GA4 UI first. So this whole report needs zero GA4 configuration, and a
+// new milestone becomes readable here the day it ships.
+
+export interface FunnelStep {
+  key: string;
+  label: string;
+  users: number;
+  events: number;
+  /** Share of the step above, 0..1. Null on the first step. */
+  ofPrevious: number | null;
+  /** Share of the first step, 0..1. */
+  ofTop: number | null;
+}
+
+export interface FunnelBreakdownRow {
+  key: string;
+  label: string;
+  users: number;
+  events: number;
+}
+
+export interface BookingFunnelStats {
+  connected: boolean;
+  error?: string;
+  rangeDays: number;
+  /** True when the page has been instrumented but no event landed yet. */
+  empty: boolean;
+  steps: FunnelStep[];
+  /** Same funnel restricted to paid social, i.e. the Meta campaigns. */
+  paidSocialSteps: FunnelStep[];
+  paidSocialLabel: string;
+  outcomes: FunnelBreakdownRow[];
+  exits: FunnelBreakdownRow[];
+  missingFields: FunnelBreakdownRow[];
+  checkoutErrors: number;
+}
+
+// Ordered spine of the funnel. Keys are GA4 event names.
+const FUNNEL_STEPS: { key: string; label: string }[] = [
+  { key: "book_step_dates", label: "Landed on step 1" },
+  { key: "book_dates_started", label: "Touched a date" },
+  { key: "__availability", label: "Saw a price" },
+  { key: "book_continue_click", label: "Clicked Continue" },
+  { key: "book_step_details", label: "Reached details" },
+  { key: "book_step_review", label: "Reached review" },
+  { key: "book_checkout_click", label: "Clicked pay" },
+  { key: "book_checkout_redirect", label: "Sent to Stripe" },
+];
+
+const OUTCOME_LABELS: Record<string, string> = {
+  book_avail_available: "Bikes available",
+  book_avail_sold_out: "Sold out for those dates",
+  book_avail_below_min_days: "Below the minimum duration",
+  book_avail_past_date: "Pickup date in the past",
+  book_avail_out_of_season: "Out of season",
+  book_avail_error: "Availability check failed",
+};
+
+const EXIT_LABELS: Record<string, string> = {
+  book_exit_dates: "Left on step 1 (dates)",
+  book_exit_details: "Left on step 2 (details)",
+  book_exit_review: "Left on step 3 (review)",
+};
+
+const MISSING_LABELS: Record<string, string> = {
+  book_missing_first_name: "First name",
+  book_missing_last_name: "Last name",
+  book_missing_email: "Email",
+  book_missing_license_number: "Motorcycle license number",
+};
+
+function emptyFunnel(rangeDays: number, error?: string): BookingFunnelStats {
+  return {
+    connected: false,
+    error,
+    rangeDays,
+    empty: true,
+    steps: [],
+    paidSocialSteps: [],
+    paidSocialLabel: "Paid Social",
+    outcomes: [],
+    exits: [],
+    missingFields: [],
+    checkoutErrors: 0,
+  };
+}
+
+export async function getBookingFunnel(rangeDays = 30): Promise<BookingFunnelStats> {
+  const propertyId = process.env.GA4_PROPERTY_ID;
+  if (!hasCredentials()) return emptyFunnel(rangeDays, "Service account not configured (GOOGLE_SA_KEY_B64).");
+  if (!propertyId) return emptyFunnel(rangeDays, "Missing GA4_PROPERTY_ID (numeric property id).");
+
+  try {
+    const token = await getAccessToken(["https://www.googleapis.com/auth/analytics.readonly"]);
+    if (!token) return emptyFunnel(rangeDays, "Could not mint an access token.");
+
+    const dateRanges = [{ startDate: `${rangeDays}daysAgo`, endDate: "today" }];
+    // Only our own events: everything the booking page fires is prefixed
+    // `book_`, so one filter keeps GA4's automatic events out.
+    const bookEventsOnly = {
+      filter: { fieldName: "eventName", stringFilter: { matchType: "BEGINS_WITH", value: "book_" } },
+    };
+
+    const res = await fetch(
+      `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:batchRunReports`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        cache: "no-store",
+        body: JSON.stringify({
+          requests: [
+            // All traffic, one row per event name.
+            {
+              dateRanges,
+              dimensions: [{ name: "eventName" }],
+              metrics: [{ name: "eventCount" }, { name: "totalUsers" }],
+              dimensionFilter: bookEventsOnly,
+              limit: "200",
+            },
+            // Same, split by channel, so the Meta campaigns can be isolated.
+            {
+              dateRanges,
+              dimensions: [{ name: "eventName" }, { name: "sessionDefaultChannelGroup" }],
+              metrics: [{ name: "eventCount" }, { name: "totalUsers" }],
+              dimensionFilter: bookEventsOnly,
+              limit: "500",
+            },
+          ],
+        }),
+      }
+    );
+    if (!res.ok) return emptyFunnel(rangeDays, `GA4 API ${res.status}: ${(await res.text()).slice(0, 200)}`);
+
+    const json = (await res.json()) as { reports?: GaReport[] };
+    const num = (v?: string) => (v ? Number(v) : 0);
+
+    // eventName -> { events, users }
+    const all = new Map<string, { events: number; users: number }>();
+    for (const r of json.reports?.[0]?.rows ?? []) {
+      const name = r.dimensionValues?.[0]?.value ?? "";
+      all.set(name, { events: num(r.metricValues?.[0]?.value), users: num(r.metricValues?.[1]?.value) });
+    }
+    const paid = new Map<string, { events: number; users: number }>();
+    for (const r of json.reports?.[1]?.rows ?? []) {
+      const name = r.dimensionValues?.[0]?.value ?? "";
+      const channel = r.dimensionValues?.[1]?.value ?? "";
+      if (!channel.toLowerCase().includes("paid social")) continue;
+      const prev = paid.get(name) ?? { events: 0, users: 0 };
+      paid.set(name, {
+        events: prev.events + num(r.metricValues?.[0]?.value),
+        users: prev.users + num(r.metricValues?.[1]?.value),
+      });
+    }
+
+    // "Saw a price" is any availability answer, whatever it said.
+    const sumAvailability = (m: Map<string, { events: number; users: number }>) => {
+      let events = 0;
+      let users = 0;
+      for (const [name, v] of m) {
+        if (!name.startsWith("book_avail_")) continue;
+        events += v.events;
+        users += v.users; // upper bound: a visitor searching twice with two outcomes counts twice
+      }
+      return { events, users };
+    };
+
+    const buildSteps = (m: Map<string, { events: number; users: number }>): FunnelStep[] => {
+      const raw = FUNNEL_STEPS.map((s) => {
+        const v = s.key === "__availability" ? sumAvailability(m) : (m.get(s.key) ?? { events: 0, users: 0 });
+        return { ...s, users: v.users, events: v.events };
+      });
+      const top = raw[0]?.users ?? 0;
+      return raw.map((s, i) => {
+        const above = i === 0 ? null : raw[i - 1].users;
+        return {
+          ...s,
+          ofPrevious: above && above > 0 ? s.users / above : null,
+          ofTop: top > 0 ? s.users / top : null,
+        };
+      });
+    };
+
+    const breakdown = (labels: Record<string, string>): FunnelBreakdownRow[] =>
+      Object.entries(labels)
+        .map(([key, label]) => {
+          const v = all.get(key) ?? { events: 0, users: 0 };
+          return { key, label, users: v.users, events: v.events };
+        })
+        .filter((r) => r.events > 0)
+        .sort((a, b) => b.events - a.events);
+
+    const steps = buildSteps(all);
+
+    return {
+      connected: true,
+      rangeDays,
+      empty: all.size === 0,
+      steps,
+      paidSocialSteps: paid.size > 0 ? buildSteps(paid) : [],
+      paidSocialLabel: "Paid Social",
+      outcomes: breakdown(OUTCOME_LABELS),
+      exits: breakdown(EXIT_LABELS),
+      missingFields: breakdown(MISSING_LABELS),
+      checkoutErrors: all.get("book_checkout_error")?.events ?? 0,
+    };
+  } catch (e) {
+    return emptyFunnel(rangeDays, e instanceof Error ? e.message : "Unknown GA4 error.");
+  }
+}
+
 // ── Search Console ───────────────────────────────────────────────────────────
 
 export interface GscTotals {
