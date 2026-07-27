@@ -251,34 +251,45 @@ export default function BookPage() {
   }, [startDate, endDate, bikeCount, checkAvailability]);
 
   // Upper-funnel signal for Meta: the visitor has valid dates, a price, and is
-  // moving to the details step. Fired browser-side through the GTM pixel.
+  // moving to the details step.
   //
-  // This used to be reported as InitiateCheckout, the same name the server uses
-  // when it actually creates a Stripe session, so Meta saw one event meaning two
-  // different things and the funnel could not be read. AddToCart is the honest
-  // name for this step and is still a standard event the ad optimizer accepts.
-  // It is also the only dense signal we have: 30 in the campaign's first three
-  // days, against zero real checkout sessions.
+  // TWO events are fired here on purpose, and the duplication is not an
+  // oversight:
   //
-  // No server twin, so no event_id / dedup needed. Best-effort, never blocks.
-  function fireAddToCart() {
+  //  - InitiateCheckout, because both live ad sets optimise on
+  //    INITIATED_CHECKOUT (checked in ad_set_history: OFFSITE_CONVERSIONS +
+  //    promoted_object INITIATED_CHECKOUT, both in LEARNING). This click is
+  //    what has been feeding them, roughly 70 a week, and it is the only
+  //    signal they get: the server-side InitiateCheckout has never fired for a
+  //    real visitor, Stripe confirms zero checkout sessions from the campaign.
+  //    Dropping it here starves the optimiser and breaks the learning phase.
+  //  - AddToCart, which is the honest name for what actually happened, and
+  //    builds the clean series we want to optimise on later.
+  //
+  // The day the ad sets switch to AddToCart, delete the InitiateCheckout line
+  // and this event stops meaning two different things at once.
+  //
+  // Best-effort: analytics never blocks a booking.
+  function fireStepTwoSignals() {
     const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof fbq !== "function" || !availability?.pricing) return;
+    const payload = {
+      value: availability.pricing.totalPrice,
+      currency: "USD",
+      num_items: bikeCount,
+      content_ids: ["himalayan-450-rental"],
+      content_type: "product",
+    };
     try {
-      fbq("track", "AddToCart", {
-        value: availability.pricing.totalPrice,
-        currency: "USD",
-        num_items: bikeCount,
-        content_ids: ["himalayan-450-rental"],
-        content_type: "product",
-      });
+      fbq("track", "InitiateCheckout", payload);
+      fbq("track", "AddToCart", payload);
     } catch {
       /* analytics must never break the booking flow */
     }
   }
 
   function handleProceedToDetails() {
-    fireAddToCart();
+    fireStepTwoSignals();
     trackEvent("book_continue_click", {
       days: availability?.pricing?.totalDays,
       lead_time_days: startDate ? daysBetween(todayInRapidCity(), startDate) : undefined,

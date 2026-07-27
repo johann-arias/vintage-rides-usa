@@ -10,17 +10,17 @@ import crypto from "crypto";
  *    confirmed" moments are the Stripe webhook (advance bookings) and the
  *    accept path of a same-day request-to-book.
  *  - InitiateCheckout, when a Stripe session is created, i.e. the visitor
- *    really is leaving /book to pay. This is the ONLY thing allowed to carry
- *    that name. The browser fires AddToCart one step earlier, when the visitor
- *    moves from dates to the details form; the two used to share the name
- *    InitiateCheckout, which made the funnel unreadable and told the optimizer
- *    that two very different intents were the same thing.
+ *    really is leaving /book to pay.
  *
- * Volume, measured over the campaign's first three days: 30 AddToCart, zero
- * InitiateCheckout, zero Purchase. With a 10-bike fleet neither IC nor Purchase
- * will reach the ~50 conversions a week an ad set needs to leave Meta's
- * learning phase any time soon, so AddToCart is the signal to optimise on for
- * now, and IC stays honest for when there is something to count.
+ * Note that InitiateCheckout is ALSO fired by the browser one step earlier, on
+ * the Continue click in /book. That overlap is deliberate and load-bearing:
+ * the live ad sets optimise on INITIATED_CHECKOUT, and the browser click is
+ * the only thing that actually produces it. This server-side one has never
+ * fired for a real visitor (Stripe: zero checkout sessions from the campaign),
+ * so in practice the two never collide today. The browser also fires AddToCart
+ * with the same payload, which is the name that tells the truth about that
+ * step; once the ad sets optimise on it, the browser InitiateCheckout goes away
+ * and this becomes the only source of the event.
  *
  * The browser pixel lives in GTM (container GTM-T22FLRVR) and only handles
  * PageView + the _fbp cookie. Do NOT add a second pixel in layout.tsx.
