@@ -84,6 +84,13 @@ export interface GaStats {
   topChannels: { label: string; sessions: number; previous: number | null }[];
   topPages: { path: string; views: number; previous: number | null }[];
   topCountries: { label: string; sessions: number; previous: number | null }[];
+  /**
+   * Sites that sent us a click, i.e. every session whose medium is `referral`.
+   * Deliberately wider than the "Referral" channel group: a click from
+   * facebook.com also carries medium=referral but GA4 files it under Organic
+   * Social, and it is still a site sending traffic.
+   */
+  topReferrers: { label: string; sessions: number; previous: number | null }[];
 }
 
 function zeroTotals(): GaTotals {
@@ -109,6 +116,7 @@ function emptyGa(rangeDays: number, error?: string): GaStats {
     topChannels: [],
     topPages: [],
     topCountries: [],
+    topReferrers: [],
   };
 }
 
@@ -135,7 +143,29 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
     // one: a row that ranks 4th today may have ranked 30th before, and we still
     // want its previous value to compute the delta.
     const COMPARE_LIMIT = "100";
-    const requests = (dateRanges: typeof current, withByDay: boolean, limits: [string, string, string]) =>
+    // Referring sites. GA4 caps a batch at 5 reports, and the current window
+    // already uses its five, so this one rides along in the comparison batch
+    // (which has no by-day series) and runs on its own for the current window.
+    const referrersRequest = (dateRanges: typeof current, limit: string) => ({
+      dateRanges,
+      dimensions: [{ name: "sessionSource" }],
+      metrics: [{ name: "sessions" }],
+      dimensionFilter: {
+        filter: {
+          fieldName: "sessionMedium",
+          stringFilter: { matchType: "EXACT", value: "referral" },
+        },
+      },
+      orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
+      limit,
+    });
+
+    const requests = (
+      dateRanges: typeof current,
+      withByDay: boolean,
+      limits: [string, string, string],
+      withReferrers = false
+    ) =>
       [
         // headline totals
         {
@@ -184,6 +214,8 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
           orderBys: [{ metric: { metricName: "sessions" }, desc: true }],
           limit: limits[2],
         },
+        // referring sites — appended last so the report indices above are stable
+        ...(withReferrers ? [referrersRequest(dateRanges, COMPARE_LIMIT)] : []),
       ];
 
     const runBatch = async (reqs: unknown[]) =>
@@ -194,9 +226,18 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
         cache: "no-store",
       });
 
-    const [res, prevRes] = await Promise.all([
+    const runReport = async (req: unknown) =>
+      fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify(req),
+        cache: "no-store",
+      });
+
+    const [res, prevRes, referrersRes] = await Promise.all([
       runBatch(requests(current, true, ["8", "10", "6"])),
-      runBatch(requests(previous, false, [COMPARE_LIMIT, COMPARE_LIMIT, COMPARE_LIMIT])),
+      runBatch(requests(previous, false, [COMPARE_LIMIT, COMPARE_LIMIT, COMPARE_LIMIT], true)),
+      runReport(referrersRequest(current, "10")),
     ]);
     if (!res.ok) return emptyGa(rangeDays, `GA4 API ${res.status}: ${(await res.text()).slice(0, 200)}`);
 
@@ -230,6 +271,7 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
     const prevChannels = prevMap(1);
     const prevPages = prevMap(2);
     const prevCountries = prevMap(3);
+    const prevReferrers = prevMap(4);
     /** 0 (not null) for a key absent from a successful comparison call: it really was zero. */
     const lookup = (m: Map<string, number> | null, key: string) => (m ? (m.get(key) ?? 0) : null);
 
@@ -251,6 +293,14 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
       const label = r.dimensionValues?.[0]?.value ?? "—";
       return { label, sessions: num(r.metricValues?.[0]?.value), previous: lookup(prevCountries, label) };
     });
+    // Its own call, so a referrer failure leaves the rest of the section intact.
+    const referrerRows = referrersRes.ok
+      ? ((await referrersRes.json()) as GaReport).rows ?? []
+      : [];
+    const topReferrers = referrerRows.map((r) => {
+      const label = r.dimensionValues?.[0]?.value ?? "—";
+      return { label, sessions: num(r.metricValues?.[0]?.value), previous: lookup(prevReferrers, label) };
+    });
 
     return {
       connected: true,
@@ -271,6 +321,7 @@ export async function getGaStats(rangeDays = 30): Promise<GaStats> {
       topChannels,
       topPages,
       topCountries,
+      topReferrers,
     };
   } catch (e) {
     return emptyGa(rangeDays, e instanceof Error ? e.message : "Unknown GA4 error.");

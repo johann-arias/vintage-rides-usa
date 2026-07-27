@@ -460,6 +460,25 @@ export default async function StatsPage() {
               </div>
             </div>
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <div className="mb-1 flex items-baseline justify-between gap-4">
+                <p className="font-medium">Referring sites</p>
+                <p className="text-xs text-muted-foreground">sessions with medium = referral</p>
+              </div>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Every site that sent a click, including the Facebook domains that GA4 files under
+                Organic Social rather than Referral.
+              </p>
+              <BarList
+                rows={ga.topReferrers.map((r) => ({
+                  label: r.label,
+                  value: r.sessions,
+                  delta: deltaOf(r.sessions, r.previous),
+                }))}
+                max={Math.max(1, ...ga.topReferrers.map((r) => r.sessions))}
+                labelClass="w-56"
+              />
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-3 font-medium">Top pages</p>
               <BarList
                 rows={ga.topPages.map((p) => ({
