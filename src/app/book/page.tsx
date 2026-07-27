@@ -97,8 +97,6 @@ export default function BookPage() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
-  const [licenseNumber, setLicenseNumber] = useState("");
-  const [emergencyContact, setEmergencyContact] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
 
   const [step, setStep] = useState<Step>("dates");
@@ -151,7 +149,6 @@ export default function BookPage() {
         !firstName && "first_name",
         !lastName && "last_name",
         !email && "email",
-        !licenseNumber && "license_number",
       ]
         .filter(Boolean)
         .join(","),
@@ -326,8 +323,6 @@ export default function BookPage() {
           lastName,
           email,
           phone,
-          licenseNumber,
-          emergencyContact,
           specialRequests,
           totalPrice: availability?.pricing?.totalPrice,
         }),
@@ -775,31 +770,11 @@ export default function BookPage() {
                   </div>
                 </div>
 
-                <div className="mb-5">
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
-                    Motorcycle License Number *
-                  </label>
-                  <input
-                    type="text"
-                    value={licenseNumber}
-                    onChange={(e) => setLicenseNumber(e.target.value)}
-                    placeholder="Your license number with motorcycle endorsement"
-                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                  />
-                </div>
-
-                <div className="mb-5">
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
-                    Emergency Contact (Name & Phone)
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyContact}
-                    onChange={(e) => setEmergencyContact(e.target.value)}
-                    placeholder="Jane Doe — +1 555 123 4567"
-                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                  />
-                </div>
+                {/* Licence number and emergency contact used to sit here. They
+                    are counter information, not booking information, and asking
+                    for a licence number on a phone before payment was the
+                    heaviest question on the page. Both are now collected at
+                    pickup instead. */}
 
                 <div>
                   <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
@@ -831,12 +806,11 @@ export default function BookPage() {
                     // of it is actually worth asking for before payment.
                     trackEvent("book_review_click", {
                       has_phone: Boolean(phone),
-                      has_emergency_contact: Boolean(emergencyContact),
                       has_special_requests: Boolean(specialRequests),
                     });
                     setStep("review");
                   }}
-                  disabled={!firstName || !lastName || !email || !licenseNumber}
+                  disabled={!firstName || !lastName || !email}
                   className="flex-[2] bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
                 >
                   Review Booking

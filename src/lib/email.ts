@@ -200,6 +200,9 @@ function renderHtml(b: BookingConfirmationInput): string {
                 ${[
                   "Save this email — your booking reference is your check-in code.",
                   `On your start date, head to ${PICKUP_ADDRESS_INLINE} for ${pTime} pickup. Return by ${dTime} on your end date.`,
+                  // The website no longer asks for a licence number, so the
+                  // reminder to bring the licence itself has to live here.
+                  "Bring your driver's license with a motorcycle endorsement — we check it at pickup. International riders also need an International Driving Permit.",
                   "Want GPX routes for the Black Hills, Badlands or Needles Highway? Just reply.",
                 ]
                   .map(
@@ -263,7 +266,8 @@ function renderText(b: BookingConfirmationInput): string {
     `What's next:`,
     `1. Save this email — your booking reference is your check-in code.`,
     `2. On your start date, head to ${PICKUP_ADDRESS_INLINE} for ${pTime} pickup. Return by ${dTime} on your end date.`,
-    `3. Want GPX routes for the Black Hills, Badlands or Needles Highway? Just reply.`,
+    `3. Bring your driver's license with a motorcycle endorsement — we check it at pickup. International riders also need an International Driving Permit.`,
+    `4. Want GPX routes for the Black Hills, Badlands or Needles Highway? Just reply.`,
     ``,
     `Questions? Reply to this email.`,
     ``,

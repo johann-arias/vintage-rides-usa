@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
         "Total Price (USD)": (session.amount_total ?? 0) / 100,
         "Stripe Session ID": session.id,
         "Stripe Payment Intent ID": paymentIntentId,
-        "Rider License Number": meta.licenseNumber ?? "",
-        "Emergency Contact Name": meta.emergencyContact ?? "",
+        // Rider License Number and Emergency Contact Name stay in Airtable for
+        // the team to fill at pickup: the website no longer asks for them.
         "Special Requests": meta.specialRequests ?? "",
         ...(requestToBook
           ? { "Internal Notes": "Channel: Website | Same-day request (authorized, awaiting accept)" }

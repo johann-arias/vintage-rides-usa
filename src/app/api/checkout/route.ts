@@ -21,12 +21,13 @@ export async function POST(req: NextRequest) {
     lastName,
     email,
     phone,
-    licenseNumber,
-    emergencyContact,
     specialRequests,
   } = body;
 
-  if (!startDate || !endDate || !bikeCount || !firstName || !lastName || !email || !licenseNumber) {
+  // Licence number and emergency contact are no longer asked for online. They
+  // are counter information, collected at pickup where the licence and its
+  // motorcycle endorsement get checked anyway.
+  if (!startDate || !endDate || !bikeCount || !firstName || !lastName || !email) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -109,8 +110,6 @@ export async function POST(req: NextRequest) {
       lastName,
       email,
       phone: phone ?? "",
-      licenseNumber,
-      emergencyContact: emergencyContact ?? "",
       specialRequests: specialRequests ?? "",
       totalDays: String(pricing.totalDays),
       dailyRate: String(pricing.dailyRate),
