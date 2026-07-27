@@ -1,7 +1,9 @@
 import { getTurnoverStats, B2B_BIKE_DAY_RATE } from "@/lib/airtable";
 import { getGaStats, getGscStats, getGbpStats, getBookingFunnel } from "@/lib/google-stats";
 import type { FunnelStep } from "@/lib/google-stats";
-import { Globe, Search, Star, TrendingUp, AlertCircle, Filter } from "lucide-react";
+import { getSearchStats } from "@/lib/availability-log";
+import { getAbandonedCheckouts } from "@/lib/stripe-abandoned";
+import { Globe, Search, Star, TrendingUp, AlertCircle, Filter, CalendarSearch, ShoppingCart } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -271,12 +273,14 @@ function FunnelList({ steps }: { steps: FunnelStep[] }) {
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function StatsPage() {
-  const [turnover, ga, gsc, gbp, funnel] = await Promise.all([
+  const [turnover, ga, gsc, gbp, funnel, searches, abandoned] = await Promise.all([
     getTurnoverStats(),
     getGaStats(30),
     getGscStats(28),
     getGbpStats(90),
     getBookingFunnel(30),
+    getSearchStats(30).catch(() => null),
+    getAbandonedCheckouts(30),
   ]);
 
   const maxMonth = Math.max(1, ...turnover.byMonth.map((m) => m.total));
@@ -597,6 +601,157 @@ export default async function StatsPage() {
             error={funnel.error}
             hint="Same GA4 service account as the traffic section above."
           />
+        )}
+      </section>
+
+      {/* ── What visitors searched for ─────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={CalendarSearch}
+          title="What they tried to book"
+          meta={`every date check on /book · last ${searches?.rangeDays ?? 30} days · ${
+            searches ? int.format(searches.total) : 0
+          } searches`}
+        />
+        {searches === null ? (
+          <PanelNote>Could not read the search log.</PanelNote>
+        ) : searches.total === 0 ? (
+          <PanelNote>
+            No searches logged yet. Every date check on /book lands here from now on, with no
+            personal data attached.
+          </PanelNote>
+        ) : (
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <div className="mb-3 flex items-baseline justify-between gap-4">
+                <p className="font-medium">Months they asked for</p>
+                <p className="text-xs text-muted-foreground">
+                  {pct(searches.sturgisShare)} of searches hit the rally rate
+                </p>
+              </div>
+              <BarList
+                rows={searches.byMonth.map((m) => ({ label: m.label, value: m.searches }))}
+                max={Math.max(1, ...searches.byMonth.map((m) => m.searches))}
+                labelClass="w-28"
+              />
+            </div>
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">What we answered</p>
+                <BarList
+                  rows={searches.byOutcome.map((o) => ({ label: o.label, value: o.searches }))}
+                  max={Math.max(1, ...searches.byOutcome.map((o) => o.searches))}
+                  labelClass="w-28"
+                />
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">How far ahead</p>
+                <BarList
+                  rows={searches.byLeadTime.map((l) => ({ label: l.label, value: l.searches }))}
+                  max={Math.max(1, ...searches.byLeadTime.map((l) => l.searches))}
+                  labelClass="w-32"
+                />
+              </div>
+              <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <p className="mb-3 font-medium">How long</p>
+                <BarList
+                  rows={searches.byDuration.map((d) => ({ label: d.label, value: d.searches }))}
+                  max={Math.max(1, ...searches.byDuration.map((d) => d.searches))}
+                  labelClass="w-28"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ── Abandoned checkouts ────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader
+          icon={ShoppingCart}
+          title="Abandoned checkouts"
+          meta={`Stripe · last ${abandoned.rangeDays} days · reached the card form, never paid`}
+        />
+        {abandoned.connected ? (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Kpi label="Checkouts started" value={int.format(abandoned.created)} />
+              <Kpi label="Paid" value={int.format(abandoned.completed)} />
+              <Kpi label="Abandoned" value={int.format(abandoned.abandoned)} />
+              <Kpi
+                label="Left on the table"
+                value={usd.format(abandoned.lostValue)}
+                sub={`${pct(abandoned.abandonRate)} abandon rate`}
+              />
+            </div>
+            <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+              <p className="mb-1 font-medium">Who to follow up</p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                Same-day requests are not listed here: their card is authorized rather than
+                charged, so Stripe calls them unpaid even though the customer went through.
+              </p>
+              {abandoned.sessions.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-muted-foreground">
+                        <th className="pb-2 font-medium">Started</th>
+                        <th className="pb-2 font-medium">Who</th>
+                        <th className="pb-2 font-medium">Rental</th>
+                        <th className="pb-2 text-right font-medium">Amount</th>
+                        <th className="pb-2 text-right font-medium">State</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {abandoned.sessions.map((s) => (
+                        <tr key={s.id} className="border-t border-border">
+                          <td className="py-2 whitespace-nowrap tabular-nums">
+                            {new Date(s.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            })}
+                          </td>
+                          <td className="py-2">
+                            <span className="block">{s.name ?? "—"}</span>
+                            <span className="block text-xs text-muted-foreground">
+                              {s.email ?? "no email"}
+                            </span>
+                          </td>
+                          <td className="py-2 whitespace-nowrap text-xs text-muted-foreground">
+                            {s.startDate && s.endDate ? `${s.startDate} → ${s.endDate}` : "—"}
+                            {s.bikes ? ` · ${s.bikes} bike${s.bikes > 1 ? "s" : ""}` : ""}
+                          </td>
+                          <td className="py-2 text-right tabular-nums">
+                            {s.amount != null ? usd.format(s.amount) : "—"}
+                          </td>
+                          <td className="py-2 text-right">
+                            {s.recoveryUrl ? (
+                              <a
+                                href={s.recoveryUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[var(--brand-olive-700)] underline underline-offset-2"
+                              >
+                                recovery link
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">{s.state}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nobody has abandoned a checkout in this window.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <NotConnected error={abandoned.error} hint="Needs STRIPE_SECRET_KEY on the server." />
         )}
       </section>
 

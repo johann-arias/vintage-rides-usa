@@ -10,6 +10,7 @@ export const Tables = {
   Blocks: "USA_Bike_Blocks",
   Bookings: "USA_Rental_Bookings",
   Pricing: "USA_Pricing",
+  AvailabilitySearches: "USA_Availability_Searches",
   Tours: "Tours",
   Riders: "Riders",
 } as const;

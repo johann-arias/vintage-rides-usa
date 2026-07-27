@@ -4,7 +4,15 @@ import {
   getActivePricingRules,
   calculateRentalPrice,
 } from "@/lib/airtable";
-import { isSameDay, isPast } from "@/lib/booking-window";
+import { isSameDay, isPast, todayInRapidCity } from "@/lib/booking-window";
+import { logAvailabilitySearch, type SearchOutcome } from "@/lib/availability-log";
+
+/** Whole days between two YYYY-MM-DD strings (noon anchor avoids DST slips). */
+function daysBetween(fromYmd: string, toYmd: string): number {
+  const a = new Date(`${fromYmd}T12:00:00Z`).getTime();
+  const b = new Date(`${toYmd}T12:00:00Z`).getTime();
+  return Math.round((b - a) / 86_400_000);
+}
 
 const NO_STORE = { "cache-control": "no-store, no-cache, must-revalidate" };
 
@@ -34,6 +42,15 @@ export async function GET(req: NextRequest) {
 
   // Past pickup dates are never bookable.
   if (isPast(startDate)) {
+    void logAvailabilitySearch({
+      startDate,
+      endDate,
+      days: Math.max(daysBetween(startDate, endDate), 1),
+      bikes,
+      leadTimeDays: daysBetween(todayInRapidCity(), startDate),
+      outcome: "past_date",
+      availableCount: 0,
+    });
     return NextResponse.json(
       {
         availableCount: 0,
@@ -55,6 +72,26 @@ export async function GET(req: NextRequest) {
     ]);
 
     const pricing = calculateRentalPrice(startDate, endDate, bikes, pricingRules);
+
+    // Not awaited: the visitor's answer never waits on our bookkeeping.
+    const outcome: SearchOutcome =
+      availableCount < bikes
+        ? "sold_out"
+        : pricing.totalDays < pricing.minDays
+        ? "below_min_days"
+        : "available";
+    void logAvailabilitySearch({
+      startDate,
+      endDate,
+      days: pricing.totalDays,
+      bikes,
+      leadTimeDays: daysBetween(todayInRapidCity(), startDate),
+      outcome,
+      availableCount,
+      dailyRate: pricing.dailyRate,
+      totalPrice: pricing.totalPrice,
+      season: pricing.seasonName,
+    });
 
     return NextResponse.json(
       {

@@ -76,6 +76,11 @@ export async function POST(req: NextRequest) {
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ["card"],
     mode: "payment",
+    // Abandoned cart recovery: when the session expires unpaid, Stripe keeps a
+    // recovery link alive so the customer can pick the booking back up, and
+    // emails it to them if cart abandonment emails are on in the Dashboard.
+    // The link also surfaces in the garage so the team can follow up by hand.
+    after_expiration: { recovery: { enabled: true, allow_promotion_codes: false } },
     // Same-day: authorize only (manual capture). Advance: default (auto capture).
     ...(requestToBook
       ? { payment_intent_data: { capture_method: "manual" as const } }
