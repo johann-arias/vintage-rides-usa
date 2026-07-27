@@ -311,9 +311,10 @@ export interface BookingFunnelStats {
   /** True when the page has been instrumented but no event landed yet. */
   empty: boolean;
   steps: FunnelStep[];
-  /** Same funnel restricted to paid social, i.e. the Meta campaigns. */
-  paidSocialSteps: FunnelStep[];
-  paidSocialLabel: string;
+  /** Same funnel restricted to sessions carrying a campaign name, i.e. the ads. */
+  campaignSteps: FunnelStep[];
+  /** Campaign names seen in the window, most sessions first. */
+  campaignNames: string[];
   outcomes: FunnelBreakdownRow[];
   exits: FunnelBreakdownRow[];
   missingFields: FunnelBreakdownRow[];
@@ -361,8 +362,8 @@ function emptyFunnel(rangeDays: number, error?: string): BookingFunnelStats {
     rangeDays,
     empty: true,
     steps: [],
-    paidSocialSteps: [],
-    paidSocialLabel: "Paid Social",
+    campaignSteps: [],
+    campaignNames: [],
     outcomes: [],
     exits: [],
     missingFields: [],
@@ -402,13 +403,17 @@ export async function getBookingFunnel(rangeDays = 30): Promise<BookingFunnelSta
               dimensionFilter: bookEventsOnly,
               limit: "200",
             },
-            // Same, split by channel, so the Meta campaigns can be isolated.
+            // Same, split by campaign. Deliberately NOT by channel group: the
+            // Meta ads have been arriving tagged utm_medium=social, which GA4
+            // files under "Organic Social", so a channel filter would drop
+            // almost all of the paid traffic. A campaign name is set by the ad
+            // whatever medium it declares.
             {
               dateRanges,
-              dimensions: [{ name: "eventName" }, { name: "sessionDefaultChannelGroup" }],
+              dimensions: [{ name: "eventName" }, { name: "sessionCampaignName" }],
               metrics: [{ name: "eventCount" }, { name: "totalUsers" }],
               dimensionFilter: bookEventsOnly,
-              limit: "500",
+              limit: "1000",
             },
           ],
         }),
@@ -425,16 +430,28 @@ export async function getBookingFunnel(rangeDays = 30): Promise<BookingFunnelSta
       const name = r.dimensionValues?.[0]?.value ?? "";
       all.set(name, { events: num(r.metricValues?.[0]?.value), users: num(r.metricValues?.[1]?.value) });
     }
-    const paid = new Map<string, { events: number; users: number }>();
+    // GA4 fills the campaign dimension with these placeholders when a session
+    // came from anywhere but an ad.
+    const NOT_A_CAMPAIGN = new Set([
+      "",
+      "(not set)",
+      "(none)",
+      "(direct)",
+      "(organic)",
+      "(referral)",
+      "(data deleted)",
+    ]);
+    const campaign = new Map<string, { events: number; users: number }>();
+    const campaignSessions = new Map<string, number>();
     for (const r of json.reports?.[1]?.rows ?? []) {
       const name = r.dimensionValues?.[0]?.value ?? "";
-      const channel = r.dimensionValues?.[1]?.value ?? "";
-      if (!channel.toLowerCase().includes("paid social")) continue;
-      const prev = paid.get(name) ?? { events: 0, users: 0 };
-      paid.set(name, {
-        events: prev.events + num(r.metricValues?.[0]?.value),
-        users: prev.users + num(r.metricValues?.[1]?.value),
-      });
+      const campaignName = r.dimensionValues?.[1]?.value ?? "";
+      if (NOT_A_CAMPAIGN.has(campaignName.toLowerCase())) continue;
+      const events = num(r.metricValues?.[0]?.value);
+      const users = num(r.metricValues?.[1]?.value);
+      const prev = campaign.get(name) ?? { events: 0, users: 0 };
+      campaign.set(name, { events: prev.events + events, users: prev.users + users });
+      campaignSessions.set(campaignName, (campaignSessions.get(campaignName) ?? 0) + events);
     }
 
     // "Saw a price" is any availability answer, whatever it said.
@@ -481,8 +498,11 @@ export async function getBookingFunnel(rangeDays = 30): Promise<BookingFunnelSta
       rangeDays,
       empty: all.size === 0,
       steps,
-      paidSocialSteps: paid.size > 0 ? buildSteps(paid) : [],
-      paidSocialLabel: "Paid Social",
+      campaignSteps: campaign.size > 0 ? buildSteps(campaign) : [],
+      campaignNames: [...campaignSessions.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([name]) => name),
       outcomes: breakdown(OUTCOME_LABELS),
       exits: breakdown(EXIT_LABELS),
       missingFields: breakdown(MISSING_LABELS),

@@ -505,13 +505,15 @@ export default async function StatsPage() {
                 <FunnelList steps={funnel.steps} />
               </div>
 
-              {funnel.paidSocialSteps.length > 0 ? (
+              {funnel.campaignSteps.length > 0 ? (
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                  <div className="mb-3 flex items-baseline justify-between">
-                    <p className="font-medium">{funnel.paidSocialLabel} only</p>
-                    <p className="text-xs text-muted-foreground">the Meta campaigns</p>
+                  <div className="mb-3 flex items-baseline justify-between gap-4">
+                    <p className="font-medium">Ad traffic only</p>
+                    <p className="truncate text-xs text-muted-foreground" title={funnel.campaignNames.join(" · ")}>
+                      {funnel.campaignNames.join(" · ")}
+                    </p>
                   </div>
-                  <FunnelList steps={funnel.paidSocialSteps} />
+                  <FunnelList steps={funnel.campaignSteps} />
                 </div>
               ) : null}
 
