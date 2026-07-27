@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
@@ -90,6 +90,25 @@ export default function BookPage() {
   const [step, setStep] = useState<Step>("dates");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Steps swap in place, so the browser keeps the previous scroll offset and the
+  // next step opens mid-page (mobile especially: you land on the footer). Bring
+  // the progress bar back under the sticky navbar on every step change.
+  const stepsBarRef = useRef<HTMLDivElement>(null);
+  const isFirstStepRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstStepRender.current) {
+      isFirstStepRender.current = false;
+      return;
+    }
+    const bar = stepsBarRef.current;
+    if (!bar) return;
+    const NAVBAR_HEIGHT = 64; // main has pt-16
+    const top = bar.getBoundingClientRect().top + window.scrollY - NAVBAR_HEIGHT;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: Math.max(top, 0), behavior: reduceMotion ? "auto" : "smooth" });
+  }, [step]);
 
   const checkAvailability = useCallback(async () => {
     if (!startDate || !endDate) return;
@@ -221,7 +240,7 @@ export default function BookPage() {
         </section>
 
         {/* Progress steps */}
-        <div className="bg-[#26301c] border-b border-white/10">
+        <div ref={stepsBarRef} className="bg-[#26301c] border-b border-white/10">
           <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-6">
             {(["dates", "details", "review"] as Step[]).map((s, i) => (
               <div key={s} className="flex items-center gap-2">
