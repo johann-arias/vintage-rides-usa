@@ -107,8 +107,8 @@ export default function BookPage() {
 
   // ── Funnel instrumentation ──────────────────────────────────────────────
   // Most visitors leave step 1 without ever picking a date, and until now the
-  // only signal between "page viewed" and "checkout" was Meta's
-  // InitiateCheckout. These refs keep each milestone firing once.
+  // only signal between "page viewed" and "checkout" was a single Meta event.
+  // These refs keep each milestone firing once.
   const datesStartedRef = useRef(false);
   const leavingForCheckoutRef = useRef(false);
   const exitSentRef = useRef(false);
@@ -250,15 +250,22 @@ export default function BookPage() {
     }
   }, [startDate, endDate, bikeCount, checkAvailability]);
 
-  // Upper-funnel signal for Meta: the visitor has valid dates and is moving to
-  // the details step. Fired browser-side through the GTM pixel (window.fbq).
-  // Purchase is server-side (CAPI); InitiateCheckout has no server twin, so no
-  // event_id / dedup is needed here. Best-effort — never blocks the flow.
-  function fireInitiateCheckout() {
+  // Upper-funnel signal for Meta: the visitor has valid dates, a price, and is
+  // moving to the details step. Fired browser-side through the GTM pixel.
+  //
+  // This used to be reported as InitiateCheckout, the same name the server uses
+  // when it actually creates a Stripe session, so Meta saw one event meaning two
+  // different things and the funnel could not be read. AddToCart is the honest
+  // name for this step and is still a standard event the ad optimizer accepts.
+  // It is also the only dense signal we have: 30 in the campaign's first three
+  // days, against zero real checkout sessions.
+  //
+  // No server twin, so no event_id / dedup needed. Best-effort, never blocks.
+  function fireAddToCart() {
     const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof fbq !== "function" || !availability?.pricing) return;
     try {
-      fbq("track", "InitiateCheckout", {
+      fbq("track", "AddToCart", {
         value: availability.pricing.totalPrice,
         currency: "USD",
         num_items: bikeCount,
@@ -271,7 +278,7 @@ export default function BookPage() {
   }
 
   function handleProceedToDetails() {
-    fireInitiateCheckout();
+    fireAddToCart();
     trackEvent("book_continue_click", {
       days: availability?.pricing?.totalDays,
       lead_time_days: startDate ? daysBetween(todayInRapidCity(), startDate) : undefined,
