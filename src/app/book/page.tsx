@@ -15,7 +15,8 @@ import {
   DROPOFF_BY_APPOINTMENT,
   GOOGLE_LISTING_URL,
 } from "@/lib/location";
-import { earliestBookableDate } from "@/lib/booking-window";
+import { earliestBookableDate, todayInRapidCity } from "@/lib/booking-window";
+import { trackEvent, daysBetween } from "@/lib/analytics";
 
 // Short testimonials for the trust rail on the dates step (cold ad traffic).
 // Trimmed from the full set on the homepage — same reviewers, same voice.
@@ -60,6 +61,19 @@ type AvailabilityResult = {
 
 type Step = "dates" | "details" | "review";
 
+const STEP_NUMBER: Record<Step, number> = { dates: 1, details: 2, review: 3 };
+
+// Single label for what the availability check told the visitor. This is the
+// answer to "why did they stop at step 1" — sold out, too short, wrong season
+// or simply the price they saw.
+function availabilityOutcome(a: NonNullable<AvailabilityResult>): string {
+  if (a.pastDate) return "past_date";
+  if (a.outOfSeason) return "out_of_season";
+  if (!a.canBook) return "sold_out";
+  if (a.pricing && a.pricing.totalDays < a.pricing.minDays) return "below_min_days";
+  return "available";
+}
+
 // Earliest self-service pickup date (no same-day — those are arranged on demand).
 const earliest = earliestBookableDate();
 // Return date can be the pickup date itself (same-day / day rental).
@@ -91,6 +105,16 @@ export default function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // ── Funnel instrumentation ──────────────────────────────────────────────
+  // Most visitors leave step 1 without ever picking a date, and until now the
+  // only signal between "page viewed" and "checkout" was Meta's
+  // InitiateCheckout. These refs keep each milestone firing once.
+  const datesStartedRef = useRef(false);
+  const leavingForCheckoutRef = useRef(false);
+  const exitSentRef = useRef(false);
+  // Latest state, read by the exit listener so it never has to re-subscribe.
+  const snapshotRef = useRef({ step: "dates" as Step, hasDates: false, outcome: "", missing: "" });
+
   // Steps swap in place, so the browser keeps the previous scroll offset and the
   // next step opens mid-page (mobile especially: you land on the footer). Bring
   // the progress bar back under the sticky navbar on every step change.
@@ -110,11 +134,74 @@ export default function BookPage() {
     window.scrollTo({ top: Math.max(top, 0), behavior: reduceMotion ? "auto" : "smooth" });
   }, [step]);
 
+  // Every step entry, including the first render: this is the funnel spine.
+  useEffect(() => {
+    trackEvent("book_step_view", { step, step_number: STEP_NUMBER[step] });
+  }, [step]);
+
+  // Keep the exit snapshot current without re-subscribing the listener.
+  useEffect(() => {
+    snapshotRef.current = {
+      step,
+      hasDates: Boolean(startDate && endDate),
+      outcome: availability ? availabilityOutcome(availability) : "",
+      missing: [
+        !firstName && "first_name",
+        !lastName && "last_name",
+        !email && "email",
+        !licenseNumber && "license_number",
+      ]
+        .filter(Boolean)
+        .join(","),
+    };
+  });
+
+  // Where the visitor stood when the page went away. Sent once, and skipped
+  // when the page is left on purpose for the Stripe checkout.
+  useEffect(() => {
+    const onExit = (forced: boolean) => {
+      if (!forced && document.visibilityState !== "hidden") return;
+      if (leavingForCheckoutRef.current || exitSentRef.current) return;
+      exitSentRef.current = true;
+      const s = snapshotRef.current;
+      trackEvent("book_exit", {
+        step: s.step,
+        step_number: STEP_NUMBER[s.step],
+        has_dates: s.hasDates,
+        outcome: s.outcome,
+        missing_required: s.step === "details" ? s.missing : undefined,
+      });
+    };
+    const onVisibility = () => onExit(false);
+    const onPageHide = () => onExit(true);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+    };
+  }, []);
+
+  // First touch on the pickup date: the single most telling number on this
+  // page, since most ad traffic leaves without ever engaging with the form.
+  function markDatesStarted() {
+    if (datesStartedRef.current) return;
+    datesStartedRef.current = true;
+    trackEvent("book_dates_started");
+  }
+
   const checkAvailability = useCallback(async () => {
     if (!startDate || !endDate) return;
     setCheckingAvailability(true);
     setAvailability(null);
     setError("");
+    // Same billed-days definition as the pricing engine (a same-day rental is
+    // one day, not zero), so every event in the funnel counts duration alike.
+    const shared = {
+      days: Math.max(daysBetween(startDate, endDate), 1),
+      lead_time_days: daysBetween(todayInRapidCity(), startDate),
+      bikes: bikeCount,
+    };
     try {
       const res = await fetch(
         `/api/availability?startDate=${startDate}&endDate=${endDate}&bikes=${bikeCount}`,
@@ -123,11 +210,24 @@ export default function BookPage() {
       const data = await res.json();
       if (!res.ok || typeof data?.canBook !== "boolean") {
         setError("Could not check availability. Please try again in a moment.");
+        trackEvent("book_availability_result", { ...shared, outcome: "error" });
         return;
       }
       setAvailability(data);
+      // The moment the visitor learns whether they can ride and at what price.
+      trackEvent("book_availability_result", {
+        ...shared,
+        days: data.pricing?.totalDays ?? shared.days,
+        outcome: availabilityOutcome(data),
+        available_count: data.availableCount,
+        season: data.pricing?.seasonName,
+        daily_rate: data.pricing?.dailyRate,
+        value: data.pricing?.totalPrice,
+        currency: "USD",
+      });
     } catch {
       setError("Could not check availability. Please try again.");
+      trackEvent("book_availability_result", { ...shared, outcome: "error" });
     } finally {
       setCheckingAvailability(false);
     }
@@ -162,12 +262,28 @@ export default function BookPage() {
 
   function handleProceedToDetails() {
     fireInitiateCheckout();
+    trackEvent("book_continue_click", {
+      days: availability?.pricing?.totalDays,
+      lead_time_days: startDate ? daysBetween(todayInRapidCity(), startDate) : undefined,
+      bikes: bikeCount,
+      season: availability?.pricing?.seasonName,
+      value: availability?.pricing?.totalPrice,
+      currency: "USD",
+    });
     setStep("details");
   }
 
   async function handleCheckout() {
     setSubmitting(true);
     setError("");
+    trackEvent("book_checkout_click", {
+      days: availability?.pricing?.totalDays,
+      bikes: bikeCount,
+      season: availability?.pricing?.seasonName,
+      request_to_book: Boolean(availability?.requestToBook),
+      value: availability?.pricing?.totalPrice,
+      currency: "USD",
+    });
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
@@ -190,12 +306,21 @@ export default function BookPage() {
       });
       const data = await res.json();
       if (data.url) {
+        // Leaving for Stripe is the success case, not an abandon.
+        leavingForCheckoutRef.current = true;
+        trackEvent("book_checkout_redirect", {
+          value: availability?.pricing?.totalPrice,
+          currency: "USD",
+          request_to_book: Boolean(availability?.requestToBook),
+        });
         window.location.href = data.url;
       } else {
         setError(data.error ?? "Checkout failed. Please try again.");
+        trackEvent("book_checkout_error", { reason: String(data.error ?? "unknown").slice(0, 100) });
       }
     } catch {
       setError("Something went wrong. Please try again.");
+      trackEvent("book_checkout_error", { reason: "network" });
     } finally {
       setSubmitting(false);
     }
@@ -297,6 +422,7 @@ export default function BookPage() {
                       min={earliest}
                       value={startDate}
                       onChange={(e) => {
+                        markDatesStarted();
                         setStartDate(e.target.value);
                         if (endDate && new Date(endDate) <= new Date(e.target.value)) {
                           setEndDate(minEnd(e.target.value));
@@ -313,7 +439,10 @@ export default function BookPage() {
                       type="date"
                       min={startDate ? minEnd(startDate) : earliest}
                       value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
+                      onChange={(e) => {
+                        markDatesStarted();
+                        setEndDate(e.target.value);
+                      }}
                       className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-[#1a1a17] text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
                     />
                   </div>
@@ -660,13 +789,25 @@ export default function BookPage() {
 
               <div className="flex gap-4">
                 <button
-                  onClick={() => setStep("dates")}
+                  onClick={() => {
+                    trackEvent("book_back_click", { step, step_number: STEP_NUMBER[step] });
+                    setStep("dates");
+                  }}
                   className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
                 >
                   Back
                 </button>
                 <button
-                  onClick={() => setStep("review")}
+                  onClick={() => {
+                    // Which optional fields survived the form tells us how much
+                    // of it is actually worth asking for before payment.
+                    trackEvent("book_review_click", {
+                      has_phone: Boolean(phone),
+                      has_emergency_contact: Boolean(emergencyContact),
+                      has_special_requests: Boolean(specialRequests),
+                    });
+                    setStep("review");
+                  }}
                   disabled={!firstName || !lastName || !email || !licenseNumber}
                   className="flex-[2] bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
                 >
@@ -721,7 +862,10 @@ export default function BookPage() {
 
               <div className="flex gap-4">
                 <button
-                  onClick={() => setStep("details")}
+                  onClick={() => {
+                    trackEvent("book_back_click", { step, step_number: STEP_NUMBER[step] });
+                    setStep("details");
+                  }}
                   className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
                 >
                   Back
