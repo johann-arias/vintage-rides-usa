@@ -340,7 +340,7 @@ export default function BookPage() {
   return (
     <>
       <Navbar />
-      <main className={`flex-1 pt-16 bg-[#faf5ea] min-h-screen ${canPay ? "pb-24" : ""}`}>
+      <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
         {/* Header */}
         <section className="bg-[#2e3b23] py-14">
           <div className="max-w-6xl mx-auto px-6">
@@ -753,6 +753,10 @@ export default function BookPage() {
         )}
       </main>
       <Footer />
+      {/* The pinned bar is fixed, and the footer sits outside <main>, so its
+          last strip would end up behind the bar at the bottom of the page.
+          Same colour as the footer, so it reads as the footer being taller. */}
+      {canPay && <div className="h-20 bg-[#2e3b23]" aria-hidden />}
     </>
   );
 }
