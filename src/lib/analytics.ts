@@ -44,6 +44,45 @@ export function trackEvent(name: string, params: EventParams = {}): void {
   }
 }
 
+/**
+ * GA4's standard ecommerce purchase. Standard name and standard shape on
+ * purpose: `purchase` with a value and a currency is what GA4 reports as
+ * revenue and what Google Ads can import as a value-based conversion. A custom
+ * event name would leave the SEA side with a countable action and no money
+ * attached to it.
+ *
+ * `transactionId` makes the event idempotent for anyone reading it later, and
+ * the caller is responsible for not firing twice on a page reload.
+ */
+export function trackPurchase(input: {
+  transactionId: string;
+  value: number;
+  currency?: string;
+  days: number;
+  bikes: number;
+}): void {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  try {
+    window.gtag("event", "purchase", {
+      send_to: GA_MEASUREMENT_ID,
+      transaction_id: input.transactionId,
+      value: input.value,
+      currency: input.currency ?? "USD",
+      items: [
+        {
+          item_id: "himalayan-450-rental",
+          item_name: "Royal Enfield Himalayan 450 rental",
+          item_category: "motorcycle-rental",
+          price: input.days > 0 ? Number((input.value / input.days).toFixed(2)) : input.value,
+          quantity: input.bikes,
+        },
+      ],
+    });
+  } catch {
+    /* analytics must never break a confirmed booking */
+  }
+}
+
 /** Whole days between two YYYY-MM-DD strings (noon anchor avoids DST slips). */
 export function daysBetween(fromYmd: string, toYmd: string): number {
   const a = new Date(`${fromYmd}T12:00:00Z`).getTime();

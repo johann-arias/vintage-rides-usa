@@ -30,6 +30,8 @@ export interface RiderProfileBooking {
   startDate: string;
   endDate: string;
   numberOfBikes: number;
+  numberOfDays: number;
+  totalPrice: number;
   pickupTime: string;
   status: string;
   completedAt: string | null;
@@ -59,6 +61,8 @@ export async function getRiderProfileBooking(
     startDate: str("Start Date"),
     endDate: str("End Date"),
     numberOfBikes: (r.get("Number of Bikes") as number) ?? 1,
+    numberOfDays: (r.get("Number of Days") as number) ?? 0,
+    totalPrice: (r.get("Total Price (USD)") as number) ?? 0,
     pickupTime: str("Pickup Time"),
     status: str("Status"),
     completedAt: str("Rider Profile Completed At") || null,

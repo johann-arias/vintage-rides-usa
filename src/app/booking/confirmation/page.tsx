@@ -10,6 +10,7 @@ import {
 import { getBookingIdBySessionId, getRiderProfileBooking } from "@/lib/rider-profile";
 import { signProfileToken } from "@/lib/booking-token";
 import InlineProfile from "./InlineProfile";
+import PurchaseEvent from "./PurchaseEvent";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,16 @@ export default async function ConfirmationPage({
               ? "Because you're riding today, your card is authorized but not yet charged. Our team is confirming a bike and will finalize your booking shortly — watch your inbox for the confirmation. If we can't confirm, the hold is released and you're not charged."
               : "Payment confirmed, and your confirmation email is on its way with your booking reference."}
           </p>
+
+          {booking ? (
+            <PurchaseEvent
+              bookingId={booking.bookingId}
+              value={booking.totalPrice}
+              days={booking.numberOfDays}
+              bikes={booking.numberOfBikes}
+              pending={isPending}
+            />
+          ) : null}
 
           <InlineProfile
             sessionId={sessionId}

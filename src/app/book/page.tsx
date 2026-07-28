@@ -264,6 +264,14 @@ export default function BookPage() {
     fireMetaEvent("InitiateCheckout", icEventId);
     setSubmitting(true);
     setError("");
+    // GA4's standard mid-funnel ecommerce event, so the SEA side can import it
+    // as a conversion without us inventing a name for it. Our book_* events
+    // stay as they are: they describe our funnel, this one describes the sale.
+    trackEvent("begin_checkout", {
+      value: availability?.pricing?.totalPrice,
+      currency: "USD",
+      items_bikes: bikeCount,
+    });
     trackEvent("book_checkout_click", {
       days: availability?.pricing?.totalDays,
       bikes: bikeCount,
