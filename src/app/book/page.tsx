@@ -15,7 +15,7 @@ import {
   GOOGLE_LISTING_URL,
 } from "@/lib/location";
 import { earliestBookableDate, todayInRapidCity } from "@/lib/booking-window";
-import { trackEvent, daysBetween } from "@/lib/analytics";
+import { trackEvent, trackBeginCheckout, daysBetween } from "@/lib/analytics";
 
 // Short testimonials for the trust rail on the dates step (cold ad traffic).
 // Trimmed from the full set on the homepage — same reviewers, same voice.
@@ -274,14 +274,14 @@ export default function BookPage() {
     fireMetaEvent("InitiateCheckout", icEventId);
     setSubmitting(true);
     setError("");
-    // GA4's standard mid-funnel ecommerce event, so the SEA side can import it
-    // as a conversion without us inventing a name for it. Our book_* events
-    // stay as they are: they describe our funnel, this one describes the sale.
-    trackEvent("begin_checkout", {
-      value: availability?.pricing?.totalPrice,
-      currency: "USD",
-      items_bikes: bikeCount,
-    });
+    // Commerce event for GTM to route; our own funnel event follows.
+    if (availability?.pricing) {
+      trackBeginCheckout({
+        value: availability.pricing.totalPrice,
+        days: availability.pricing.totalDays,
+        bikes: bikeCount,
+      });
+    }
     trackEvent("book_checkout_click", {
       days: availability?.pricing?.totalDays,
       bikes: bikeCount,

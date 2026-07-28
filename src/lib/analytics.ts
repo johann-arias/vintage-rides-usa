@@ -44,16 +44,50 @@ export function trackEvent(name: string, params: EventParams = {}): void {
   }
 }
 
+declare global {
+  interface Window {
+    dataLayer?: unknown[];
+  }
+}
+
 /**
- * GA4's standard ecommerce purchase. Standard name and standard shape on
- * purpose: `purchase` with a value and a currency is what GA4 reports as
- * revenue and what Google Ads can import as a value-based conversion. A custom
- * event name would leave the SEA side with a countable action and no money
- * attached to it.
+ * Commerce events go to the dataLayer, not straight to gtag.
  *
- * `transactionId` makes the event idempotent for anyone reading it later, and
- * the caller is responsible for not firing twice on a page reload.
+ * The site's job is to state what happened; deciding who hears about it belongs
+ * in GTM, which the SEA agency owns. That is also why these are not sent to GA4
+ * directly: Google Ads conversions imported from GA4 are measured with GA4's
+ * own attribution and come out lower than a native Ads conversion, so the
+ * agency wires a dedicated Ads tag plus a GA4 tag onto these same pushes. One
+ * source, one count, and destinations can change without a deploy.
+ *
+ * Our own book_* funnel events keep going to GA4 directly: they describe our
+ * funnel for the garage dashboard and nobody else needs to route them.
+ *
+ * The `ecommerce: null` push first is the documented GTM way to stop a previous
+ * event's items leaking into this one.
  */
+function pushCommerce(event: string, ecommerce: Record<string, unknown>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.dataLayer = window.dataLayer ?? [];
+    window.dataLayer.push({ ecommerce: null });
+    window.dataLayer.push({ event, ecommerce });
+  } catch {
+    /* analytics must never break a booking */
+  }
+}
+
+function rentalItem(value: number, days: number, bikes: number) {
+  return {
+    item_id: "himalayan-450-rental",
+    item_name: "Royal Enfield Himalayan 450 rental",
+    item_category: "motorcycle-rental",
+    price: days > 0 ? Number((value / days).toFixed(2)) : value,
+    quantity: bikes,
+  };
+}
+
+/** The sale. `transaction_id` is the booking reference, so it can be deduplicated. */
 export function trackPurchase(input: {
   transactionId: string;
   value: number;
@@ -61,26 +95,26 @@ export function trackPurchase(input: {
   days: number;
   bikes: number;
 }): void {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-  try {
-    window.gtag("event", "purchase", {
-      send_to: GA_MEASUREMENT_ID,
-      transaction_id: input.transactionId,
-      value: input.value,
-      currency: input.currency ?? "USD",
-      items: [
-        {
-          item_id: "himalayan-450-rental",
-          item_name: "Royal Enfield Himalayan 450 rental",
-          item_category: "motorcycle-rental",
-          price: input.days > 0 ? Number((input.value / input.days).toFixed(2)) : input.value,
-          quantity: input.bikes,
-        },
-      ],
-    });
-  } catch {
-    /* analytics must never break a confirmed booking */
-  }
+  pushCommerce("purchase", {
+    transaction_id: input.transactionId,
+    value: input.value,
+    currency: input.currency ?? "USD",
+    items: [rentalItem(input.value, input.days, input.bikes)],
+  });
+}
+
+/** Leaving for the payment page. */
+export function trackBeginCheckout(input: {
+  value: number;
+  currency?: string;
+  days: number;
+  bikes: number;
+}): void {
+  pushCommerce("begin_checkout", {
+    value: input.value,
+    currency: input.currency ?? "USD",
+    items: [rentalItem(input.value, input.days, input.bikes)],
+  });
 }
 
 /** Whole days between two YYYY-MM-DD strings (noon anchor avoids DST slips). */
