@@ -163,11 +163,20 @@ export async function findProfilesToRemind(today: string): Promise<ProfileRemind
     .join(", ");
   const records = await base(Tables.Bookings)
     .select({
+      // The last clause covers bookings taken by the previous flow, which asked
+      // for a licence and an emergency contact up front: their profile stamp is
+      // empty but we already hold what we would be asking for, and emailing
+      // someone for details they gave us is the fastest way to look sloppy.
+      //
+      // LEN({Field} & "") rather than {Field} != BLANK(): Airtable evaluates the
+      // latter as TRUE on an empty field, which silently matched nothing and
+      // would have cancelled every reminder.
       filterByFormula: `AND(
         {Status} = "Confirmed",
         {Rider Profile Completed At} = BLANK(),
         {Email} != BLANK(),
-        OR(${dateClause})
+        OR(${dateClause}),
+        NOT(AND(LEN({Rider License Number} & "") > 0, LEN({Emergency Contact Name} & "") > 0))
       )`,
       fields: [
         "Booking ID",
