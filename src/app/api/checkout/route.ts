@@ -17,17 +17,13 @@ export async function POST(req: NextRequest) {
     bikeCount,
     pickupTime,
     dropoffTime,
-    firstName,
-    lastName,
-    email,
-    phone,
-    specialRequests,
   } = body;
 
-  // Licence number and emergency contact are no longer asked for online. They
-  // are counter information, collected at pickup where the licence and its
-  // motorcycle endorsement get checked anyway.
-  if (!startDate || !endDate || !bikeCount || !firstName || !lastName || !email) {
+  // Nothing personal is asked for before payment any more. Stripe Checkout
+  // collects name, email and phone itself, on a form that autofills and that
+  // people already trust, and the rest of the rider profile is filled in after
+  // the money has moved. So the only thing this route needs is the rental.
+  if (!startDate || !endDate || !bikeCount) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
   }
 
@@ -86,7 +82,10 @@ export async function POST(req: NextRequest) {
     ...(requestToBook
       ? { payment_intent_data: { capture_method: "manual" as const } }
       : {}),
-    customer_email: email,
+    // Checkout always asks for an email and the cardholder name. The phone is
+    // opt-in and we want it: a same-day request has to be confirmable by call,
+    // and it is the only way to reach someone whose email bounces.
+    phone_number_collection: { enabled: true },
     line_items: [
       {
         price_data: {
@@ -106,11 +105,8 @@ export async function POST(req: NextRequest) {
       bikeCount: String(bikeCount),
       pickupTime: pickupTime ?? "",
       dropoffTime: dropoffTime ?? "",
-      firstName,
-      lastName,
-      email,
-      phone: phone ?? "",
-      specialRequests: specialRequests ?? "",
+      // Identity is no longer carried here: the webhook reads it from
+      // session.customer_details, which is what Stripe actually verified.
       totalDays: String(pricing.totalDays),
       dailyRate: String(pricing.dailyRate),
       requestToBook: requestToBook ? "1" : "",
@@ -131,6 +127,11 @@ export async function POST(req: NextRequest) {
   // browser because this is the last moment we hold both the visitor's Meta
   // cookies and the quoted value. Awaited (one fetch, never throws) so it is
   // not cut short when the serverless function returns.
+  //
+  // Match quality is now cookie-only: we no longer know the name or email at
+  // this point, Stripe collects them on the next screen. The Purchase event,
+  // which is the one that matters for attribution, is sent from the webhook
+  // with the verified email, phone and name.
   const reportPreCheckout = shouldReportPreCheckout();
   console.log("[checkout] InitiateCheckout gate:", reportPreCheckout);
   if (reportPreCheckout) {
@@ -138,10 +139,6 @@ export async function POST(req: NextRequest) {
       eventId: `${metaEventId}-ic`,
       value: pricing.totalPrice,
       currency: "USD",
-      email,
-      phone: phone ?? undefined,
-      firstName,
-      lastName,
       fbp: fbp || undefined,
       fbc: fbc || undefined,
       clientIpAddress: clientIp || undefined,

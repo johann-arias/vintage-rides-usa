@@ -144,6 +144,18 @@ export default async function BookingsPage({
                     ) : b.email ? (
                       <div className="text-xs text-muted-foreground">{b.email}</div>
                     ) : null}
+                    {/* Website bookings only: B2B rows never had a profile to fill. */}
+                    {b.channel === "WEBSITE" && b.status !== "Cancelled" ? (
+                      b.riderProfileCompletedAt ? (
+                        <div className="mt-0.5 text-[0.7rem] text-[var(--brand-olive-700)]">
+                          Rider details in
+                        </div>
+                      ) : (
+                        <div className="mt-0.5 text-[0.7rem] text-[#9a3b21]">
+                          Rider details missing
+                        </div>
+                      )
+                    ) : null}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {fmt(b.startDate)} → {fmt(b.endDate)}

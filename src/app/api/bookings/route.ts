@@ -7,7 +7,8 @@ import {
   sendBookingRequestReceived,
   sendInternalBookingRequest,
 } from "@/lib/email";
-import { signBookingToken } from "@/lib/booking-token";
+import { signBookingToken, signProfileToken } from "@/lib/booking-token";
+import { riderProfileUrl } from "@/lib/rider-profile";
 import { sendMetaPurchase, readMetaSignals, shouldReportPurchase } from "@/lib/meta-capi";
 import { nanoid } from "nanoid";
 
@@ -44,6 +45,19 @@ export async function POST(req: NextRequest) {
   const bookingId = `VR-USA-${nanoid(8).toUpperCase()}`;
   const bikeCount = parseInt(meta.bikeCount ?? "1", 10);
 
+  // Identity comes from Stripe, not from a form we asked the visitor to fill in
+  // before paying. Checkout collected and validated it: the email is the one
+  // the receipt goes to, the name is the cardholder's, and the phone is the one
+  // they typed to complete the payment. Metadata is kept as a fallback for
+  // sessions created by the previous flow that may still be in flight.
+  const customer = session.customer_details;
+  const fullName = (customer?.name ?? "").trim();
+  const spaceAt = fullName.lastIndexOf(" ");
+  const firstName = meta.firstName || (spaceAt > 0 ? fullName.slice(0, spaceAt) : fullName);
+  const lastName = meta.lastName || (spaceAt > 0 ? fullName.slice(spaceAt + 1) : "");
+  const email = customer?.email ?? session.customer_email ?? meta.email ?? "";
+  const phone = customer?.phone ?? meta.phone ?? "";
+
   // Same-day request-to-book: card is authorized (manual capture), not charged.
   // Booking stays Pending Payment and its blocks Tentative until the team accepts.
   const requestToBook = meta.requestToBook === "1";
@@ -58,10 +72,10 @@ export async function POST(req: NextRequest) {
       fields: {
         "Booking ID": bookingId,
         Status: requestToBook ? "Pending Payment" : "Confirmed",
-        "First Name": meta.firstName ?? "",
-        "Last Name": meta.lastName ?? "",
-        Email: meta.email ?? "",
-        Phone: meta.phone ?? "",
+        "First Name": firstName,
+        "Last Name": lastName,
+        Email: email,
+        Phone: phone,
         "Start Date": meta.startDate,
         "End Date": meta.endDate,
         "Pickup Time": meta.pickupTime ?? "",
@@ -71,8 +85,8 @@ export async function POST(req: NextRequest) {
         "Total Price (USD)": (session.amount_total ?? 0) / 100,
         "Stripe Session ID": session.id,
         "Stripe Payment Intent ID": paymentIntentId,
-        // Rider License Number and Emergency Contact Name stay in Airtable for
-        // the team to fill at pickup: the website no longer asks for them.
+        // Licence, emergency contact, helmet size and experience are filled in
+        // after payment by the customer, on the rider profile page.
         "Special Requests": meta.specialRequests ?? "",
         ...(requestToBook
           ? { "Internal Notes": "Channel: Website | Same-day request (authorized, awaiting accept)" }
@@ -101,11 +115,12 @@ export async function POST(req: NextRequest) {
   // 3. Emails — non-blocking for the webhook ack.
   const totalPrice = (session.amount_total ?? 0) / 100;
   const totalDays = parseInt(meta.totalDays ?? "0", 10);
+  const siteUrl = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.vintageridesusa.com").replace(/\/$/, "");
   const emailBase = {
     bookingId,
-    firstName: meta.firstName ?? "",
-    lastName: meta.lastName ?? "",
-    email: meta.email ?? "",
+    firstName,
+    lastName,
+    email,
     startDate: meta.startDate,
     endDate: meta.endDate,
     pickupTime: meta.pickupTime || undefined,
@@ -113,11 +128,14 @@ export async function POST(req: NextRequest) {
     totalDays,
     bikeCount,
     totalPrice,
+    // The booking form stops at the dates now, so the rest of what we need for
+    // the ride is asked for here, once the money is in.
+    profileUrl: riderProfileUrl(bookingId, signProfileToken(bookingId), siteUrl),
   };
 
   if (requestToBook) {
     // Customer: "request received, card authorized not charged".
-    if (meta.email) {
+    if (email) {
       try {
         await sendBookingRequestReceived(emailBase);
       } catch (err) {
@@ -125,13 +143,12 @@ export async function POST(req: NextRequest) {
       }
     }
     // Team: PENDING alert with one-click accept/decline (LIVE + TEST so it's testable).
-    const siteBase = (process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.vintageridesusa.com").replace(/\/$/, "");
     const link = (action: "accept" | "decline") =>
-      `${siteBase}/booking-request/${bookingId}?action=${action}&token=${signBookingToken(bookingId, action)}`;
+      `${siteUrl}/booking-request/${bookingId}?action=${action}&token=${signBookingToken(bookingId, action)}`;
     try {
       await sendInternalBookingRequest({
         ...emailBase,
-        phone: meta.phone ?? "",
+        phone,
         livemode: event.livemode,
         acceptUrl: link("accept"),
         declineUrl: link("decline"),
@@ -151,10 +168,10 @@ export async function POST(req: NextRequest) {
       eventId: metaSignals.metaEventId ?? bookingId,
       value: totalPrice,
       currency: session.currency ?? "usd",
-      email: meta.email,
-      phone: meta.phone,
-      firstName: meta.firstName,
-      lastName: meta.lastName,
+      email,
+      phone,
+      firstName,
+      lastName,
       fbp: metaSignals.fbp,
       fbc: metaSignals.fbc,
       clientIpAddress: metaSignals.clientIp,
@@ -165,7 +182,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Immediate booking: confirm the customer + notify the team (LIVE only).
-  if (meta.email) {
+  if (email) {
     try {
       await sendBookingConfirmation(emailBase);
     } catch (err) {
@@ -176,7 +193,7 @@ export async function POST(req: NextRequest) {
     try {
       await sendInternalBookingNotification({
         ...emailBase,
-        phone: meta.phone ?? "",
+        phone,
         livemode: true,
       });
     } catch (err) {

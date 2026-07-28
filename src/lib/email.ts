@@ -23,6 +23,11 @@ interface BookingConfirmationInput {
   totalDays: number;
   bikeCount: number;
   totalPrice: number;
+  /**
+   * Signed link to the rider profile form. Present on the customer-facing
+   * emails since the booking flow stopped asking for anything but the dates.
+   */
+  profileUrl?: string;
 }
 
 interface InternalNotificationInput extends BookingConfirmationInput {
@@ -193,6 +198,24 @@ function renderHtml(b: BookingConfirmationInput): string {
             </td>
           </tr>
 
+          ${
+            b.profileUrl
+              ? `<tr>
+            <td style="padding:24px 32px 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f7f2e6;border:1px solid #e6dcc4;border-radius:6px;">
+                <tr>
+                  <td style="padding:20px 22px;">
+                    <div style="font-size:15px;font-weight:600;color:#2a2a28;margin-bottom:6px;">Two minutes and you're done</div>
+                    <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5b5b58;">Tell us your helmet size, an emergency contact and how much you ride, and your bike is ready before you walk in. Nothing is required.</p>
+                    <a href="${b.profileUrl}" style="display:inline-block;background:#2e3b23;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:4px;">Complete your ride details</a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>`
+              : ""
+          }
+
           <tr>
             <td style="padding:24px 32px 8px;">
               <div style="font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#c8a45a;margin-bottom:14px;">What's next</div>
@@ -263,6 +286,15 @@ function renderText(b: BookingConfirmationInput): string {
     `  Pickup at ${pTime} · Return by ${dTime}`,
     `  Directions: ${PICKUP_DIRECTIONS_URL}`,
     ``,
+    ...(b.profileUrl
+      ? [
+          `Two minutes and you're done:`,
+          `  Tell us your helmet size, an emergency contact and how much you ride,`,
+          `  and your bike is ready before you walk in. Nothing is required.`,
+          `  ${b.profileUrl}`,
+          ``,
+        ]
+      : []),
     `What's next:`,
     `1. Save this email — your booking reference is your check-in code.`,
     `2. On your start date, head to ${PICKUP_ADDRESS_INLINE} for ${pTime} pickup. Return by ${dTime} on your end date.`,
@@ -619,6 +651,75 @@ export async function sendAbandonedCartRecovery(b: AbandonedCartInput): Promise<
       tags: ["abandoned-cart-recovery", "vintage-rides-usa"],
     },
     "abandoned cart recovery email"
+  );
+}
+
+// ── Rider profile reminder ──────────────────────────────────────────────────
+
+export interface RiderProfileReminderInput {
+  bookingId: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  startDate: string;
+  pickupTime?: string;
+  profileUrl: string;
+  /** Days until pickup, so the copy can say "in three days" or "tomorrow". */
+  daysUntil: number;
+}
+
+/**
+ * A nudge for a paid booking whose rider details are still empty. Deliberately
+ * light: nothing here is required, the team can take it at the counter, and a
+ * customer who ignores both reminders still gets their bike.
+ */
+export async function sendRiderProfileReminder(b: RiderProfileReminderInput): Promise<void> {
+  const when = b.daysUntil <= 1 ? "tomorrow" : `in ${b.daysUntil} days`;
+  const greeting = b.firstName ? `Hi ${escapeHtml(b.firstName)}, ` : "";
+  const pTime = b.pickupTime?.trim() || DEFAULT_PICKUP_TIME;
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2a2a28;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8e6e0;">
+    <tr><td style="background:#111110;padding:24px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#c8a45a;">You ride ${escapeHtml(when)}</div>
+      <div style="color:#ffffff;font-size:14px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;margin-top:8px;">VINTAGE RIDES <span style="color:#c8a45a;font-weight:400;">USA</span></div>
+    </td></tr>
+    <tr><td style="padding:28px 32px 8px;">
+      <p style="margin:0 0 14px;font-size:15px;line-height:1.6;">${greeting}your Himalayan 450 is reserved for ${escapeHtml(fmtDate(b.startDate))}, pickup at ${escapeHtml(pTime)}.</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;">We are still missing a few details that make handover quick: your helmet size, an emergency contact, and how much you ride. Two minutes, and none of it is mandatory.</p>
+      <a href="${b.profileUrl}" style="display:inline-block;background:#2e3b23;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:13px 24px;border-radius:4px;">Complete your ride details</a>
+      <p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#5b5b58;">Prefer to sort it out at the counter? That works too. Bring your driver's license with a motorcycle endorsement either way, we check it at pickup.</p>
+    </td></tr>
+    <tr><td style="background:#111110;padding:22px 32px;">
+      <div style="font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:#8a8a86;margin-bottom:6px;">Booking ${escapeHtml(b.bookingId)}</div>
+      <div style="font-size:12px;color:#8a8a86;line-height:1.55;">Vintage Rides USA · ${escapeHtml(PICKUP_ADDRESS_INLINE)}<br /><a href="https://www.vintageridesusa.com" style="color:#c8a45a;text-decoration:none;">vintageridesusa.com</a></div>
+    </td></tr>
+  </table></body></html>`;
+
+  const text = [
+    `${b.firstName ? `Hi ${b.firstName}, ` : ""}you ride ${when}.`,
+    ``,
+    `Your Himalayan 450 is reserved for ${fmtDate(b.startDate)}, pickup at ${pTime}.`,
+    ``,
+    `We're still missing a few details that make handover quick: helmet size,`,
+    `an emergency contact, and how much you ride. Two minutes, none of it mandatory.`,
+    ``,
+    `${b.profileUrl}`,
+    ``,
+    `Prefer to sort it out at the counter? That works too. Bring your driver's`,
+    `license with a motorcycle endorsement either way, we check it at pickup.`,
+    ``,
+    `Booking ${b.bookingId} · Vintage Rides USA`,
+  ].join("\n");
+
+  await sendBrevo(
+    {
+      to: [{ email: b.email, name: `${b.firstName} ${b.lastName}`.trim() || b.email }],
+      subject: `Two minutes before your ride, ${b.bookingId}`,
+      html,
+      text,
+      tags: ["rider-profile-reminder", "vintage-rides-usa"],
+    },
+    "rider profile reminder"
   );
 }
 

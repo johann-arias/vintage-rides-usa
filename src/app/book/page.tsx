@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -59,10 +58,6 @@ type AvailabilityResult = {
   } | null;
 } | null;
 
-type Step = "dates" | "details" | "review";
-
-const STEP_NUMBER: Record<Step, number> = { dates: 1, details: 2, review: 3 };
-
 // Single label for what the availability check told the visitor. This is the
 // answer to "why did they stop at step 1" — sold out, too short, wrong season
 // or simply the price they saw.
@@ -80,9 +75,7 @@ const earliest = earliestBookableDate();
 const minEnd = (start: string) => start;
 
 export default function BookPage() {
-  const router = useRouter();
-
-  // Step 1: Dates
+  // The rental itself: the only thing asked for before payment.
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [bikeCount, setBikeCount] = useState(1);
@@ -92,70 +85,35 @@ export default function BookPage() {
   const [availability, setAvailability] = useState<AvailabilityResult>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
 
-  // Step 2: Customer details
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [specialRequests, setSpecialRequests] = useState("");
-
-  const [step, setStep] = useState<Step>("dates");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   // ── Funnel instrumentation ──────────────────────────────────────────────
-  // Most visitors leave step 1 without ever picking a date, and until now the
-  // only signal between "page viewed" and "checkout" was a single Meta event.
-  // These refs keep each milestone firing once.
+  // There is one step left before Stripe, so the funnel is short: landed,
+  // touched a date, saw a price, went to pay. These refs keep each milestone
+  // firing once.
   const datesStartedRef = useRef(false);
   const leavingForCheckoutRef = useRef(false);
   const exitSentRef = useRef(false);
+  const addToCartSentRef = useRef(false);
   // Latest state, read by the exit listener so it never has to re-subscribe.
-  const snapshotRef = useRef({ step: "dates" as Step, hasDates: false, outcome: "", missing: "" });
+  const snapshotRef = useRef({ hasDates: false, outcome: "" });
 
-  // Steps swap in place, so the browser keeps the previous scroll offset and the
-  // next step opens mid-page (mobile especially: you land on the footer). Bring
-  // the progress bar back under the sticky navbar on every step change.
-  const stepsBarRef = useRef<HTMLDivElement>(null);
-  const isFirstStepRender = useRef(true);
-
+  // Landing on the page: the top of the funnel. The name is kept from the
+  // three-step era so the /garage report reads across the change.
   useEffect(() => {
-    if (isFirstStepRender.current) {
-      isFirstStepRender.current = false;
-      return;
-    }
-    const bar = stepsBarRef.current;
-    if (!bar) return;
-    const NAVBAR_HEIGHT = 64; // main has pt-16
-    const top = bar.getBoundingClientRect().top + window.scrollY - NAVBAR_HEIGHT;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    window.scrollTo({ top: Math.max(top, 0), behavior: reduceMotion ? "auto" : "smooth" });
-  }, [step]);
-
-  // Every step entry, including the first render: this is the funnel spine.
-  // The step lives in the event NAME, not in a parameter, so the /garage report
-  // can read it straight from the GA4 API with no custom dimension to register.
-  useEffect(() => {
-    trackEvent(`book_step_${step}`, { step, step_number: STEP_NUMBER[step] });
-  }, [step]);
+    trackEvent("book_step_dates", { step: "dates", step_number: 1 });
+  }, []);
 
   // Keep the exit snapshot current without re-subscribing the listener.
   useEffect(() => {
     snapshotRef.current = {
-      step,
       hasDates: Boolean(startDate && endDate),
       outcome: availability ? availabilityOutcome(availability) : "",
-      missing: [
-        !firstName && "first_name",
-        !lastName && "last_name",
-        !email && "email",
-      ]
-        .filter(Boolean)
-        .join(","),
     };
   });
 
-  // Where the visitor stood when the page went away. Sent once, and skipped
+  // How far the visitor got when the page went away. Sent once, and skipped
   // when the page is left on purpose for the Stripe checkout.
   useEffect(() => {
     const onExit = (forced: boolean) => {
@@ -163,18 +121,12 @@ export default function BookPage() {
       if (leavingForCheckoutRef.current || exitSentRef.current) return;
       exitSentRef.current = true;
       const s = snapshotRef.current;
-      trackEvent(`book_exit_${s.step}`, {
-        step: s.step,
-        step_number: STEP_NUMBER[s.step],
+      trackEvent("book_exit_dates", {
+        step: "dates",
+        step_number: 1,
         has_dates: s.hasDates,
         outcome: s.outcome,
-        missing_required: s.step === "details" ? s.missing : undefined,
       });
-      // One event per required field still empty when they left. Field names
-      // only, never their values — this says which question killed the form.
-      if (s.step === "details" && s.missing) {
-        for (const field of s.missing.split(",")) trackEvent(`book_missing_${field}`);
-      }
     };
     const onVisibility = () => onExit(false);
     const onPageHide = () => onExit(true);
@@ -247,58 +199,44 @@ export default function BookPage() {
     }
   }, [startDate, endDate, bikeCount, checkAvailability]);
 
-  // Upper-funnel signal for Meta: the visitor has valid dates, a price, and is
-  // moving to the details step.
-  //
-  // TWO events are fired here on purpose, and the duplication is not an
-  // oversight:
-  //
-  //  - InitiateCheckout, because both live ad sets optimise on
-  //    INITIATED_CHECKOUT (checked in ad_set_history: OFFSITE_CONVERSIONS +
-  //    promoted_object INITIATED_CHECKOUT, both in LEARNING). This click is
-  //    what has been feeding them, roughly 70 a week, and it is the only
-  //    signal they get: the server-side InitiateCheckout has never fired for a
-  //    real visitor, Stripe confirms zero checkout sessions from the campaign.
-  //    Dropping it here starves the optimiser and breaks the learning phase.
-  //  - AddToCart, which is the honest name for what actually happened, and
-  //    builds the clean series we want to optimise on later.
-  //
-  // The day the ad sets switch to AddToCart, delete the InitiateCheckout line
-  // and this event stops meaning two different things at once.
-  //
-  // Best-effort: analytics never blocks a booking.
-  function fireStepTwoSignals() {
+  /** Best-effort Meta pixel call. Analytics never blocks a booking. */
+  function fireMetaEvent(name: string) {
     const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof fbq !== "function" || !availability?.pricing) return;
-    const payload = {
-      value: availability.pricing.totalPrice,
-      currency: "USD",
-      num_items: bikeCount,
-      content_ids: ["himalayan-450-rental"],
-      content_type: "product",
-    };
     try {
-      fbq("track", "InitiateCheckout", payload);
-      fbq("track", "AddToCart", payload);
+      fbq("track", name, {
+        value: availability.pricing.totalPrice,
+        currency: "USD",
+        num_items: bikeCount,
+        content_ids: ["himalayan-450-rental"],
+        content_type: "product",
+      });
     } catch {
       /* analytics must never break the booking flow */
     }
   }
 
-  function handleProceedToDetails() {
-    fireStepTwoSignals();
-    trackEvent("book_continue_click", {
-      days: availability?.pricing?.totalDays,
-      lead_time_days: startDate ? daysBetween(todayInRapidCity(), startDate) : undefined,
-      bikes: bikeCount,
-      season: availability?.pricing?.seasonName,
-      value: availability?.pricing?.totalPrice,
-      currency: "USD",
-    });
-    setStep("details");
-  }
+  // AddToCart the first time a bookable price is on screen. With the details
+  // step gone, this is the dense upstream signal the ad optimiser can learn on:
+  // it happens to everyone who picks usable dates, not just to the few who go
+  // all the way to the card form. Fired once per page, not once per date edit.
+  useEffect(() => {
+    if (addToCartSentRef.current) return;
+    if (!availability?.pricing || !availability.canBook) return;
+    if (availability.outOfSeason || availability.pastDate) return;
+    if (availability.pricing.totalDays < availability.pricing.minDays) return;
+    addToCartSentRef.current = true;
+    fireMetaEvent("AddToCart");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availability]);
 
   async function handleCheckout() {
+    // InitiateCheckout now means what it says: they are leaving to pay. The
+    // click it used to hang off (Continue to Details) no longer exists, so the
+    // event moves here and its volume changes. The ad sets optimise on
+    // INITIATED_CHECKOUT, so watch that in Events Manager; AddToCart above is
+    // the denser signal to switch them to.
+    fireMetaEvent("InitiateCheckout");
     setSubmitting(true);
     setError("");
     trackEvent("book_checkout_click", {
@@ -319,12 +257,6 @@ export default function BookPage() {
           bikeCount,
           pickupTime,
           dropoffTime,
-          firstName,
-          lastName,
-          email,
-          phone,
-          specialRequests,
-          totalPrice: availability?.pricing?.totalPrice,
         }),
       });
       const data = await res.json();
@@ -353,11 +285,24 @@ export default function BookPage() {
     availability?.pricing != null &&
     availability.pricing.totalDays < availability.pricing.minDays;
 
-  const canProceedToDetails =
+  const canPay =
     availability?.canBook &&
     !availability?.outOfSeason &&
+    !availability?.pastDate &&
     availability?.pricing != null &&
     !belowMinDays;
+
+  /** "Friday, September 12, 2026", or empty while the date is unset. */
+  const longDate = (ymd: string) =>
+    ymd
+      ? new Date(`${ymd}T12:00:00Z`).toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          timeZone: "UTC",
+        })
+      : "";
 
   return (
     <>
@@ -387,34 +332,6 @@ export default function BookPage() {
           </div>
         </section>
 
-        {/* Progress steps */}
-        <div ref={stepsBarRef} className="bg-[#26301c] border-b border-white/10">
-          <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-6">
-            {(["dates", "details", "review"] as Step[]).map((s, i) => (
-              <div key={s} className="flex items-center gap-2">
-                <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                    step === s
-                      ? "bg-[#d9a32b] text-[#1a1a17]"
-                      : i < ["dates", "details", "review"].indexOf(step)
-                      ? "bg-white/20 text-white"
-                      : "bg-white/10 text-white/40"
-                  }`}
-                >
-                  {i + 1}
-                </div>
-                <span
-                  className={`text-xs tracking-wider uppercase hidden sm:block ${
-                    step === s ? "text-white" : "text-white/40"
-                  }`}
-                >
-                  {s === "dates" ? "Dates & Bikes" : s === "details" ? "Your Details" : "Review"}
-                </span>
-                {i < 2 && <span className="text-white/20 text-xs ml-2">→</span>}
-              </div>
-            ))}
-          </div>
-        </div>
 
         <div className="max-w-6xl mx-auto px-6 py-10">
           {error && (
@@ -423,12 +340,12 @@ export default function BookPage() {
             </div>
           )}
 
-          {/* ── Step 1: Dates ──────────────────────────────────────────────── */}
+          {/* ── The only step before Stripe ────────────────────────────────── */}
           {/* Two columns on desktop: booking form + a trust rail for cold ad
               traffic. On mobile everything stacks, form first (offer visible),
-              proof below. Only this step is enriched — steps 2 & 3 stay lean. */}
-          {step === "dates" && (
-            <div className="lg:grid lg:grid-cols-5 lg:gap-10 lg:items-start">
+              proof below. Name, email and phone are collected by Stripe on the
+              next screen, the rest of the rider profile after payment. */}
+          <div className="lg:grid lg:grid-cols-5 lg:gap-10 lg:items-start">
              {/* Form column stays pinned on desktop while the taller proof rail scrolls,
                  keeping the CTA in view and absorbing the height difference. */}
              <div className="lg:col-span-3 space-y-8 lg:sticky lg:top-6 lg:self-start">
@@ -589,13 +506,52 @@ export default function BookPage() {
                 )}
               </div>
 
+              {/* Recap + terms + pay. Everything that used to be a third step,
+                  minus the fields Stripe collects better than we can. */}
               <div>
+                {canPay && (
+                  <div className="mb-5 rounded-sm border border-[#e8e3d3] bg-white px-5 py-4">
+                    <div className="flex justify-between py-1.5 text-sm">
+                      <span className="text-[#6e6a5e]">Pickup</span>
+                      <span className="text-[#1a1a17] font-medium text-right">
+                        {longDate(startDate)} · {pickupTime}
+                      </span>
+                    </div>
+                    <div className="flex justify-between py-1.5 text-sm border-t border-[#f0ece0]">
+                      <span className="text-[#6e6a5e]">Return</span>
+                      <span className="text-[#1a1a17] font-medium text-right">
+                        {longDate(endDate)} · {dropoffTime}
+                      </span>
+                    </div>
+                    <p className="mt-3 border-t border-[#f0ece0] pt-3 text-xs leading-relaxed text-[#6e6a5e]">
+                      Next screen is the secure payment page, where you enter your name, email and
+                      phone.{" "}
+                      {availability?.requestToBook
+                        ? "For same-day rides your card is authorized (a hold) and only charged once we confirm your bike."
+                        : "Full payment is charged at checkout."}{" "}
+                      Everything else we need for your ride is asked for afterwards, in two minutes.
+                      Cancellation policy: 100% refund if cancelled 30+ days before pickup, 50%
+                      within 30 days, no refund within 7 days.
+                    </p>
+                  </div>
+                )}
                 <button
-                  onClick={handleProceedToDetails}
-                  disabled={!canProceedToDetails}
-                  className="w-full bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
+                  onClick={handleCheckout}
+                  disabled={!canPay || submitting}
+                  className="w-full bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
                 >
-                  Continue to Details
+                  {submitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Redirecting…
+                    </>
+                  ) : !canPay ? (
+                    "Select your dates"
+                  ) : availability!.requestToBook ? (
+                    `Request to Book · Authorize $${availability!.pricing!.totalPrice.toLocaleString()}`
+                  ) : (
+                    `Continue to Payment · $${availability!.pricing!.totalPrice.toLocaleString()}`
+                  )}
                 </button>
                 <p className="mt-3 text-center text-xs text-[#6e6a5e]">
                   🔒 Secure checkout · Free cancellation 30+ days before pickup · No account needed
@@ -720,201 +676,6 @@ export default function BookPage() {
                 </div>
               </aside>
             </div>
-          )}
-
-          {/* ── Step 2: Details ────────────────────────────────────────────── */}
-          {step === "details" && (
-            <div className="space-y-8 max-w-3xl mx-auto">
-              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
-                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Your Details</h2>
-
-                <div className="grid md:grid-cols-2 gap-5 mb-5">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">First Name *</label>
-                    <input
-                      type="text"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Last Name *</label>
-                    <input
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-5 mb-5">
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Email *</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">Phone</label>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]"
-                    />
-                  </div>
-                </div>
-
-                {/* Licence number and emergency contact used to sit here. They
-                    are counter information, not booking information, and asking
-                    for a licence number on a phone before payment was the
-                    heaviest question on the page. Both are now collected at
-                    pickup instead. */}
-
-                <div>
-                  <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
-                    Special Requests
-                  </label>
-                  <textarea
-                    value={specialRequests}
-                    onChange={(e) => setSpecialRequests(e.target.value)}
-                    rows={3}
-                    placeholder="Luggage, helmet size, route suggestions…"
-                    className="w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b] resize-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    trackEvent("book_back_click", { step, step_number: STEP_NUMBER[step] });
-                    setStep("dates");
-                  }}
-                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={() => {
-                    // Which optional fields survived the form tells us how much
-                    // of it is actually worth asking for before payment.
-                    trackEvent("book_review_click", {
-                      has_phone: Boolean(phone),
-                      has_special_requests: Boolean(specialRequests),
-                    });
-                    setStep("review");
-                  }}
-                  disabled={!firstName || !lastName || !email}
-                  className="flex-[2] bg-[#d9a32b] hover:bg-[#e2ae2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-[#1a1a17] font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
-                >
-                  Review Booking
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 3: Review ─────────────────────────────────────────────── */}
-          {step === "review" && availability && (
-            <div className="space-y-6 max-w-3xl mx-auto">
-              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
-                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Review Your Booking</h2>
-
-                <div className="space-y-0 mb-8">
-                  {[
-                    { label: "Pickup", value: `${new Date(startDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · ${pickupTime}` },
-                    { label: "Return", value: `${new Date(endDate).toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })} · ${dropoffTime}` },
-                    { label: "Duration", value: `${availability.pricing!.totalDays} day${availability.pricing!.totalDays !== 1 ? "s" : ""}` },
-                    { label: "Bikes", value: `${bikeCount} × Royal Enfield Himalayan 450` },
-                    { label: "Rider", value: `${firstName} ${lastName}` },
-                    { label: "Email", value: email },
-                  ].map((row) => (
-                    <div key={row.label} className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
-                      <span className="text-[#6e6a5e]">{row.label}</span>
-                      <span className="text-[#1a1a17] font-medium">{row.value}</span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
-                    <span className="text-[#6e6a5e]">Subtotal (${availability.pricing!.dailyRate}/day × {availability.pricing!.totalDays}d × {bikeCount})</span>
-                    <span className="text-[#1a1a17] font-medium">${availability.pricing!.subtotal.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between py-2.5 border-b border-[#e8e3d3] text-sm">
-                    <span className="text-[#6e6a5e]">Tax (11.9%)</span>
-                    <span className="text-[#1a1a17] font-medium">${availability.pricing!.tax.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between pt-4 mt-1">
-                    <span className="font-semibold text-[#1a1a17]">Total</span>
-                    <span className="font-bold text-[#d9a32b] text-xl">${availability.pricing!.totalPrice.toLocaleString()}</span>
-                  </div>
-                </div>
-
-                <p className="text-[#6e6a5e] text-xs leading-relaxed border-t border-[#e8e3d3] pt-4">
-                  By proceeding you agree to our Terms & Conditions.{" "}
-                  {availability.requestToBook
-                    ? "For same-day rides your card is authorized (a hold) at checkout and only charged once we confirm your bike. If we can't confirm, the hold is released and you're not charged."
-                    : "Full payment is charged at checkout."}{" "}
-                  Cancellation policy: 100% refund if cancelled 30+ days before pickup, 50% within 30 days, no refund within 7 days.
-                </p>
-              </div>
-
-              <div className="flex gap-4">
-                <button
-                  onClick={() => {
-                    trackEvent("book_back_click", { step, step_number: STEP_NUMBER[step] });
-                    setStep("details");
-                  }}
-                  className="flex-1 border border-[#3a4730] text-[#1a1a17] font-medium tracking-wider py-4 rounded-sm hover:bg-[#2e3b23] hover:text-white transition-colors text-sm uppercase"
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleCheckout}
-                  disabled={submitting}
-                  className="flex-[2] bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
-                >
-                  {submitting ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      Redirecting…
-                    </>
-                  ) : availability.requestToBook ? (
-                    `Request to Book · Authorize $${availability.pricing!.totalPrice.toLocaleString()}`
-                  ) : (
-                    `Pay $${availability.pricing!.totalPrice.toLocaleString()}`
-                  )}
-                </button>
-              </div>
-
-              <div className="bg-white rounded-sm border border-[#e8e3d3] overflow-hidden">
-                <div className="p-6 pb-4">
-                  <p className="text-[10px] font-semibold tracking-[0.22em] uppercase text-[#d9a32b] mb-2">Pickup location</p>
-                  <p className="text-[#1a1a17] font-semibold">{PICKUP_LOCATION.name}</p>
-                  <p className="text-[#2a2a24] text-sm mt-1">{PICKUP_LOCATION.street}</p>
-                  <p className="text-[#2a2a24] text-sm">{PICKUP_LOCATION.city}, {PICKUP_LOCATION.state} {PICKUP_LOCATION.zip}</p>
-                  <a
-                    href={PICKUP_DIRECTIONS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-3 text-sm text-[#d9a32b] hover:text-[#966b14] font-medium"
-                  >
-                    Get directions →
-                  </a>
-                </div>
-                <iframe
-                  title="Pickup location map"
-                  src={PICKUP_MAP_EMBED_URL}
-                  className="w-full h-56 border-0"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            </div>
-          )}
         </div>
       </main>
       <Footer />

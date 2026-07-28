@@ -314,6 +314,12 @@ export interface AdminBooking {
   dropoffTime?: string;
   /** Bike Names pinned to this booking (from the Bike Names text field). */
   assignedBikes: string[];
+  /**
+   * When the customer filled in their rider profile after paying. Null means
+   * the team collects helmet size, emergency contact and licence at the
+   * counter, which is fine but worth knowing before they walk in.
+   */
+  riderProfileCompletedAt?: string;
 }
 
 /** A booking plus the live per-block bike assignment (read from the blocks). */
@@ -445,6 +451,7 @@ function mapBooking(r: AirtableRecord<FieldSet>): AdminBooking {
     notes: (r.get("Special Requests") as string) ?? undefined,
     pickupTime: (r.get("Pickup Time") as string) || undefined,
     dropoffTime: (r.get("Drop-off Time") as string) || undefined,
+    riderProfileCompletedAt: (r.get("Rider Profile Completed At") as string) || undefined,
     assignedBikes: ((r.get("Bike Names") as string) ?? "")
       .split(",")
       .map((s) => s.trim())

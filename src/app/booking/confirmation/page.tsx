@@ -7,14 +7,33 @@ import {
   PICKUP_DIRECTIONS_URL,
   PICKUP_MAP_EMBED_URL,
 } from "@/lib/location";
+import { getBookingIdBySessionId, riderProfileUrl } from "@/lib/rider-profile";
+import { signProfileToken } from "@/lib/booking-token";
+
+export const dynamic = "force-dynamic";
 
 export default async function ConfirmationPage({
   searchParams,
 }: {
-  searchParams: Promise<{ pending?: string }>;
+  searchParams: Promise<{ pending?: string; session_id?: string }>;
 }) {
-  const { pending } = await searchParams;
+  const { pending, session_id: sessionId } = await searchParams;
   const isPending = pending === "1";
+
+  // The profile form is the natural next click while the customer is still on
+  // the page. The webhook may not have created the booking yet, in which case
+  // we simply say nothing here: the same link is in the confirmation email.
+  let profileUrl: string | null = null;
+  if (sessionId) {
+    try {
+      const bookingId = await getBookingIdBySessionId(sessionId);
+      if (bookingId) {
+        profileUrl = riderProfileUrl(bookingId, signProfileToken(bookingId), "");
+      }
+    } catch {
+      /* never block the confirmation on a lookup */
+    }
+  }
   return (
     <>
       <Navbar />
@@ -36,6 +55,22 @@ export default async function ConfirmationPage({
               ? "Because you're riding today, your card is authorized but not yet charged. Our team is confirming a bike and will finalize your booking shortly — watch your inbox for the confirmation. If we can't confirm, the hold is released and you're not charged."
               : "Your booking is confirmed. A confirmation email is on its way with your booking reference."}
           </p>
+
+          {profileUrl && (
+            <div className="bg-[#f7f2e6] border border-[#e6dcc4] rounded-sm p-6 text-left mb-6">
+              <p className="text-[#1a1a17] font-semibold mb-1.5">Two minutes and you&apos;re done</p>
+              <p className="text-[#5b5b58] text-sm leading-relaxed mb-4">
+                Tell us your helmet size, an emergency contact and how much you ride, and your bike
+                is ready before you walk in. Nothing is required, and the link is in your email too.
+              </p>
+              <Link
+                href={profileUrl}
+                className="inline-block bg-[#2e3b23] hover:bg-[#3a4a2c] text-white font-semibold text-sm tracking-wider uppercase px-6 py-3 rounded-sm transition-colors"
+              >
+                Complete your ride details
+              </Link>
+            </div>
+          )}
 
           <div className="bg-white border border-[#e8e3d3] rounded-sm overflow-hidden text-left mb-6">
             <div className="p-6 pb-4">

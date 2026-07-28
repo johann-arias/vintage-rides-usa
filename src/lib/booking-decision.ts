@@ -7,7 +7,8 @@ import {
 } from "./airtable";
 import { sendBookingConfirmation, sendBookingDeclined } from "./email";
 import { sendMetaPurchase, readMetaSignals } from "./meta-capi";
-import type { BookingDecision } from "./booking-token";
+import { signProfileToken, type BookingDecision } from "./booking-token";
+import { riderProfileUrl } from "./rider-profile";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
@@ -25,6 +26,9 @@ export interface DecisionResult {
 }
 
 function toEmailInput(b: BookingForDecision) {
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.vintageridesusa.com"
+  ).replace(/\/$/, "");
   return {
     bookingId: b.bookingId,
     firstName: b.firstName,
@@ -37,6 +41,9 @@ function toEmailInput(b: BookingForDecision) {
     totalDays: b.numberOfDays,
     bikeCount: b.numberOfBikes,
     totalPrice: b.totalPrice,
+    // An accepted same-day request gets the same invitation to fill in the
+    // rider profile as any other confirmed booking.
+    profileUrl: riderProfileUrl(b.bookingId, signProfileToken(b.bookingId), siteUrl),
   };
 }
 
