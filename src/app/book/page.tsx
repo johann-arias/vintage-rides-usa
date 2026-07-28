@@ -88,6 +88,16 @@ export default function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // A discount code carried in the link, e.g. /book?promo=EAGLE130. Read from
+  // the URL rather than useSearchParams so this page needs no Suspense
+  // boundary. Stripe validates it and applies it on the payment page; we only
+  // pass it along and say that it is there.
+  const [promoCode, setPromoCode] = useState("");
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get("promo");
+    if (code) setPromoCode(code.trim().toUpperCase().slice(0, 40));
+  }, []);
+
   // The form column is taller than a laptop viewport, so `position: sticky` on
   // it does nothing useful: the pay button sits below the fold and the proof
   // rail on the right keeps scrolling past it. A bar pinned to the bottom of
@@ -291,6 +301,7 @@ export default function BookPage() {
           pickupTime,
           dropoffTime,
           icEventId,
+          promoCode: promoCode || undefined,
         }),
       });
       const data = await res.json();
@@ -568,6 +579,12 @@ export default function BookPage() {
                         {longDate(endDate)} · {dropoffTime}
                       </span>
                     </div>
+                    {promoCode && (
+                      <p className="mt-3 rounded-sm border border-[#e8d9b0] bg-[#faf5ea] px-3 py-2 text-xs text-[#8a6516]">
+                        Discount code <span className="font-semibold">{promoCode}</span> will be
+                        applied on the payment page.
+                      </p>
+                    )}
                     <p className="mt-3 border-t border-[#f0ece0] pt-3 text-xs leading-relaxed text-[#6e6a5e]">
                       {availability?.requestToBook
                         ? "Same-day: your card is authorized and only charged once we confirm your bike."

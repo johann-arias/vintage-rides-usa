@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
     pickupTime,
     dropoffTime,
     icEventId,
+    promoCode,
   } = body;
 
   // Nothing personal is asked for before payment any more. Stripe Checkout
@@ -54,6 +55,26 @@ export async function POST(req: NextRequest) {
       { error: `Minimum rental is ${pricing.minDays} days.` },
       { status: 400 }
     );
+  }
+
+  // A discount is only ever applied when the visitor arrived with a code in the
+  // link. Turning Stripe's promotion field on for everyone would put a "got a
+  // code?" box in front of every customer, which sends people off to hunt for
+  // one instead of paying. Stripe owns the rules: expiry, redemption limits and
+  // validity are enforced by it, not by us.
+  let discountId: string | null = null;
+  if (typeof promoCode === "string" && promoCode.trim()) {
+    try {
+      const found = await stripe.promotionCodes.list({
+        code: promoCode.trim().toUpperCase(),
+        active: true,
+        limit: 1,
+      });
+      discountId = found.data[0]?.id ?? null;
+      if (!discountId) console.log("[checkout] unknown or inactive promo code");
+    } catch (err) {
+      console.error("[checkout] promo lookup failed:", err);
+    }
   }
 
   const originHeader = req.headers.get("origin");
@@ -95,6 +116,7 @@ export async function POST(req: NextRequest) {
     // opt-in and we want it: a same-day request has to be confirmable by call,
     // and it is the only way to reach someone whose email bounces.
     phone_number_collection: { enabled: true },
+    ...(discountId ? { discounts: [{ promotion_code: discountId }] } : {}),
     line_items: [
       {
         price_data: {
