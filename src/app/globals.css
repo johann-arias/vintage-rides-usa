@@ -145,3 +145,10 @@
     letter-spacing: -0.01em;
   }
 }
+/* The booking page pins a price-and-pay bar to the bottom of the viewport once
+   there is a bookable price. While it is up, the floating contact widget sits
+   above it instead of on top of its button. The class is toggled by /book so
+   the widget never moves on pages, or states, without that bar. */
+body.has-booking-bar [data-contact-fab] {
+  bottom: 6rem;
+}

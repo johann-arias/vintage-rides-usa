@@ -328,6 +328,14 @@ export default function BookPage() {
     availability?.pricing != null &&
     !belowMinDays;
 
+  // Tell the floating contact widget to step above the pinned bar, but only
+  // while that bar is actually on screen.
+  useEffect(() => {
+    const showBar = Boolean(canPay) && !ctaVisible;
+    document.body.classList.toggle("has-booking-bar", showBar);
+    return () => document.body.classList.remove("has-booking-bar");
+  });
+
   /** "Friday, September 12, 2026", or empty while the date is unset. */
   const longDate = (ymd: string) =>
     ymd
