@@ -215,6 +215,11 @@ export default function ProfileForm({
               </button>
             </div>
           ) : null}
+          {/* The native file input is always hidden and driven by our own
+              button. Its "Choose File / No file chosen" labels come from the
+              browser's own locale, not from the page, so a visitor with a
+              French browser would read French buttons on an English site. This
+              is the only way to control that wording. */}
           <input
             id="licencePhoto"
             ref={fileInput}
@@ -222,8 +227,22 @@ export default function ProfileForm({
             accept={LICENSE_PHOTO_TYPES.join(",")}
             capture="environment"
             onChange={handleFile}
-            className={`${hasPhoto && !photoName ? "sr-only" : ""} block w-full text-sm text-[#6e6a5e] file:mr-4 file:rounded-sm file:border-0 file:bg-[#2e3b23] file:px-4 file:py-2.5 file:text-xs file:font-semibold file:uppercase file:tracking-wider file:text-white hover:file:bg-[#3a4a2c]`}
+            className="sr-only"
           />
+          {!(hasPhoto && !photoName) && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                className="rounded-sm bg-[#2e3b23] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-[#3a4a2c]"
+              >
+                {photoName ? "Choose another" : "Take a photo or choose a file"}
+              </button>
+              {!photoName && !preparingPhoto && (
+                <span className="text-sm text-[#6e6a5e]">No file chosen yet</span>
+              )}
+            </div>
+          )}
           {preparingPhoto && (
             <p className="mt-2 text-xs text-[#6e6a5e]">Preparing your photo…</p>
           )}
