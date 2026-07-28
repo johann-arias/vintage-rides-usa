@@ -72,12 +72,20 @@ export async function POST(req: NextRequest) {
   const clientUserAgent = (req.headers.get("user-agent") ?? "").slice(0, 480);
 
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
+    // No payment_method_types on purpose. Pinning it to ["card"] overrode the
+    // account's payment method configuration, where Klarna, Affirm, Cash App,
+    // Amazon Pay and Link are all switched on: they were paid for and enabled
+    // in the Dashboard but could never appear at checkout. Omitting the field
+    // hands the choice back to that configuration, and Stripe shows each
+    // customer only what fits their country, currency and device. Methods that
+    // cannot do separate auth-then-capture are filtered out by Stripe itself on
+    // same-day requests, so the request-to-book flow stays intact.
     mode: "payment",
     // Abandoned cart recovery: when the session expires unpaid, Stripe keeps a
-    // recovery link alive so the customer can pick the booking back up, and
-    // emails it to them if cart abandonment emails are on in the Dashboard.
-    // The link also surfaces in the garage so the team can follow up by hand.
+    // recovery link alive for 30 days. It never mails it out on its own (that
+    // needs promotional consent we do not collect), so the link is what our own
+    // /api/cron/abandoned-cart uses, and it surfaces in the garage for manual
+    // follow-up.
     after_expiration: { recovery: { enabled: true, allow_promotion_codes: false } },
     // Same-day: authorize only (manual capture). Advance: default (auto capture).
     ...(requestToBook

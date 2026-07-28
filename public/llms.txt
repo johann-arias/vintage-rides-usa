@@ -81,7 +81,7 @@ This means renters deal directly with experienced, local riders who know the roa
 
 ## Cancellation
 
-- Free cancellation more than 14 days before start date (full refund)
+- Free cancellation 14 or more days before start date (full refund)
 - 50% refund 7–14 days before
 - No refund within 7 days of start date
 - Reschedule once for free if requested 7+ days in advance

@@ -345,7 +345,7 @@ export default function BookPage() {
               <span className="text-white/20" aria-hidden>·</span>
               <span className="text-[#f4e9cf]">Free Custer + Black Hills park passes</span>
               <span className="text-white/20" aria-hidden>·</span>
-              <span className="text-[#f4e9cf]">Free cancellation 30+ days out</span>
+              <span className="text-[#f4e9cf]">Free cancellation 14+ days out</span>
             </div>
           </div>
         </section>
@@ -548,8 +548,8 @@ export default function BookPage() {
                         ? "For same-day rides your card is authorized (a hold) and only charged once we confirm your bike."
                         : "Full payment is charged at checkout."}{" "}
                       Everything else we need for your ride is asked for afterwards, in two minutes.
-                      Cancellation policy: 100% refund if cancelled 30+ days before pickup, 50%
-                      within 30 days, no refund within 7 days.
+                      Cancellation policy: full refund if cancelled 14 or more days before
+                      pickup, 50% between 7 and 14 days, no refund within 7 days.
                     </p>
                   </div>
                 )}
@@ -572,7 +572,7 @@ export default function BookPage() {
                   )}
                 </button>
                 <p className="mt-3 text-center text-xs text-[#6e6a5e]">
-                  🔒 Secure checkout · Free cancellation 30+ days before pickup · No account needed
+                  🔒 Secure checkout · Free cancellation 14+ days before pickup · No account needed
                 </p>
               </div>
 
