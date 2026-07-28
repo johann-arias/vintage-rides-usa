@@ -316,8 +316,8 @@ export interface AdminBooking {
   assignedBikes: string[];
   /**
    * When the customer filled in their rider profile after paying. Null means
-   * the team collects helmet size, emergency contact and licence at the
-   * counter, which is fine but worth knowing before they walk in.
+   * the team takes the licence details at the counter, which is fine but worth
+   * knowing before they walk in.
    */
   riderProfileCompletedAt?: string;
 }

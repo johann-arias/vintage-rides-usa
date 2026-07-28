@@ -85,8 +85,8 @@ export async function POST(req: NextRequest) {
         "Total Price (USD)": (session.amount_total ?? 0) / 100,
         "Stripe Session ID": session.id,
         "Stripe Payment Intent ID": paymentIntentId,
-        // Licence, emergency contact, helmet size and experience are filled in
-        // after payment by the customer, on the rider profile page.
+        // Licence number and photo are filled in after payment by the customer,
+        // on the rider profile form.
         "Special Requests": meta.specialRequests ?? "",
         ...(requestToBook
           ? { "Internal Notes": "Channel: Website | Same-day request (authorized, awaiting accept)" }

@@ -206,7 +206,7 @@ function renderHtml(b: BookingConfirmationInput): string {
                 <tr>
                   <td style="padding:20px 22px;">
                     <div style="font-size:15px;font-weight:600;color:#2a2a28;margin-bottom:6px;">Two minutes and you're done</div>
-                    <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5b5b58;">Tell us your helmet size, an emergency contact and how much you ride, and your bike is ready before you walk in. Nothing is required.</p>
+                    <p style="margin:0 0 16px;font-size:14px;line-height:1.55;color:#5b5b58;">Send us a photo of your motorcycle license and a number to reach you on. We check it before you arrive, so pickup is keys and go. Nothing is required.</p>
                     <a href="${b.profileUrl}" style="display:inline-block;background:#2e3b23;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:12px 22px;border-radius:4px;">Complete your ride details</a>
                   </td>
                 </tr>
@@ -289,8 +289,8 @@ function renderText(b: BookingConfirmationInput): string {
     ...(b.profileUrl
       ? [
           `Two minutes and you're done:`,
-          `  Tell us your helmet size, an emergency contact and how much you ride,`,
-          `  and your bike is ready before you walk in. Nothing is required.`,
+          `  Send us a photo of your motorcycle license and a number to reach you on.`,
+          `  We check it before you arrive, so pickup is keys and go. Nothing is required.`,
           `  ${b.profileUrl}`,
           ``,
         ]
@@ -685,7 +685,7 @@ export async function sendRiderProfileReminder(b: RiderProfileReminderInput): Pr
     </td></tr>
     <tr><td style="padding:28px 32px 8px;">
       <p style="margin:0 0 14px;font-size:15px;line-height:1.6;">${greeting}your Himalayan 450 is reserved for ${escapeHtml(fmtDate(b.startDate))}, pickup at ${escapeHtml(pTime)}.</p>
-      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;">We are still missing a few details that make handover quick: your helmet size, an emergency contact, and how much you ride. Two minutes, and none of it is mandatory.</p>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;">We are still missing a photo of your motorcycle license and a number to reach you on. Sending them now means we check the license before you arrive, and pickup is keys and go. Two minutes, and neither is mandatory.</p>
       <a href="${b.profileUrl}" style="display:inline-block;background:#2e3b23;color:#ffffff;font-size:14px;font-weight:600;text-decoration:none;padding:13px 24px;border-radius:4px;">Complete your ride details</a>
       <p style="margin:20px 0 0;font-size:13px;line-height:1.55;color:#5b5b58;">Prefer to sort it out at the counter? That works too. Bring your driver's license with a motorcycle endorsement either way, we check it at pickup.</p>
     </td></tr>
@@ -700,8 +700,8 @@ export async function sendRiderProfileReminder(b: RiderProfileReminderInput): Pr
     ``,
     `Your Himalayan 450 is reserved for ${fmtDate(b.startDate)}, pickup at ${pTime}.`,
     ``,
-    `We're still missing a few details that make handover quick: helmet size,`,
-    `an emergency contact, and how much you ride. Two minutes, none of it mandatory.`,
+    `We're still missing a photo of your motorcycle license and a number to reach`,
+    `you on. Sending them now means pickup is keys and go. Two minutes, not mandatory.`,
     ``,
     `${b.profileUrl}`,
     ``,

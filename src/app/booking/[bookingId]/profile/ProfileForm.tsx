@@ -1,13 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import { HELMET_SIZES, EXPERIENCE_LEVELS } from "@/lib/rider-profile-options";
+import { useRef, useState } from "react";
+import {
+  LICENSE_PHOTO_TYPES,
+  MAX_LICENSE_PHOTO_BYTES,
+  type LicensePhotoUpload,
+} from "@/lib/rider-profile-options";
 // Type-only, so nothing from the Airtable module reaches the browser bundle.
 import type { RiderProfileBooking } from "@/lib/rider-profile";
 
 const LABEL = "block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2";
 const FIELD =
   "w-full border border-[#e8e3d3] rounded-sm px-4 py-3 text-sm focus:outline-none focus:border-[#d9a32b] focus:ring-1 focus:ring-[#d9a32b]";
+
+/** Longest edge of a resized licence photo. Plenty to read a licence, small to send. */
+const MAX_EDGE_PX = 1600;
+
+/**
+ * Phone cameras produce 4 to 12 MB files, well past what Airtable's attachment
+ * endpoint accepts and what a serverless request body should carry. Redraw the
+ * image at a sane size before it ever leaves the device. PDFs and anything the
+ * browser cannot decode are passed through untouched and size-checked instead.
+ */
+async function toUpload(file: File): Promise<LicensePhotoUpload> {
+  const asBase64 = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result).split(",")[1] ?? "");
+      reader.onerror = () => reject(new Error("Could not read that file"));
+      reader.readAsDataURL(blob);
+    });
+
+  if (!file.type.startsWith("image/") || file.type === "image/heic" || file.type === "image/heif") {
+    return { filename: file.name, contentType: file.type, data: await asBase64(file) };
+  }
+
+  const bitmap = await createImageBitmap(file).catch(() => null);
+  if (!bitmap) {
+    return { filename: file.name, contentType: file.type, data: await asBase64(file) };
+  }
+
+  const scale = Math.min(1, MAX_EDGE_PX / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext("2d")?.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, "image/jpeg", 0.82)
+  );
+  if (!blob) {
+    return { filename: file.name, contentType: file.type, data: await asBase64(file) };
+  }
+  return {
+    filename: file.name.replace(/\.[^.]+$/, "") + ".jpg",
+    contentType: "image/jpeg",
+    data: await asBase64(blob),
+  };
+}
 
 export default function ProfileForm({
   booking,
@@ -17,15 +66,55 @@ export default function ProfileForm({
   token: string;
 }) {
   const [phone, setPhone] = useState(booking.phone);
-  const [emergencyContact, setEmergencyContact] = useState(booking.emergencyContact);
   const [licenseNumber, setLicenseNumber] = useState(booking.licenseNumber);
-  const [helmetSize, setHelmetSize] = useState(booking.helmetSize);
-  const [ridingExperience, setRidingExperience] = useState(booking.ridingExperience);
   const [specialRequests, setSpecialRequests] = useState(booking.specialRequests);
+
+  const [photo, setPhoto] = useState<LicensePhotoUpload | null>(null);
+  const [photoName, setPhotoName] = useState("");
+  const [photoPreview, setPhotoPreview] = useState("");
+  const [preparingPhoto, setPreparingPhoto] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(Boolean(booking.completedAt));
+  const [hasPhoto, setHasPhoto] = useState(booking.hasLicensePhoto);
   const [error, setError] = useState("");
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+    setPreparingPhoto(true);
+    try {
+      const upload = await toUpload(file);
+      if ((upload.data.length * 3) / 4 > MAX_LICENSE_PHOTO_BYTES) {
+        setError("That file is too big. A photo taken with your phone camera works best.");
+        setPhoto(null);
+        setPhotoName("");
+        return;
+      }
+      setPhoto(upload);
+      setPhotoName(file.name);
+      setPhotoPreview(
+        upload.contentType.startsWith("image/")
+          ? `data:${upload.contentType};base64,${upload.data}`
+          : ""
+      );
+    } catch {
+      setError("Could not read that file. Try a photo or a PDF.");
+      setPhoto(null);
+      setPhotoName("");
+    } finally {
+      setPreparingPhoto(false);
+    }
+  }
+
+  function clearPhoto() {
+    setPhoto(null);
+    setPhotoName("");
+    setPhotoPreview("");
+    if (fileInput.current) fileInput.current.value = "";
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,11 +128,9 @@ export default function ProfileForm({
           bookingId: booking.bookingId,
           token,
           phone,
-          emergencyContact,
           licenseNumber,
-          helmetSize,
-          ridingExperience,
           specialRequests,
+          licensePhoto: photo ?? undefined,
         }),
       });
       const data = await res.json();
@@ -52,6 +139,12 @@ export default function ProfileForm({
         return;
       }
       setSaved(true);
+      if (data.photoError) {
+        setError(data.photoError);
+      } else if (photo) {
+        setHasPhoto(true);
+        clearPhoto();
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch {
       setError("Something went wrong. Please try again.");
@@ -93,20 +186,6 @@ export default function ProfileForm({
         </div>
 
         <div>
-          <label className={LABEL} htmlFor="emergency">
-            Emergency contact
-          </label>
-          <input
-            id="emergency"
-            type="text"
-            value={emergencyContact}
-            onChange={(e) => setEmergencyContact(e.target.value)}
-            placeholder="Name and phone number"
-            className={FIELD}
-          />
-        </div>
-
-        <div>
           <label className={LABEL} htmlFor="licence">
             Motorcycle license number
           </label>
@@ -118,53 +197,62 @@ export default function ProfileForm({
             placeholder="The one with your motorcycle endorsement"
             className={FIELD}
           />
-          <p className="mt-1.5 text-xs text-[#6e6a5e]">
-            Bring the license itself to pickup, we check it there. Filling it in now just makes
-            handover quicker.
-          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5">
-          <div>
-            <label className={LABEL} htmlFor="helmet">
-              Helmet size
-            </label>
-            <select
-              id="helmet"
-              value={helmetSize}
-              onChange={(e) => setHelmetSize(e.target.value)}
-              className={`${FIELD} bg-white`}
-            >
-              <option value="">Not sure yet</option>
-              {HELMET_SIZES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1.5 text-xs text-[#6e6a5e]">A helmet is included with every rental.</p>
-          </div>
-          <div>
-            <label className={LABEL} htmlFor="experience">
-              Riding experience
-            </label>
-            <select
-              id="experience"
-              value={ridingExperience}
-              onChange={(e) => setRidingExperience(e.target.value)}
-              className={`${FIELD} bg-white`}
-            >
-              <option value="">Rather not say</option>
-              {EXPERIENCE_LEVELS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1.5 text-xs text-[#6e6a5e]">
-              Helps us set the bike up and point you at the right roads.
-            </p>
-          </div>
+        <div>
+          <label className={LABEL} htmlFor="licencePhoto">
+            Photo of your license
+          </label>
+          {hasPhoto && !photoName ? (
+            <div className="flex items-center justify-between gap-4 rounded-sm border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+              <span>License received. Thank you.</span>
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                className="shrink-0 text-xs font-semibold uppercase tracking-wider underline underline-offset-2"
+              >
+                Replace
+              </button>
+            </div>
+          ) : null}
+          <input
+            id="licencePhoto"
+            ref={fileInput}
+            type="file"
+            accept={LICENSE_PHOTO_TYPES.join(",")}
+            capture="environment"
+            onChange={handleFile}
+            className={`${hasPhoto && !photoName ? "sr-only" : ""} block w-full text-sm text-[#6e6a5e] file:mr-4 file:rounded-sm file:border-0 file:bg-[#2e3b23] file:px-4 file:py-2.5 file:text-xs file:font-semibold file:uppercase file:tracking-wider file:text-white hover:file:bg-[#3a4a2c]`}
+          />
+          {preparingPhoto && (
+            <p className="mt-2 text-xs text-[#6e6a5e]">Preparing your photo…</p>
+          )}
+          {photoName && !preparingPhoto && (
+            <div className="mt-3 flex items-center gap-3">
+              {photoPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={photoPreview}
+                  alt="Your license, as it will be sent"
+                  className="h-16 w-24 rounded-sm border border-[#e8e3d3] object-cover"
+                />
+              ) : null}
+              <div className="min-w-0 text-xs text-[#6e6a5e]">
+                <p className="truncate">{photoName}</p>
+                <button
+                  type="button"
+                  onClick={clearPhoto}
+                  className="mt-1 font-semibold uppercase tracking-wider underline underline-offset-2"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+          )}
+          <p className="mt-2 text-xs text-[#6e6a5e]">
+            A phone photo of the front is enough. We check it before you arrive, so pickup is keys
+            and go. Bring the license itself either way, we look at it at the counter.
+          </p>
         </div>
 
         <div>
@@ -184,7 +272,7 @@ export default function ProfileForm({
 
       <button
         type="submit"
-        disabled={saving}
+        disabled={saving || preparingPhoto}
         className="w-full bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase"
       >
         {saving ? "Saving…" : saved ? "Save changes" : "Save my details"}

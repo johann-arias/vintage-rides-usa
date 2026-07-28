@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { signProfileToken, verifyProfileToken } from "@/lib/booking-token";
 import {
+  attachLicensePhoto,
   getBookingIdBySessionId,
   getRiderProfileBooking,
   saveRiderProfile,
@@ -81,15 +82,35 @@ export async function POST(req: NextRequest) {
   try {
     await saveRiderProfile(booking.recordId, {
       phone: body.phone,
-      emergencyContact: body.emergencyContact,
       licenseNumber: body.licenseNumber,
-      helmetSize: body.helmetSize,
-      ridingExperience: body.ridingExperience,
       specialRequests: body.specialRequests,
     });
   } catch (err) {
     console.error("Rider profile save failed:", err);
     return NextResponse.json({ error: "Could not save. Please try again." }, { status: 500 });
+  }
+
+  // The photo is attached after the text, and its failure is reported on its
+  // own: losing a licence photo is annoying, losing the phone number the
+  // customer just typed because the photo failed would be worse.
+  if (body.licensePhoto?.data) {
+    try {
+      await attachLicensePhoto(booking.recordId, {
+        filename: String(body.licensePhoto.filename ?? "license"),
+        contentType: String(body.licensePhoto.contentType ?? ""),
+        data: String(body.licensePhoto.data),
+      });
+    } catch (err) {
+      console.error("Licence photo upload failed:", err instanceof Error ? err.message : err);
+      return NextResponse.json(
+        {
+          ok: true,
+          photoError:
+            "Your details are saved, but the license photo did not go through. Try a smaller photo, or just bring it with you.",
+        },
+        { status: 200 }
+      );
+    }
   }
 
   return NextResponse.json({ ok: true });

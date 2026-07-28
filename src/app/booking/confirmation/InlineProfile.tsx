@@ -75,9 +75,9 @@ export default function InlineProfile({
       <div className="text-left mb-8">
         <h2 className="text-[#1a1a17] text-xl font-semibold mb-1.5">One quick thing</h2>
         <p className="text-[#6e6a5e] text-sm leading-relaxed mb-5">
-          Your helmet size, an emergency contact and how much you ride. Two minutes now and your
-          bike is ready before you walk in. None of it is required, and you can change it later from
-          the link in your email.
+          A photo of your motorcycle license and a number to reach you on. We check the license
+          before you arrive, so pickup is keys and go. None of it is required, and you can come back
+          to it later from the link in your email.
         </p>
         <ProfileForm booking={booking} token={token} />
       </div>
@@ -89,8 +89,8 @@ export default function InlineProfile({
       <div className="bg-[#f7f2e6] border border-[#e6dcc4] rounded-sm p-6 text-left mb-8">
         <p className="text-[#1a1a17] font-semibold mb-1.5">One quick thing, by email</p>
         <p className="text-[#5b5b58] text-sm leading-relaxed">
-          Your confirmation email has a link to tell us your helmet size, an emergency contact and
-          how much you ride. Two minutes, and nothing in it is required.
+          Your confirmation email has a link to send us a photo of your motorcycle license and a
+          number to reach you on. Two minutes, and nothing in it is required.
         </p>
       </div>
     );

@@ -11,11 +11,14 @@
 // anyway. It only has to be easy enough that most people do it themselves.
 
 import base, { Tables } from "@/lib/airtable";
-import { HELMET_SIZES, EXPERIENCE_LEVELS } from "@/lib/rider-profile-options";
-import type { RiderProfileInput } from "@/lib/rider-profile-options";
+import {
+  MAX_LICENSE_PHOTO_BYTES,
+  LICENSE_PHOTO_TYPES,
+  type LicensePhotoUpload,
+  type RiderProfileInput,
+} from "@/lib/rider-profile-options";
 
-export type { RiderProfileInput };
-export { HELMET_SIZES, EXPERIENCE_LEVELS };
+export type { RiderProfileInput, LicensePhotoUpload };
 
 export interface RiderProfileBooking {
   recordId: string;
@@ -31,11 +34,10 @@ export interface RiderProfileBooking {
   status: string;
   completedAt: string | null;
   /** Current values, so the form can be edited rather than only filled once. */
-  emergencyContact: string;
   licenseNumber: string;
-  helmetSize: string;
-  ridingExperience: string;
   specialRequests: string;
+  /** True once a licence photo is attached; the file itself never leaves Airtable. */
+  hasLicensePhoto: boolean;
 }
 
 export async function getRiderProfileBooking(
@@ -60,47 +62,71 @@ export async function getRiderProfileBooking(
     pickupTime: str("Pickup Time"),
     status: str("Status"),
     completedAt: str("Rider Profile Completed At") || null,
-    emergencyContact: str("Emergency Contact Name"),
     licenseNumber: str("Rider License Number"),
-    helmetSize: str("Helmet Size"),
-    ridingExperience: str("Riding Experience"),
     specialRequests: str("Special Requests"),
+    hasLicensePhoto: ((r.get("Rider License Photo") as unknown[]) ?? []).length > 0,
   };
 }
 
 /**
- * Writes whatever the customer filled in. Every field is optional on purpose:
- * a half-filled profile is worth more than an abandoned one, and the select
- * values are checked against the allowed lists so a crafted request cannot
- * create new Airtable options.
+ * Writes whatever the customer filled in. Every field is optional on purpose: a
+ * half-filled profile is worth more than an abandoned one.
  */
 export async function saveRiderProfile(
   recordId: string,
   input: RiderProfileInput
 ): Promise<void> {
   const clean = (v: string | undefined, max = 300) => v?.trim().slice(0, max) || undefined;
-  const helmet = HELMET_SIZES.includes(input.helmetSize as (typeof HELMET_SIZES)[number])
-    ? input.helmetSize
-    : undefined;
-  const experience = EXPERIENCE_LEVELS.includes(
-    input.ridingExperience as (typeof EXPERIENCE_LEVELS)[number]
-  )
-    ? input.ridingExperience
-    : undefined;
 
   const fields: Record<string, string> = { "Rider Profile Completed At": new Date().toISOString() };
   const phone = clean(input.phone, 40);
-  const emergency = clean(input.emergencyContact);
   const licence = clean(input.licenseNumber, 60);
   const requests = clean(input.specialRequests, 2000);
   if (phone) fields.Phone = phone;
-  if (emergency) fields["Emergency Contact Name"] = emergency;
   if (licence) fields["Rider License Number"] = licence;
-  if (helmet) fields["Helmet Size"] = helmet;
-  if (experience) fields["Riding Experience"] = experience;
   if (requests) fields["Special Requests"] = requests;
 
   await base(Tables.Bookings).update([{ id: recordId, fields }]);
+}
+
+/**
+ * Pushes the licence photo into the booking's attachment field.
+ *
+ * Airtable's content API takes the bytes directly, so the file never needs a
+ * public URL of ours and never sits in our own storage: it goes straight from
+ * the customer's phone to the record the team already opens at pickup. The SDK
+ * has no binding for this endpoint, hence the raw fetch.
+ */
+export async function attachLicensePhoto(
+  recordId: string,
+  file: LicensePhotoUpload
+): Promise<void> {
+  if (!LICENSE_PHOTO_TYPES.includes(file.contentType as (typeof LICENSE_PHOTO_TYPES)[number])) {
+    throw new Error(`Unsupported licence photo type: ${file.contentType}`);
+  }
+  // Base64 inflates by ~4/3; compare on the decoded size.
+  if ((file.data.length * 3) / 4 > MAX_LICENSE_PHOTO_BYTES) {
+    throw new Error("Licence photo too large");
+  }
+
+  const baseId = process.env.AIRTABLE_BASE_ID;
+  const apiKey = process.env.AIRTABLE_API_KEY;
+  const res = await fetch(
+    `https://content.airtable.com/v0/${baseId}/${recordId}/${encodeURIComponent("Rider License Photo")}/uploadAttachment`,
+    {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contentType: file.contentType,
+        file: file.data,
+        filename: file.filename.slice(0, 120),
+      }),
+    }
+  );
+  if (!res.ok) {
+    // Never log the body: it is a photo of someone's driving licence.
+    throw new Error(`Airtable attachment upload failed with ${res.status}`);
+  }
 }
 
 /**
