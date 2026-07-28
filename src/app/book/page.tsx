@@ -199,18 +199,31 @@ export default function BookPage() {
     }
   }, [startDate, endDate, bikeCount, checkAvailability]);
 
-  /** Best-effort Meta pixel call. Analytics never blocks a booking. */
-  function fireMetaEvent(name: string) {
+  /**
+   * Best-effort Meta pixel call. Analytics never blocks a booking.
+   *
+   * `eventId` matters for InitiateCheckout: the server fires the same event
+   * through the Conversions API a moment later, when it creates the Stripe
+   * session. Same act, two transports. Without a shared id Meta counts it
+   * twice, inflates the very metric both ad sets optimise on, and teaches the
+   * optimiser that checkouts are twice as common as they are.
+   */
+  function fireMetaEvent(name: string, eventId?: string) {
     const fbq = (window as unknown as { fbq?: (...args: unknown[]) => void }).fbq;
     if (typeof fbq !== "function" || !availability?.pricing) return;
     try {
-      fbq("track", name, {
-        value: availability.pricing.totalPrice,
-        currency: "USD",
-        num_items: bikeCount,
-        content_ids: ["himalayan-450-rental"],
-        content_type: "product",
-      });
+      fbq(
+        "track",
+        name,
+        {
+          value: availability.pricing.totalPrice,
+          currency: "USD",
+          num_items: bikeCount,
+          content_ids: ["himalayan-450-rental"],
+          content_type: "product",
+        },
+        eventId ? { eventID: eventId } : undefined
+      );
     } catch {
       /* analytics must never break the booking flow */
     }
@@ -231,12 +244,16 @@ export default function BookPage() {
   }, [availability]);
 
   async function handleCheckout() {
-    // InitiateCheckout now means what it says: they are leaving to pay. The
-    // click it used to hang off (Continue to Details) no longer exists, so the
-    // event moves here and its volume changes. The ad sets optimise on
-    // INITIATED_CHECKOUT, so watch that in Events Manager; AddToCart above is
-    // the denser signal to switch them to.
-    fireMetaEvent("InitiateCheckout");
+    // InitiateCheckout means what it says: they are leaving to pay. It goes out
+    // from here AND from the server when the Stripe session is created, sharing
+    // this id so Meta merges them into one event with the union of their
+    // parameters: the browser brings the pixel context, the server brings the
+    // IP, user agent and click cookies.
+    const icEventId =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `ic-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    fireMetaEvent("InitiateCheckout", icEventId);
     setSubmitting(true);
     setError("");
     trackEvent("book_checkout_click", {
@@ -257,6 +274,7 @@ export default function BookPage() {
           bikeCount,
           pickupTime,
           dropoffTime,
+          icEventId,
         }),
       });
       const data = await res.json();

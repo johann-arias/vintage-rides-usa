@@ -373,13 +373,14 @@ export interface BookingFunnelStats {
 }
 
 // Ordered spine of the funnel. Keys are GA4 event names.
+// Ordered spine of the funnel, matching the single-step booking page. The
+// details and review steps were removed on 2026-07-28; their events survive in
+// GA4 history but can never fire again, so listing them would show three rows
+// collapsing to zero and read as a catastrophe rather than a redesign.
 const FUNNEL_STEPS: { key: string; label: string }[] = [
-  { key: "book_step_dates", label: "Landed on step 1" },
+  { key: "book_step_dates", label: "Landed on /book" },
   { key: "book_dates_started", label: "Touched a date" },
   { key: "__availability", label: "Saw a price" },
-  { key: "book_continue_click", label: "Clicked Continue" },
-  { key: "book_step_details", label: "Reached details" },
-  { key: "book_step_review", label: "Reached review" },
   { key: "book_checkout_click", label: "Clicked pay" },
   { key: "book_checkout_redirect", label: "Sent to Stripe" },
 ];

@@ -83,6 +83,22 @@ function empty(rangeDays: number, error?: string): AbandonedStats {
   };
 }
 
+/**
+ * Names now come from Stripe, not from a form of ours. The booking page stopped
+ * asking for them, so the old metadata.firstName is empty on every session
+ * created since. Checkout fills customer_details.name as soon as the visitor
+ * types it on the card form; before that, an abandoned cart is simply nameless.
+ */
+function nameOf(s: Stripe.Checkout.Session): { firstName: string; lastName: string } {
+  const m = (s.metadata ?? {}) as Record<string, string>;
+  const full = (s.customer_details?.name ?? "").trim();
+  const at = full.lastIndexOf(" ");
+  return {
+    firstName: m.firstName || (at > 0 ? full.slice(0, at) : full),
+    lastName: m.lastName || (at > 0 ? full.slice(at + 1) : ""),
+  };
+}
+
 function normalizeEmail(s: Stripe.Checkout.Session): string | null {
   const raw =
     s.customer_email ??
@@ -121,7 +137,8 @@ function emailsThatBooked(all: Stripe.Checkout.Session[]): Set<string> {
 
 function toAbandonedSession(s: Stripe.Checkout.Session): AbandonedSession {
   const m = (s.metadata ?? {}) as Record<string, string>;
-  const name = `${m.firstName ?? ""} ${m.lastName ?? ""}`.trim();
+  const { firstName, lastName } = nameOf(s);
+  const name = `${firstName} ${lastName}`.trim();
   return {
     id: s.id,
     createdAt: new Date(s.created * 1000).toISOString(),
@@ -298,8 +315,7 @@ export async function findRecoverableCarts(): Promise<RecoveryScan> {
       eligible.push({
         sessionId: s.id,
         email,
-        firstName: m.firstName ?? "",
-        lastName: m.lastName ?? "",
+        ...nameOf(s),
         startDate: m.startDate ?? "",
         endDate: m.endDate ?? "",
         bikes: m.bikeCount ? Number(m.bikeCount) : 1,

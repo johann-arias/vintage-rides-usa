@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
     bikeCount,
     pickupTime,
     dropoffTime,
+    icEventId,
   } = body;
 
   // Nothing personal is asked for before payment any more. Stripe Checkout
@@ -123,12 +124,13 @@ export async function POST(req: NextRequest) {
     cancel_url: `${baseUrl}/book`,
   });
 
-  // Mid-funnel signal for the ad optimizer. Sent here rather than from the
-  // browser because this is the last moment we hold both the visitor's Meta
-  // cookies and the quoted value. Awaited (one fetch, never throws) so it is
-  // not cut short when the serverless function returns.
+  // Mid-funnel signal for the ad optimizer, the server half of a pair: the
+  // browser fired the same InitiateCheckout a moment ago on the pay click.
+  // `icEventId` comes from that call, so Meta deduplicates the two into one
+  // event and takes the union of their parameters. Falling back to a derived id
+  // when the browser could not send one costs the dedup but never the event.
   //
-  // Match quality is now cookie-only: we no longer know the name or email at
+  // Match quality here is cookie-only: we no longer know the name or email at
   // this point, Stripe collects them on the next screen. The Purchase event,
   // which is the one that matters for attribution, is sent from the webhook
   // with the verified email, phone and name.
@@ -136,7 +138,7 @@ export async function POST(req: NextRequest) {
   console.log("[checkout] InitiateCheckout gate:", reportPreCheckout);
   if (reportPreCheckout) {
     await sendMetaInitiateCheckout({
-      eventId: `${metaEventId}-ic`,
+      eventId: typeof icEventId === "string" && icEventId ? icEventId : `${metaEventId}-ic`,
       value: pricing.totalPrice,
       currency: "USD",
       fbp: fbp || undefined,
