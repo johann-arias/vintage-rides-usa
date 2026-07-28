@@ -90,11 +90,11 @@ export default function BookPage() {
 
   // The form column is taller than a laptop viewport, so `position: sticky` on
   // it does nothing useful: the pay button sits below the fold and the proof
-  // rail on the right keeps scrolling past it. A pinned action bar keeps the
-  // price and the button reachable from anywhere on the page, and steps aside
-  // whenever the real button is actually on screen.
-  const ctaRef = useRef<HTMLButtonElement>(null);
-  const [ctaVisible, setCtaVisible] = useState(false);
+  // rail on the right keeps scrolling past it. A bar pinned to the bottom of
+  // the screen carries the price and the button instead, and it stays up for
+  // as long as there is something to buy. It used to hide itself whenever the
+  // real button came into view; that was fragile to get right and gained
+  // nothing, so it no longer tries.
 
   // ── Funnel instrumentation ──────────────────────────────────────────────
   // There is one step left before Stripe, so the funnel is short: landed,
@@ -145,34 +145,6 @@ export default function BookPage() {
       window.removeEventListener("pagehide", onPageHide);
     };
   }, []);
-
-  // Measured on scroll rather than with an IntersectionObserver. The observer
-  // reported the button as visible from mount, when the page was still short,
-  // and never corrected itself once picking dates pushed the button below the
-  // fold: the bar stayed hidden with the button out of reach, which is the
-  // state that loses the sale. A rect read is deterministic and cheap.
-  useEffect(() => {
-    let frame = 0;
-    const measure = () => {
-      frame = 0;
-      const el = ctaRef.current;
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      // Comfortably on screen, not merely touching the edge.
-      setCtaVisible(r.top < window.innerHeight - 24 && r.bottom > 88);
-    };
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(measure);
-    };
-    measure();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      if (frame) cancelAnimationFrame(frame);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [availability, submitting]);
 
   // First touch on the pickup date: the single most telling number on this
   // page, since most ad traffic leaves without ever engaging with the form.
@@ -349,8 +321,7 @@ export default function BookPage() {
   // Tell the floating contact widget to step above the pinned bar, but only
   // while that bar is actually on screen.
   useEffect(() => {
-    const showBar = Boolean(canPay) && !ctaVisible;
-    document.body.classList.toggle("has-booking-bar", showBar);
+    document.body.classList.toggle("has-booking-bar", Boolean(canPay));
     return () => document.body.classList.remove("has-booking-bar");
   });
 
@@ -369,7 +340,7 @@ export default function BookPage() {
   return (
     <>
       <Navbar />
-      <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
+      <main className={`flex-1 pt-16 bg-[#faf5ea] min-h-screen ${canPay ? "pb-24" : ""}`}>
         {/* Header */}
         <section className="bg-[#2e3b23] py-14">
           <div className="max-w-6xl mx-auto px-6">
@@ -599,7 +570,6 @@ export default function BookPage() {
                   </div>
                 )}
                 <button
-                  ref={ctaRef}
                   onClick={handleCheckout}
                   disabled={!canPay || submitting}
                   className="w-full bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
@@ -746,7 +716,7 @@ export default function BookPage() {
             steps aside when the real button is on screen, so there are never
             two pay buttons competing. Right padding clears the floating contact
             button, which sits at bottom-6 right-6 with z-50. */}
-        {canPay && !ctaVisible && (
+        {canPay && (
           <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8e3d3] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
             <div className="max-w-6xl mx-auto flex items-center gap-4 px-6 py-3">
               <div className="min-w-0 flex-1">
