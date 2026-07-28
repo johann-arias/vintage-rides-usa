@@ -93,7 +93,7 @@ export default function BookPage() {
   // rail on the right keeps scrolling past it. A pinned action bar keeps the
   // price and the button reachable from anywhere on the page, and steps aside
   // whenever the real button is actually on screen.
-  const ctaRef = useRef<HTMLDivElement>(null);
+  const ctaRef = useRef<HTMLButtonElement>(null);
   const [ctaVisible, setCtaVisible] = useState(false);
 
   // ── Funnel instrumentation ──────────────────────────────────────────────
@@ -390,9 +390,12 @@ export default function BookPage() {
               proof below. Name, email and phone are collected by Stripe on the
               next screen, the rest of the rider profile after payment. */}
           <div className="lg:grid lg:grid-cols-5 lg:gap-10 lg:items-start">
-             {/* Form column stays pinned on desktop while the taller proof rail scrolls,
-                 keeping the CTA in view and absorbing the height difference. */}
-             <div className="lg:col-span-3 space-y-8 lg:sticky lg:top-6 lg:self-start">
+             {/* Both columns scroll together. Pinning this one used to look like a
+                 second scrollbar: it is taller than the viewport, so sticky froze
+                 it mid-page while the proof rail carried on. The pinned bar at the
+                 bottom of the screen is what keeps the price and the button
+                 reachable now. */}
+             <div className="lg:col-span-3 space-y-8">
               <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
                 <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
 
@@ -553,7 +556,7 @@ export default function BookPage() {
 
               {/* Recap + terms + pay. Everything that used to be a third step,
                   minus the fields Stripe collects better than we can. */}
-              <div ref={ctaRef}>
+              <div>
                 {canPay && (
                   <div className="mb-5 rounded-sm border border-[#e8e3d3] bg-white px-5 py-4">
                     <div className="flex justify-between py-1.5 text-sm">
@@ -578,6 +581,7 @@ export default function BookPage() {
                   </div>
                 )}
                 <button
+                  ref={ctaRef}
                   onClick={handleCheckout}
                   disabled={!canPay || submitting}
                   className="w-full bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:bg-[#e8e3d3] disabled:text-[#6e6a5e] text-white font-semibold tracking-wider py-4 rounded-sm transition-colors text-sm uppercase flex items-center justify-center gap-2"
