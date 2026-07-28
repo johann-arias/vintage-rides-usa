@@ -146,15 +146,33 @@ export default function BookPage() {
     };
   }, []);
 
+  // Measured on scroll rather than with an IntersectionObserver. The observer
+  // reported the button as visible from mount, when the page was still short,
+  // and never corrected itself once picking dates pushed the button below the
+  // fold: the bar stayed hidden with the button out of reach, which is the
+  // state that loses the sale. A rect read is deterministic and cheap.
   useEffect(() => {
-    const el = ctaRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([entry]) => setCtaVisible(entry.isIntersecting), {
-      rootMargin: "-80px 0px 0px 0px",
-    });
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const el = ctaRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      // Comfortably on screen, not merely touching the edge.
+      setCtaVisible(r.top < window.innerHeight - 24 && r.bottom > 88);
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(measure);
+    };
+    measure();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [availability, submitting]);
 
   // First touch on the pickup date: the single most telling number on this
   // page, since most ad traffic leaves without ever engaging with the form.
