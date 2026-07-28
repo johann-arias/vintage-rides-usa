@@ -88,6 +88,14 @@ export default function BookPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  // The form column is taller than a laptop viewport, so `position: sticky` on
+  // it does nothing useful: the pay button sits below the fold and the proof
+  // rail on the right keeps scrolling past it. A pinned action bar keeps the
+  // price and the button reachable from anywhere on the page, and steps aside
+  // whenever the real button is actually on screen.
+  const ctaRef = useRef<HTMLDivElement>(null);
+  const [ctaVisible, setCtaVisible] = useState(false);
+
   // ── Funnel instrumentation ──────────────────────────────────────────────
   // There is one step left before Stripe, so the funnel is short: landed,
   // touched a date, saw a price, went to pay. These refs keep each milestone
@@ -136,6 +144,16 @@ export default function BookPage() {
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", onPageHide);
     };
+  }, []);
+
+  useEffect(() => {
+    const el = ctaRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(([entry]) => setCtaVisible(entry.isIntersecting), {
+      rootMargin: "-80px 0px 0px 0px",
+    });
+    io.observe(el);
+    return () => io.disconnect();
   }, []);
 
   // First touch on the pickup date: the single most telling number on this
@@ -431,7 +449,8 @@ export default function BookPage() {
                   </div>
                 </div>
                 <p className="text-xs text-[#6e6a5e] mb-6">
-                  Pickup available every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>. After-hours pickup and all drop-offs are arranged by appointment — we&apos;ll confirm a time with you. Riding <span className="text-[#1a1a17] font-medium">today</span>? Same-day bookings are a quick request: we authorize your card and only charge once the team confirms your bike.
+                  Pickup every half hour, <span className="text-[#1a1a17] font-medium">8:00 AM to 6:00 PM</span>.
+                  After-hours pickup and all drop-offs by appointment.
                 </p>
 
                 <div className="mb-6">
@@ -526,7 +545,7 @@ export default function BookPage() {
 
               {/* Recap + terms + pay. Everything that used to be a third step,
                   minus the fields Stripe collects better than we can. */}
-              <div>
+              <div ref={ctaRef}>
                 {canPay && (
                   <div className="mb-5 rounded-sm border border-[#e8e3d3] bg-white px-5 py-4">
                     <div className="flex justify-between py-1.5 text-sm">
@@ -542,14 +561,11 @@ export default function BookPage() {
                       </span>
                     </div>
                     <p className="mt-3 border-t border-[#f0ece0] pt-3 text-xs leading-relaxed text-[#6e6a5e]">
-                      Next screen is the secure payment page, where you enter your name, email and
-                      phone.{" "}
                       {availability?.requestToBook
-                        ? "For same-day rides your card is authorized (a hold) and only charged once we confirm your bike."
-                        : "Full payment is charged at checkout."}{" "}
-                      Everything else we need for your ride is asked for afterwards, in two minutes.
-                      Cancellation policy: full refund if cancelled 14 or more days before
-                      pickup, 50% between 7 and 14 days, no refund within 7 days.
+                        ? "Same-day: your card is authorized and only charged once we confirm your bike."
+                        : "Secure payment on the next screen, then two minutes of ride details."}{" "}
+                      Full refund if cancelled 14 or more days before pickup, 50% between 7 and 14
+                      days, none within 7.
                     </p>
                   </div>
                 )}
@@ -695,6 +711,46 @@ export default function BookPage() {
               </aside>
             </div>
         </div>
+
+        {/* Pinned action bar. Appears as soon as there is a bookable price and
+            steps aside when the real button is on screen, so there are never
+            two pay buttons competing. Right padding clears the floating contact
+            button, which sits at bottom-6 right-6 with z-50. */}
+        {canPay && !ctaVisible && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#e8e3d3] bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/85">
+            <div className="max-w-6xl mx-auto flex items-center gap-4 px-6 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-[#1a1a17] font-semibold leading-tight whitespace-nowrap">
+                  ${availability!.pricing!.totalPrice.toLocaleString()}
+                  <span className="ml-2 text-[11px] font-normal text-[#6e6a5e] sm:text-xs">
+                    {availability!.pricing!.totalDays}d · {bikeCount} bike
+                    {bikeCount > 1 ? "s" : ""} · incl. tax
+                  </span>
+                </p>
+                <p className="hidden text-xs text-[#6e6a5e] sm:block">
+                  Free cancellation 14+ days before pickup
+                </p>
+              </div>
+              <button
+                onClick={handleCheckout}
+                disabled={submitting}
+                className="shrink-0 bg-[#2e3b23] hover:bg-[#3a4a2c] disabled:opacity-60 text-white font-semibold tracking-wider px-4 sm:px-6 py-3 rounded-sm transition-colors text-xs sm:text-sm uppercase whitespace-nowrap"
+              >
+                {submitting ? (
+                  "Redirecting…"
+                ) : availability!.requestToBook ? (
+                  <>
+                    Request<span className="hidden sm:inline"> to book</span>
+                  </>
+                ) : (
+                  <>
+                    Continue<span className="hidden sm:inline"> to payment</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
     </>

@@ -29,8 +29,16 @@ export default function ContactButton() {
   // Customer-facing widget — hide it on the internal /garage backoffice.
   if (pathname.startsWith("/garage")) return null;
 
+  // /book pins a price-and-pay bar to the bottom of the viewport once dates are
+  // chosen. Sit above it rather than on top of its button: on that page the
+  // bottom strip belongs to the booking, not to us.
+  const onBookingPage = pathname.startsWith("/book");
+
   return (
-    <div ref={panelRef} className="fixed bottom-6 right-6 z-50">
+    <div
+      ref={panelRef}
+      className={`fixed right-6 z-50 ${onBookingPage ? "bottom-24" : "bottom-6"}`}
+    >
       {open && (
         <div className="mb-3 w-80 bg-white border border-[#e8e3d3] rounded-sm shadow-xl overflow-hidden">
           <div className="bg-[#2e3b23] px-5 py-4 flex items-center justify-between">
