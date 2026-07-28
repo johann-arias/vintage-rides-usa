@@ -294,6 +294,14 @@ async function sendBrevo(msg: BrevoMessage, context: string): Promise<void> {
     console.error(`BREVO_API_KEY missing — skipping ${context}`);
     return;
   }
+  // `next dev` loads .env.local, which holds the real Brevo key: exercising any
+  // email path locally reaches real inboxes. Set EMAIL_DRY_RUN=1 to log instead.
+  if (process.env.EMAIL_DRY_RUN === "1") {
+    console.log(
+      `[EMAIL_DRY_RUN] would send ${context} to ${msg.to.map((t) => t.email).join(", ")} — "${msg.subject}"`
+    );
+    return;
+  }
   const res = await fetch(BREVO_ENDPOINT, {
     method: "POST",
     headers: { "api-key": apiKey, "content-type": "application/json", accept: "application/json" },
@@ -461,6 +469,10 @@ export async function sendInternalBookingNotification(b: InternalNotificationInp
     console.error("BREVO_API_KEY missing — skipping internal booking notification");
     return;
   }
+  if (process.env.EMAIL_DRY_RUN === "1") {
+    console.log(`[EMAIL_DRY_RUN] would send internal booking notification for ${b.bookingId}`);
+    return;
+  }
 
   const tag = b.livemode ? "" : " [TEST]";
   const subject = `${b.livemode ? "" : "[TEST] "}New booking · ${b.firstName} ${b.lastName} · ${b.bookingId}`;
@@ -536,6 +548,78 @@ export async function sendInternalBookingNotification(b: InternalNotificationInp
     const body = await res.text().catch(() => "");
     throw new Error(`Brevo internal notification failed ${res.status}: ${body}`);
   }
+}
+
+export interface AbandonedCartInput {
+  email: string;
+  firstName: string;
+  lastName: string;
+  startDate: string;
+  endDate: string;
+  totalDays: number;
+  bikeCount: number;
+  totalPrice: number;
+  /** Live checkout url, or Stripe's recovery link once the session expired. */
+  resumeUrl: string;
+}
+
+/**
+ * One nudge to someone who reached the card form and walked away. Sent only to
+ * addresses with no booking anywhere else (see findRecoverableCarts), so it can
+ * never land on a customer who already paid.
+ */
+export async function sendAbandonedCartRecovery(b: AbandonedCartInput): Promise<void> {
+  const greeting = b.firstName ? `Hi ${escapeHtml(b.firstName)}, ` : "";
+  const dates = `${fmtDate(b.startDate)} → ${fmtDate(b.endDate)}`;
+  const bikes = `${b.bikeCount} bike${b.bikeCount === 1 ? "" : "s"}`;
+  const html = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f4f1ea;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#2a2a28;">
+  <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;margin:0 auto;background:#ffffff;border:1px solid #e8e6e0;">
+    <tr><td style="background:#111110;padding:24px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#c8a45a;">Your ride is still here</div>
+      <div style="color:#ffffff;font-size:14px;letter-spacing:0.18em;text-transform:uppercase;font-weight:600;margin-top:8px;">VINTAGE RIDES <span style="color:#c8a45a;font-weight:400;">USA</span></div>
+    </td></tr>
+    <tr><td style="padding:32px 28px;">
+      <h1 style="margin:0 0 12px;font-size:24px;font-weight:300;color:#111110;">${greeting}you left a booking half-finished.</h1>
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#5b5b58;">We held onto the details. One click and you're back where you left off, nothing to fill in again.</p>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e8e6e0;border-radius:2px;margin-top:8px;">
+        <tr><td style="padding:16px 20px;font-size:14px;line-height:1.7;color:#2a2a28;">
+          <div><span style="color:#8a8a86;">Dates:</span> ${dates}</div>
+          <div><span style="color:#8a8a86;">Duration:</span> ${b.totalDays} day${b.totalDays === 1 ? "" : "s"} · ${bikes}</div>
+          <div><span style="color:#8a8a86;">Total:</span> <strong>${fmtMoney(b.totalPrice)}</strong></div>
+          <div><span style="color:#8a8a86;">Pickup:</span> ${escapeHtml(PICKUP_ADDRESS_INLINE)}</div>
+        </td></tr>
+      </table>
+      <p style="margin:24px 0 8px;"><a href="${escapeHtml(b.resumeUrl)}" style="display:inline-block;background:#111110;color:#ffffff;text-decoration:none;padding:14px 28px;font-size:15px;font-weight:600;letter-spacing:0.04em;">Finish my booking</a></p>
+      <p style="margin:16px 0 0;font-size:15px;line-height:1.6;color:#5b5b58;">Your Royal Enfield Himalayan 450 comes with the Custer State Park entrance pass and the Black Hills National Forest trail pass included. Free cancellation.</p>
+      <p style="margin:20px 0 0;font-size:13px;color:#8a8a86;">Changed your mind, or want different dates? Just reply — you'll reach the team in Rapid City directly.</p>
+    </td></tr>
+  </table></body></html>`;
+  const text = [
+    `YOUR RIDE IS STILL HERE — Vintage Rides USA`,
+    ``,
+    `${b.firstName ? `Hi ${b.firstName}, ` : ""}you left a booking half-finished.`,
+    `One click and you're back where you left off, nothing to fill in again.`,
+    ``,
+    `Dates:    ${dates}`,
+    `Duration: ${b.totalDays} day${b.totalDays === 1 ? "" : "s"} · ${bikes}`,
+    `Total:    ${fmtMoney(b.totalPrice)}`,
+    `Pickup:   ${PICKUP_ADDRESS_INLINE}`,
+    ``,
+    `Finish your booking: ${b.resumeUrl}`,
+    ``,
+    `Park passes included. Free cancellation.`,
+    `Changed your mind, or want different dates? Just reply to this email.`,
+  ].join("\n");
+  await sendBrevo(
+    {
+      to: [{ email: b.email, name: `${b.firstName} ${b.lastName}`.trim() || b.email }],
+      subject: `Your Black Hills ride is still waiting`,
+      html,
+      text,
+      tags: ["abandoned-cart-recovery", "vintage-rides-usa"],
+    },
+    "abandoned cart recovery email"
+  );
 }
 
 function escapeHtml(s: string): string {

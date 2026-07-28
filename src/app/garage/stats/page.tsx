@@ -2,7 +2,7 @@ import { getTurnoverStats, B2B_BIKE_DAY_RATE } from "@/lib/airtable";
 import { getGaStats, getGscStats, getGbpStats, getBookingFunnel } from "@/lib/google-stats";
 import type { FunnelStep } from "@/lib/google-stats";
 import { getSearchStats } from "@/lib/availability-log";
-import { getAbandonedCheckouts } from "@/lib/stripe-abandoned";
+import { getAbandonedCheckouts, RECOVERY_DELAY_HOURS } from "@/lib/stripe-abandoned";
 import { Globe, Search, Star, TrendingUp, AlertCircle, Filter, CalendarSearch, ShoppingCart } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -674,9 +674,14 @@ export default async function StatsPage() {
         />
         {abandoned.connected ? (
           <div className="space-y-3">
-            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               <Kpi label="Checkouts started" value={int.format(abandoned.created)} />
               <Kpi label="Paid" value={int.format(abandoned.completed)} />
+              <Kpi
+                label="Changed their cart"
+                value={int.format(abandoned.recovered)}
+                sub="booked under another session"
+              />
               <Kpi label="Abandoned" value={int.format(abandoned.abandoned)} />
               <Kpi
                 label="Left on the table"
@@ -687,8 +692,11 @@ export default async function StatsPage() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-1 font-medium">Who to follow up</p>
               <p className="mb-3 text-xs text-muted-foreground">
-                Same-day requests are not listed here: their card is authorized rather than
-                charged, so Stripe calls them unpaid even though the customer went through.
+                Two kinds of false abandon are filtered out. Same-day requests: their card is
+                authorized rather than charged, so Stripe calls them unpaid even though the
+                customer went through. And anyone who adjusted their cart and paid under another
+                session, counted above as &ldquo;changed their cart&rdquo;. Everyone still listed
+                gets one automatic recovery email {RECOVERY_DELAY_HOURS}h after they walked away.
               </p>
               {abandoned.sessions.length > 0 ? (
                 <div className="overflow-x-auto">
@@ -737,6 +745,11 @@ export default async function StatsPage() {
                             ) : (
                               <span className="text-xs text-muted-foreground">{s.state}</span>
                             )}
+                            <span className="block text-xs text-muted-foreground">
+                              {s.recoveryEmailSentAt
+                                ? `emailed ${new Date(s.recoveryEmailSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                                : "not emailed yet"}
+                            </span>
                           </td>
                         </tr>
                       ))}
