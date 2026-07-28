@@ -327,6 +327,16 @@ export interface BookingDetail extends AdminBooking {
   blockType: BikeBlock["type"];
   firstName: string;
   lastName: string;
+  /** What the customer filled in after paying, for the counter to read. */
+  licenseNumber?: string;
+  emergencyContact?: string;
+  licensePhotos: {
+    url: string;
+    /** Preview for images; absent on PDFs. */
+    thumbnailUrl?: string;
+    filename: string;
+    type: string;
+  }[];
 }
 
 // Channel is derived from the Booking ID prefix so no Airtable schema change is
@@ -884,11 +894,30 @@ export async function getBookingByRecordId(
     .firstPage();
   const blockType =
     (blocks[0]?.get("Type") as BikeBlock["type"]) ?? "RENTAL";
+  // Airtable attachment urls are signed and expire after a couple of hours, so
+  // they are only usable because every garage page is force-dynamic and reads
+  // the record at request time. Never cache or store one.
+  type AirtableAttachment = {
+    url: string;
+    filename: string;
+    type: string;
+    thumbnails?: { large?: { url: string } };
+  };
+  const attachments = (rec.get("Rider License Photo") as AirtableAttachment[] | undefined) ?? [];
+
   return {
     ...booking,
     blockType,
     firstName: (rec.get("First Name") as string) ?? "",
     lastName: (rec.get("Last Name") as string) ?? "",
+    licenseNumber: (rec.get("Rider License Number") as string) || undefined,
+    emergencyContact: (rec.get("Emergency Contact Name") as string) || undefined,
+    licensePhotos: attachments.map((a) => ({
+      url: a.url,
+      thumbnailUrl: a.thumbnails?.large?.url,
+      filename: a.filename,
+      type: a.type,
+    })),
   };
 }
 

@@ -8,6 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BikePicker } from "@/components/admin/BikePicker";
+import { signProfileToken } from "@/lib/booking-token";
+import { riderProfileUrl } from "@/lib/rider-profile";
 import { updateBookingAction } from "../../../actions";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +47,14 @@ export default async function EditBookingPage({
   if (!booking) notFound();
 
   const isB2B = booking.channel === "B2B";
+  // Website bookings collect the rider details after payment; B2B rows never
+  // had a form to fill, so the panel would only be noise there.
+  const siteUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL ?? "https://www.vintageridesusa.com"
+  ).replace(/\/$/, "");
+  const profileLink = isB2B
+    ? null
+    : riderProfileUrl(booking.bookingId, signProfileToken(booking.bookingId), siteUrl);
 
   // Include the booking's stored time even if it's not one of the standard
   // options, so the select shows the real value instead of silently resetting.
@@ -79,6 +89,81 @@ export default async function EditBookingPage({
         <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-2.5 text-sm text-destructive">
           {ERRORS[error] ?? "Something went wrong."}
         </p>
+      ) : null}
+
+      {profileLink ? (
+        <section className="mb-5 rounded-2xl border border-border bg-card p-6 shadow-sm">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 className="font-serif text-lg">Rider details</h2>
+            <span className="text-xs text-muted-foreground">
+              {booking.riderProfileCompletedAt
+                ? `sent by the rider ${new Date(booking.riderProfileCompletedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                : "not filled in yet"}
+            </span>
+          </div>
+
+          <dl className="space-y-2 text-sm">
+            <div className="flex gap-3">
+              <dt className="w-40 shrink-0 text-muted-foreground">License number</dt>
+              <dd className="font-medium">{booking.licenseNumber || "—"}</dd>
+            </div>
+            <div className="flex gap-3">
+              <dt className="w-40 shrink-0 text-muted-foreground">Emergency contact</dt>
+              <dd className="font-medium">{booking.emergencyContact || "—"}</dd>
+            </div>
+            <div className="flex gap-3">
+              <dt className="w-40 shrink-0 text-muted-foreground">Special requests</dt>
+              <dd className="font-medium">{booking.notes || "—"}</dd>
+            </div>
+          </dl>
+
+          <div className="mt-4">
+            <p className="mb-2 text-sm text-muted-foreground">License photo</p>
+            {booking.licensePhotos.length > 0 ? (
+              <div className="flex flex-wrap gap-3">
+                {booking.licensePhotos.map((p) => (
+                  <a
+                    key={p.url}
+                    href={p.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block"
+                    title={p.filename}
+                  >
+                    {p.thumbnailUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={p.thumbnailUrl}
+                        alt={`License sent by ${booking.customerName}`}
+                        className="h-28 rounded-lg border border-border object-cover"
+                      />
+                    ) : (
+                      <span className="inline-block rounded-lg border border-border px-4 py-3 text-sm underline underline-offset-2">
+                        {p.filename}
+                      </span>
+                    )}
+                  </a>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nothing sent. Check the license at the counter as usual.
+              </p>
+            )}
+          </div>
+
+          <p className="mt-4 border-t border-border pt-3 text-xs break-all text-muted-foreground">
+            Their form:{" "}
+            <a
+              href={profileLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2"
+            >
+              {profileLink}
+            </a>
+          </p>
+        </section>
       ) : null}
 
       <form
