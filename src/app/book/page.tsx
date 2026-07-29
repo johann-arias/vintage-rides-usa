@@ -38,6 +38,7 @@ const RAIL_INCLUDED = [
   "Long-travel suspension, built for pavement & dirt",
   "Panniers, phone mount & tank bag included",
   "Custer State Park + Black Hills passes included",
+  "Insured: liability + damage, $1,000 deductible",
 ];
 
 type AvailabilityResult = {
@@ -377,6 +378,8 @@ export default function BookPage() {
               <span className="text-white/20" aria-hidden>·</span>
               <span className="text-[#f4e9cf]">$130<span className="text-white/50">/day + tax</span></span>
               <span className="text-white/20" aria-hidden>·</span>
+              <span className="text-[#f4e9cf]">Insurance included</span>
+              <span className="text-white/20" aria-hidden>·</span>
               <span className="text-[#f4e9cf]">Free Custer + Black Hills park passes</span>
               <span className="text-white/20" aria-hidden>·</span>
               <span className="text-[#f4e9cf]">Free cancellation 14+ days out</span>
@@ -613,7 +616,7 @@ export default function BookPage() {
                   )}
                 </button>
                 <p className="mt-3 text-center text-xs text-[#6e6a5e]">
-                  🔒 Secure checkout · Free cancellation 14+ days before pickup · No account needed
+                  🔒 Secure checkout · Insurance included · Free cancellation 14+ days before pickup
                 </p>
               </div>
 

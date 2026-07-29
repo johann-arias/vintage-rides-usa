@@ -25,6 +25,7 @@ const SPECS = [
 ];
 
 const INCLUDED = [
+  "Insurance on the bike: liability + damage ($1,000 deductible)",
   "Full-face helmet in your size",
   "Custer State Park entrance pass",
   "Black Hills National Forest trail pass",
@@ -41,7 +42,7 @@ const NOT_INCLUDED = [
   "Riding gear beyond the helmet (bring your jacket, gloves and boots)",
   "Fuel",
   "Accommodation",
-  "Insurance (required — see FAQ)",
+  "Personal accident & travel insurance (bring your own)",
   "One-way drop-off (contact us for availability)",
 ];
 

@@ -217,6 +217,7 @@ export default function HomePage() {
                     "USB-C charging · GPS mount · all-day comfort seat",
                     "Panniers, phone mount & tank bag included",
                     "Custer State Park + Black Hills National Forest passes included",
+                    "Insurance included in the daily rate",
                   ].map((spec) => (
                     <li key={spec} className="flex items-start gap-3 text-sm text-[#2a2a24]">
                       <span className="text-[#d9a32b] mt-0.5 shrink-0">—</span>
@@ -393,8 +394,13 @@ export default function HomePage() {
                 },
                 {
                   q: "What's included in the rental?",
-                  a: "The bike, panniers, a tank bag, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
+                  a: "The bike and its insurance, panniers, a tank bag, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
                 },
+                {
+                  q: "Is insurance included?",
+                  a: "Yes. Insurance on the motorcycle is in the daily rate, so there is nothing to buy at the counter. It covers liability up to $1,000,000 excess, plus damage to the bike after a $1,000 deductible, which is the part you are responsible for if the bike is damaged. Cover for you personally, accident, medical and trip cancellation, is not included, so bring your own travel insurance.",
+                },
+
                 {
                   q: "Where can I ride?",
                   a: "Anywhere you like from our Rapid City base. Popular rides include the Black Hills, Badlands National Park, Needles Highway, Spearfish Canyon, and Mount Rushmore. We'll share GPX tracks on request.",
