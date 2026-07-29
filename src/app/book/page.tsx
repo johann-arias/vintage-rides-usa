@@ -534,7 +534,7 @@ export default function BookPage() {
                     ) : (
                       <div>
                         <p className="text-green-700 text-sm font-semibold mb-4">
-                          {availability.availableCount} bike{availability.availableCount !== 1 ? "s" : ""} available — looks good!
+                          Your dates are available. Looks good!
                         </p>
                         {availability.requestToBook && (
                           <div className="mb-4 rounded-sm border border-[#e8d9b0] bg-[#faf5ea] px-4 py-3 text-sm text-[#8a6516]">
