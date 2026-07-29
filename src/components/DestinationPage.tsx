@@ -78,6 +78,19 @@ export default function DestinationPage({ destination: d }: Props) {
             <p className="text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
               {d.intro}
             </p>
+            {/* The page arrives from a search with rental intent, so the way to
+                book is above the fold rather than seven sections down. */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/book"
+                className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+              >
+                Check availability
+              </Link>
+              <span className="text-white/60 text-sm">
+                $130/day · insurance included · free cancellation 14+ days out
+              </span>
+            </div>
           </div>
         </section>
 
@@ -189,6 +202,27 @@ export default function DestinationPage({ destination: d }: Props) {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* Mid-page CTA: the reader has just pictured the ride, which is the
+            moment they are most likely to act. */}
+        <section className="bg-[#26301c] py-12">
+          <div className="max-w-5xl mx-auto px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <p className="text-white text-xl font-light">
+                Ride it on a Himalayan 450
+              </p>
+              <p className="text-white/50 text-sm mt-1">
+                10 bikes in Rapid City. Insurance, park passes and helmet included.
+              </p>
+            </div>
+            <Link
+              href="/book"
+              className="shrink-0 bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-sm uppercase inline-block text-center"
+            >
+              See dates &amp; prices
+            </Link>
           </div>
         </section>
 
@@ -311,9 +345,9 @@ export default function DestinationPage({ destination: d }: Props) {
               Your bike is waiting in Rapid City
             </h2>
             <p className="text-white/60 text-base md:text-lg mb-10 max-w-2xl mx-auto">
-              $130/day. Brand-new 2025 Royal Enfield Himalayan 450. Custer State
-              Park + Black Hills National Forest passes included. Available
-              year-round.
+              $130/day. Brand-new 2025 Royal Enfield Himalayan 450. Insurance,
+              Custer State Park and Black Hills National Forest passes included.
+              Free cancellation 14+ days out. Available year-round.
             </p>
             <Link
               href="/book"

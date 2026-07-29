@@ -63,6 +63,19 @@ export default function FleetPage() {
               10 bikes. All 2025. Maintained to the same standard we use for our
               guided tours across 4 continents.
             </p>
+            {/* Specs pages are read by people comparing bikes; the way to book
+                one belongs here, not only after the whole spec sheet. */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+              <Link
+                href="/book"
+                className="bg-[#d9a32b] hover:bg-[#e2ae2c] text-[#1a1a17] font-semibold tracking-wider px-8 py-4 rounded-sm transition-colors text-sm uppercase inline-block"
+              >
+                Check availability
+              </Link>
+              <span className="text-white/60 text-sm">
+                $130/day · insurance included · free cancellation 14+ days out
+              </span>
+            </div>
           </div>
         </section>
 
