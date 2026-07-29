@@ -136,8 +136,12 @@ function internalIps(): string[] {
 
 function isInternalTraffic(s: Stripe.Checkout.Session): boolean {
   const m = (s.metadata ?? {}) as Record<string, string>;
+  // An ABSENT user agent proves nothing: sessions created before the tracking
+  // metadata shipped on 2026-07-22 have none, and treating that as a script
+  // erased seven real bookings from the totals on the first attempt. Only a
+  // user agent that names a tool is evidence.
   const ua = m.clientUserAgent ?? "";
-  if (!ua || NON_BROWSER_AGENT.test(ua)) return true;
+  if (ua && NON_BROWSER_AGENT.test(ua)) return true;
   const ip = m.clientIp ?? "";
   if (ip && internalIps().includes(ip)) return true;
   const email = normalizeEmail(s);
