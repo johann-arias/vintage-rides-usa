@@ -204,9 +204,11 @@ function mmddOrdinal(mmdd: string): number {
 }
 
 // Picks the pricing rule for a rental spanning [startDate, endDate] (inclusive).
-// Any day the rental touches a special window (e.g. Sturgis Rally) makes that
-// window apply to the WHOLE rental, so a rental that merely clips the rally
-// still gets the surge rate, not just one that starts inside it.
+// Any day the rental touches a special window makes that window apply to the
+// WHOLE rental, so a rental that merely clips it is billed at that rate too.
+// No special window is active today: rally week is priced like any other week
+// since 2026-07-29, so every active rule sits at $130. The mechanism stays so a
+// season rate can be reinstated from Airtable without a deploy.
 export function getPriceForDate(
   startDate: Date,
   endDate: Date,
@@ -227,8 +229,8 @@ export function getPriceForDate(
 
   const matched = [...matching.values()];
   if (matched.length > 0) {
-    // Most specific (narrowest) window wins, so a short rally window overrides the
-    // broad standard season when dates overlap (e.g. Sturgis week inside May-Sep).
+    // Most specific (narrowest) window wins, so a short seasonal window overrides
+    // the broad standard season when dates overlap (e.g. a week inside May-Sep).
     return matched.sort(
       (a, b) =>
         mmddOrdinal(a.seasonEnd!) - mmddOrdinal(a.seasonStart!) -
@@ -263,8 +265,8 @@ export function calculateRentalPrice(
   const totalPrice = Math.round((subtotal + tax) * 100) / 100;
 
   // Minimum rental duration is data-driven per pricing rule (Airtable "Min Rental
-  // Days"). All active rules are at 1 today (day rentals OK, rally week included);
-  // the check stays so a minimum can be reinstated from Airtable without a deploy.
+  // Days"). The only active rule is at 1 today (day rentals OK, rally week
+  // included); the check stays so a minimum can be reinstated without a deploy.
   const minDays = Math.max(1, rule.minRentalDays || 1);
 
   return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName: rule.seasonName };

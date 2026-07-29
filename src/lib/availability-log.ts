@@ -76,8 +76,28 @@ export interface SearchStats {
   byLeadTime: SearchDemandRow[];
   /** Rental length asked for. */
   byDuration: SearchDemandRow[];
-  /** Share of searches that hit the rally rate. */
-  sturgisShare: number;
+  /** Share of searches whose dates touch Sturgis Rally week. */
+  rallyWeekShare: number;
+}
+
+// Rally week is read from the requested dates, not from the pricing rule: since
+// 2026-07-29 rally week is priced like any other week, so the season name no
+// longer says anything about demand. The dates still do.
+const RALLY_START_MMDD = "08-07";
+const RALLY_END_MMDD = "08-16";
+
+function touchesRallyWeek(startDate: string, endDate: string): boolean {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
+  const cursor = new Date(start);
+  // A rental is a few weeks at most; the cap is a defensive guard on bad rows.
+  for (let i = 0; i <= 400 && cursor <= end; i++) {
+    const mmdd = `${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+    if (mmdd >= RALLY_START_MMDD && mmdd <= RALLY_END_MMDD) return true;
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return false;
 }
 
 const LEAD_BUCKETS: { label: string; max: number }[] = [
@@ -134,7 +154,7 @@ export async function getSearchStats(rangeDays = 30): Promise<SearchStats> {
   const records = await base(Tables.AvailabilitySearches)
     .select({
       filterByFormula: `IS_AFTER({Searched At}, '${since}')`,
-      fields: ["Start Month", "Outcome", "Lead Time Days", "Days", "Season"],
+      fields: ["Start Month", "Start Date", "End Date", "Outcome", "Lead Time Days", "Days"],
       sort: [{ field: "Searched At", direction: "desc" }],
       maxRecords: MAX_RECORDS,
       pageSize: 100,
@@ -145,7 +165,7 @@ export async function getSearchStats(rangeDays = 30): Promise<SearchStats> {
   const outcomes: string[] = [];
   const leads: string[] = [];
   const durations: string[] = [];
-  let sturgis = 0;
+  let rallyWeek = 0;
 
   for (const r of records) {
     const f = r.fields as Record<string, unknown>;
@@ -153,7 +173,13 @@ export async function getSearchStats(rangeDays = 30): Promise<SearchStats> {
     if (typeof f.Outcome === "string") outcomes.push(f.Outcome);
     if (typeof f["Lead Time Days"] === "number") leads.push(bucket(f["Lead Time Days"], LEAD_BUCKETS));
     if (typeof f.Days === "number") durations.push(bucket(f.Days, DURATION_BUCKETS));
-    if (typeof f.Season === "string" && f.Season.toLowerCase().includes("sturgis")) sturgis += 1;
+    if (
+      typeof f["Start Date"] === "string" &&
+      typeof f["End Date"] === "string" &&
+      touchesRallyWeek(f["Start Date"], f["End Date"])
+    ) {
+      rallyWeek += 1;
+    }
   }
 
   const rows = (m: Map<string, number>, order?: string[]): SearchDemandRow[] => {
@@ -175,7 +201,7 @@ export async function getSearchStats(rangeDays = 30): Promise<SearchStats> {
     byOutcome: rows(tally(outcomes)),
     byLeadTime: rows(tally(leads), LEAD_BUCKETS.map((b) => b.label)),
     byDuration: rows(tally(durations), DURATION_BUCKETS.map((b) => b.label)),
-    sturgisShare: records.length > 0 ? sturgis / records.length : 0,
+    rallyWeekShare: records.length > 0 ? rallyWeek / records.length : 0,
   };
   cache = { at: Date.now(), rangeDays, data };
   return data;

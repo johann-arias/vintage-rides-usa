@@ -626,7 +626,7 @@ export default async function StatsPage() {
               <div className="mb-3 flex items-baseline justify-between gap-4">
                 <p className="font-medium">Months they asked for</p>
                 <p className="text-xs text-muted-foreground">
-                  {pct(searches.sturgisShare)} of searches hit the rally rate
+                  {pct(searches.rallyWeekShare)} of searches touch rally week
                 </p>
               </div>
               <BarList

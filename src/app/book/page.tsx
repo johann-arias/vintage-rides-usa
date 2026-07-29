@@ -528,9 +528,7 @@ export default function BookPage() {
                       </p>
                     ) : belowMinDays ? (
                       <p className="text-red-700 text-sm font-medium">
-                        {availability.pricing!.seasonName === "Sturgis Rally"
-                          ? `The Sturgis Rally period requires a minimum ${availability.pricing!.minDays}-day rental.`
-                          : `This period requires a minimum ${availability.pricing!.minDays}-day rental.`}{" "}
+                        This period requires a minimum {availability.pricing!.minDays}-day rental.{" "}
                         Please extend your return date.
                       </p>
                     ) : (

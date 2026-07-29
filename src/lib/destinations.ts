@@ -165,11 +165,11 @@ export const DESTINATIONS: Record<string, Destination> = {
     h1: "Ride the",
     h1Accent: "Sturgis Rally",
     intro:
-      "Sturgis is the world's biggest motorcycle gathering, averaging around 500,000 bikes every August in a town of 7,000. During rally week the paved roads run two-wide for a hundred miles in every direction. Most rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to slip off the pavement and onto the trails, where the Black Hills are almost yours alone.",
+      "Sturgis is the world's biggest motorcycle gathering, averaging around 500,000 bikes every August in a town of 7,000. During rally week the paved roads run two-wide for a hundred miles in every direction. Most rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to slip off the pavement and onto the trails, where the Black Hills are almost yours alone. And rally week costs the same $130 a day as any other week, with no surcharge.",
     stats: [
       { label: "Distance to Sturgis", value: "30 min from base" },
       { label: "Rally dates 2026", value: "Aug 7-16" },
-      { label: "Daily rate", value: "$250 rally week ($130 rest of year)" },
+      { label: "Daily rate", value: "$130 + 11.9% SD tax, rally week included" },
       { label: "Why us", value: "Adventure bike, not a Harley" },
     ],
     whyHimalayan: {
@@ -215,6 +215,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     knowBefore: {
       title: "Sturgis Rally rental tips",
       items: [
+        { label: "Rally rate", value: "$130/day + tax, same as the rest of the year — no rally surcharge" },
         { label: "Book early", value: "Reserve 3-6 months ahead for August dates — rally week books out" },
         { label: "Pickup", value: "1715 Samco Rd #107, Rapid City, SD — 30 min south of Sturgis on I-90" },
         { label: "Lodging", value: "Camping in Sturgis is the experience. Book Buffalo Chip, Pappy Hoel, or Glencoe months in advance" },
@@ -230,7 +231,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "Why rent in Rapid City instead of Sturgis itself?",
-        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open year-round; the rate is $130/day, or $250/day during the rally (August 7-16), with no minimum rental duration.",
+        a: "Rapid City is 30 minutes south on I-90 — close enough to commute to the rally daily, but far enough to escape the noise and find lodging. Sturgis itself only has rental shops during rally week, prices spike, and reservations close fast. Our base in Rapid City is open year-round at the same $130/day, rally week included, with no minimum rental duration.",
       },
       {
         q: "Can I ride to Sturgis on a Royal Enfield Himalayan?",
@@ -242,7 +243,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "How much does motorcycle rental cost during Sturgis?",
-        a: "During the Sturgis Rally (August 7-16) our rate is $250/day plus tax, with no minimum rental duration, so you can book a single day if that's all you need. The rest of the year it's our standard $130/day. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
+        a: "The same as any other week of the year: $130/day plus 11.9% South Dakota tax, with no minimum rental duration, so you can book a single day if that's all you need. We don't add a rally surcharge during Sturgis week (August 7-16), which is unusual in the Black Hills. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [
