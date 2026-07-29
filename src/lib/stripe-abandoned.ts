@@ -114,10 +114,44 @@ function isProbeEmail(email: string): boolean {
   return /@(example\.(com|org|net)|test\.com)$/.test(email);
 }
 
+/**
+ * Our own traffic, which has no business in a dashboard the team reads to
+ * decide who to chase.
+ *
+ * Two signatures. A session created outside a browser has no user agent at all,
+ * or a tool's one: that is a script, never a customer. And a session from an
+ * office IP listed in ABANDONED_IGNORE_IPS is someone on the team clicking
+ * through the funnel. Both used to sit in the follow-up table looking exactly
+ * like lost money: on 2026-07-29 six of the thirteen unreachable carts were
+ * ours, which made the problem look twice its real size.
+ */
+const NON_BROWSER_AGENT = /curl|wget|python|node-fetch|postman|insomnia|headless|bot|spider/i;
+
+function internalIps(): string[] {
+  return (process.env.ABANDONED_IGNORE_IPS ?? "")
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function isInternalTraffic(s: Stripe.Checkout.Session): boolean {
+  const m = (s.metadata ?? {}) as Record<string, string>;
+  const ua = m.clientUserAgent ?? "";
+  if (!ua || NON_BROWSER_AGENT.test(ua)) return true;
+  const ip = m.clientIp ?? "";
+  if (ip && internalIps().includes(ip)) return true;
+  const email = normalizeEmail(s);
+  return email != null && isProbeEmail(email);
+}
+
 async function listSessions(rangeDays: number): Promise<Stripe.Checkout.Session[]> {
   const since = Math.floor((Date.now() - rangeDays * 86_400_000) / 1000);
   const all: Stripe.Checkout.Session[] = [];
   for await (const s of stripe.checkout.sessions.list({ created: { gte: since }, limit: 100 })) {
+    // Filtered here rather than at each read, so every figure downstream, the
+    // counts, the abandon rate and the money left on the table, is about
+    // customers only.
+    if (isInternalTraffic(s)) continue;
     all.push(s);
     if (all.length >= 500) break; // sanity stop, far above real volume
   }

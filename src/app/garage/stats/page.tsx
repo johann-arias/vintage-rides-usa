@@ -692,11 +692,13 @@ export default async function StatsPage() {
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
               <p className="mb-1 font-medium">Who to follow up</p>
               <p className="mb-3 text-xs text-muted-foreground">
-                Two kinds of false abandon are filtered out. Same-day requests: their card is
-                authorized rather than charged, so Stripe calls them unpaid even though the
-                customer went through. And anyone who adjusted their cart and paid under another
-                session, counted above as &ldquo;changed their cart&rdquo;. Everyone still listed
-                gets one automatic recovery email {RECOVERY_DELAY_HOURS}h after they walked away.
+                Three kinds of noise are filtered out. Same-day requests: their card is
+                    authorized rather than charged, so Stripe calls them unpaid even though the
+                    customer went through. Anyone who adjusted their cart and paid under another
+                    session, counted above as &ldquo;changed their cart&rdquo;. And our own
+                    traffic: scripts, and the office IPs listed in ABANDONED_IGNORE_IPS. Everyone
+                    still listed gets one automatic recovery email 3h after they walked away, when
+                    we have an address for them.
               </p>
               {abandoned.sessions.length > 0 ? (
                 <div className="overflow-x-auto">
