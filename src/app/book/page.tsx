@@ -14,7 +14,8 @@ import {
   DROPOFF_BY_APPOINTMENT,
   GOOGLE_LISTING_URL,
 } from "@/lib/location";
-import { earliestBookableDate, todayInRapidCity } from "@/lib/booking-window";
+import { earliestBookableDate, todayInRapidCity, addDays } from "@/lib/booking-window";
+import { buildDatePresets, type DatePreset } from "@/lib/date-presets";
 import { trackEvent, trackBeginCheckout, daysBetween } from "@/lib/analytics";
 
 // Short testimonials for the trust rail on the dates step (cold ad traffic).
@@ -70,8 +71,6 @@ function availabilityOutcome(a: NonNullable<AvailabilityResult>): string {
   return "available";
 }
 
-// Earliest self-service pickup date (no same-day — those are arranged on demand).
-const earliest = earliestBookableDate();
 // Return date can be the pickup date itself (same-day / day rental).
 const minEnd = (start: string) => start;
 
@@ -88,6 +87,50 @@ export default function BookPage() {
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // Date suggestions, and the earliest date the picker accepts. Both are
+  // computed on mount rather than at module scope: this page is prerendered, so
+  // anything date-derived baked into the build would age with the deployment.
+  const [presets, setPresets] = useState<DatePreset[]>([]);
+  const [earliest, setEarliest] = useState("");
+  // Armed while the visitor is still on the suggestion we picked for them. It
+  // buys exactly one automatic move to the following week if that suggestion
+  // turns out to be sold out, and is spent by any manual edit.
+  const presetShiftRef = useRef(false);
+  // True while the dates on screen are ours rather than theirs. Those checks
+  // are excluded from the server-side search log and flagged in the analytics,
+  // so "what visitors asked for" keeps meaning what it says.
+  const autoDatesRef = useRef(false);
+
+  useEffect(() => {
+    const suggestions = buildDatePresets();
+    setPresets(suggestions);
+    setEarliest(earliestBookableDate());
+    const first = suggestions[0];
+    if (!first) return;
+    // Open on a real quote instead of an empty form. Everything downstream
+    // (availability check, price, pay button) follows from these two dates.
+    presetShiftRef.current = true;
+    autoDatesRef.current = true;
+    setStartDate(first.startDate);
+    setEndDate(first.endDate);
+    trackEvent("book_preset_applied", { preset: first.key, days: first.days });
+  }, []);
+
+  function applyPreset(p: DatePreset) {
+    presetShiftRef.current = false;
+    autoDatesRef.current = false;
+    markDatesStarted();
+    setStartDate(p.startDate);
+    setEndDate(p.endDate);
+    trackEvent("book_preset_selected", { preset: p.key, days: p.days });
+  }
+
+  // Which suggestion the current dates correspond to, if any. Derived rather
+  // than tracked, so editing a date by hand simply deselects every chip.
+  const activePreset = presets.find(
+    (p) => p.startDate === startDate && p.endDate === endDate
+  )?.key;
 
   // A discount code carried in the link, e.g. /book?promo=EAGLE130. Read from
   // the URL rather than useSearchParams so this page needs no Suspense
@@ -172,14 +215,18 @@ export default function BookPage() {
     setError("");
     // Same billed-days definition as the pricing engine (a same-day rental is
     // one day, not zero), so every event in the funnel counts duration alike.
+    const suggested = autoDatesRef.current;
     const shared = {
       days: Math.max(daysBetween(startDate, endDate), 1),
       lead_time_days: daysBetween(todayInRapidCity(), startDate),
       bikes: bikeCount,
+      dates_source: suggested ? "suggested" : "chosen",
     };
     try {
       const res = await fetch(
-        `/api/availability?startDate=${startDate}&endDate=${endDate}&bikes=${bikeCount}`,
+        `/api/availability?startDate=${startDate}&endDate=${endDate}&bikes=${bikeCount}${
+          suggested ? "&suggested=1" : ""
+        }`,
         { cache: "no-store" }
       );
       const data = await res.json();
@@ -187,6 +234,18 @@ export default function BookPage() {
         setError("Could not check availability. Please try again in a moment.");
         trackEvent("book_avail_error", { ...shared, outcome: "error" });
         return;
+      }
+      // The suggestion we picked for them is full: move it a week out rather
+      // than opening the page on a dead end. Once only, and never after the
+      // visitor has chosen dates themselves.
+      if (presetShiftRef.current) {
+        presetShiftRef.current = false;
+        if (!data.canBook && !data.pastDate) {
+          trackEvent("book_preset_shifted", { ...shared, reason: "sold_out" });
+          setStartDate(addDays(startDate, 7));
+          setEndDate(addDays(endDate, 7));
+          return; // the date change re-runs this check
+        }
       }
       setAvailability(data);
       // The moment the visitor learns whether they can ride and at what price.
@@ -254,6 +313,11 @@ export default function BookPage() {
   // all the way to the card form. Fired once per page, not once per date edit.
   useEffect(() => {
     if (addToCartSentRef.current) return;
+    // Only once the dates are theirs. The page now prices a suggestion on
+    // arrival, and an AddToCart on every page load would just be a page view
+    // wearing a conversion badge, which is exactly what the ad optimiser must
+    // not learn on.
+    if (autoDatesRef.current) return;
     if (!availability?.pricing || !availability.canBook) return;
     if (availability.outOfSeason || availability.pastDate) return;
     if (availability.pricing.totalDays < availability.pricing.minDays) return;
@@ -410,6 +474,37 @@ export default function BookPage() {
               <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
                 <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
 
+                {/* One tap to a real quote. Most visitors never touched a date
+                    field, so the form used to sit empty and priceless. */}
+                {presets.length > 0 && (
+                  <div className="mb-6">
+                    <span className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
+                      Popular dates
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {presets.map((p) => {
+                        const active = activePreset === p.key;
+                        return (
+                          <button
+                            key={p.key}
+                            type="button"
+                            onClick={() => applyPreset(p)}
+                            aria-pressed={active}
+                            className={`rounded-sm border px-4 py-2 text-left transition-colors ${
+                              active
+                                ? "border-[#d9a32b] bg-[#faf5ea]"
+                                : "border-[#e8e3d3] bg-white hover:border-[#d9a32b]"
+                            }`}
+                          >
+                            <span className="block text-sm font-semibold text-[#1a1a17]">{p.label}</span>
+                            <span className="block text-xs text-[#6e6a5e]">{p.hint}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid md:grid-cols-2 gap-6 mb-3">
                   <div>
                     <label className="block text-xs font-semibold tracking-widest uppercase text-[#6e6a5e] mb-2">
@@ -417,9 +512,11 @@ export default function BookPage() {
                     </label>
                     <input
                       type="date"
-                      min={earliest}
+                      min={earliest || undefined}
                       value={startDate}
                       onChange={(e) => {
+                        presetShiftRef.current = false;
+                        autoDatesRef.current = false;
                         markDatesStarted();
                         setStartDate(e.target.value);
                         if (endDate && new Date(endDate) <= new Date(e.target.value)) {
@@ -435,9 +532,11 @@ export default function BookPage() {
                     </label>
                     <input
                       type="date"
-                      min={startDate ? minEnd(startDate) : earliest}
+                      min={startDate ? minEnd(startDate) : earliest || undefined}
                       value={endDate}
                       onChange={(e) => {
+                        presetShiftRef.current = false;
+                        autoDatesRef.current = false;
                         markDatesStarted();
                         setEndDate(e.target.value);
                       }}

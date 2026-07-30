@@ -12,6 +12,7 @@
 // rolling window rather than growing forever inside the shared ops base.
 
 import base, { Tables } from "@/lib/airtable";
+import { touchesRallyWeek } from "@/lib/date-presets";
 
 export const RETENTION_DAYS = 30;
 
@@ -82,23 +83,8 @@ export interface SearchStats {
 
 // Rally week is read from the requested dates, not from the pricing rule: since
 // 2026-07-29 rally week is priced like any other week, so the season name no
-// longer says anything about demand. The dates still do.
-const RALLY_START_MMDD = "08-07";
-const RALLY_END_MMDD = "08-16";
-
-function touchesRallyWeek(startDate: string, endDate: string): boolean {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return false;
-  const cursor = new Date(start);
-  // A rental is a few weeks at most; the cap is a defensive guard on bad rows.
-  for (let i = 0; i <= 400 && cursor <= end; i++) {
-    const mmdd = `${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-    if (mmdd >= RALLY_START_MMDD && mmdd <= RALLY_END_MMDD) return true;
-    cursor.setDate(cursor.getDate() + 1);
-  }
-  return false;
-}
+// longer says anything about demand. The dates still do. Same helper the /book
+// date suggestions use, so both agree on what rally week is.
 
 const LEAD_BUCKETS: { label: string; max: number }[] = [
   { label: "Today or tomorrow", max: 1 },

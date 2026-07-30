@@ -12,6 +12,11 @@ export const RAPID_CITY_TZ = "America/Denver";
 // bike freed, customer notified). Kept short because same-day means today.
 export const SAME_DAY_REQUEST_EXPIRY_HOURS = 3;
 
+// Sturgis Rally week, as MM-DD. Not a pricing rule any more (rally week is
+// billed like any other week since 2026-07-29), but still a real-world fact:
+// it drives a suggested date range on /book and the demand read in the garage.
+export const RALLY_WEEK = { start: "08-07", end: "08-16" } as const;
+
 // Format a Date as YYYY-MM-DD in a given IANA timezone. en-CA yields ISO order.
 function ymdInTz(date: Date, tz: string): string {
   return new Intl.DateTimeFormat("en-CA", {

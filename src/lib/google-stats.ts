@@ -377,10 +377,15 @@ export interface BookingFunnelStats {
 // details and review steps were removed on 2026-07-28; their events survive in
 // GA4 history but can never fire again, so listing them would show three rows
 // collapsing to zero and read as a catastrophe rather than a redesign.
+// Since 2026-07-30 the page opens on a suggested date range and prices it
+// straight away, so "saw a price" now comes before any engagement and applies
+// to nearly everyone. Picking their own dates is the real intent signal and
+// sits after it. Rows read before that date keep the old meaning, where a
+// price only ever appeared once the visitor had typed dates themselves.
 const FUNNEL_STEPS: { key: string; label: string }[] = [
   { key: "book_step_dates", label: "Landed on /book" },
-  { key: "book_dates_started", label: "Touched a date" },
   { key: "__availability", label: "Saw a price" },
+  { key: "book_dates_started", label: "Chose their own dates" },
   { key: "book_checkout_click", label: "Clicked pay" },
   { key: "book_checkout_redirect", label: "Sent to Stripe" },
 ];

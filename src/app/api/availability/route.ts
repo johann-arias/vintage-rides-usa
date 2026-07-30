@@ -24,6 +24,11 @@ export async function GET(req: NextRequest) {
   const startDate = searchParams.get("startDate");
   const endDate = searchParams.get("endDate");
   const bikes = parseInt(searchParams.get("bikes") ?? "1", 10);
+  // The page now opens on a suggested date range and prices it straight away.
+  // That check is ours, not the visitor's, so it stays out of the search log:
+  // that table answers "what are they actually trying to book", and filling it
+  // with our own default would drown the real demand signal.
+  const suggested = searchParams.get("suggested") === "1";
 
   if (!startDate || !endDate) {
     return NextResponse.json({ error: "startDate and endDate are required" }, { status: 400, headers: NO_STORE });
@@ -42,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   // Past pickup dates are never bookable.
   if (isPast(startDate)) {
-    void logAvailabilitySearch({
+    if (!suggested) void logAvailabilitySearch({
       startDate,
       endDate,
       days: Math.max(daysBetween(startDate, endDate), 1),
@@ -80,7 +85,7 @@ export async function GET(req: NextRequest) {
         : pricing.totalDays < pricing.minDays
         ? "below_min_days"
         : "available";
-    void logAvailabilitySearch({
+    if (!suggested) void logAvailabilitySearch({
       startDate,
       endDate,
       days: pricing.totalDays,
