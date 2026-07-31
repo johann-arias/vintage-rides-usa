@@ -425,15 +425,19 @@ export default function BookPage() {
     <>
       <Navbar />
       <main className="flex-1 pt-16 bg-[#faf5ea] min-h-screen">
-        {/* Header */}
-        <section className="bg-[#2e3b23] py-14">
+        {/* Header. Deliberately compact on mobile: this block used to eat about
+            a third of the screen, pushing the date chips and the pickup field
+            below the fold, so the one thing a visitor is here to do was
+            invisible until they scrolled. Same content, tighter rhythm; the
+            desktop sizing is restored at md and up. */}
+        <section className="bg-[#2e3b23] py-7 md:py-14">
           <div className="max-w-6xl mx-auto px-6">
-            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-3">Rental Booking</p>
-            <h1 className="text-white text-3xl md:text-4xl font-light">
+            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-2 md:mb-3">Rental Booking</p>
+            <h1 className="text-white text-2xl md:text-4xl font-light">
               Book your <span className="font-semibold">Himalayan 450</span>
             </h1>
             {/* Trust strip — instant context for visitors arriving cold from an ad. */}
-            <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+            <div className="mt-3 md:mt-5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs md:gap-x-4 md:gap-y-2 md:text-sm">
               <span className="inline-flex items-center gap-1.5 text-[#f4e9cf]">
                 <span className="text-[#d9a32b] tracking-tight" aria-hidden>★★★★★</span>
                 <span className="font-medium">5.0</span>
@@ -452,7 +456,7 @@ export default function BookPage() {
         </section>
 
 
-        <div className="max-w-6xl mx-auto px-6 py-10">
+        <div className="max-w-6xl mx-auto px-6 py-6 md:py-10">
           {error && (
             <div className="max-w-3xl mx-auto bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-sm mb-6">
               {error}
@@ -471,8 +475,8 @@ export default function BookPage() {
                  bottom of the screen is what keeps the price and the button
                  reachable now. */}
              <div className="lg:col-span-3 space-y-8">
-              <div className="bg-white rounded-sm border border-[#e8e3d3] p-8">
-                <h2 className="text-[#1a1a17] font-semibold text-lg mb-6">Select Dates & Bikes</h2>
+              <div className="bg-white rounded-sm border border-[#e8e3d3] p-5 md:p-8">
+                <h2 className="text-[#1a1a17] font-semibold text-lg mb-4 md:mb-6">Select Dates & Bikes</h2>
 
                 {/* One tap to a real quote. Most visitors never touched a date
                     field, so the form used to sit empty and priceless. */}
