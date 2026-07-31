@@ -103,11 +103,21 @@ export async function POST(req: NextRequest) {
     // same-day requests, so the request-to-book flow stays intact.
     mode: "payment",
     // Abandoned cart recovery: when the session expires unpaid, Stripe keeps a
-    // recovery link alive for 30 days. It never mails it out on its own (that
-    // needs promotional consent we do not collect), so the link is what our own
-    // /api/cron/abandoned-cart uses, and it surfaces in the garage for manual
-    // follow-up.
+    // recovery link alive for 30 days. That link also feeds our own
+    // /api/cron/abandoned-cart and the garage follow-up list.
     after_expiration: { recovery: { enabled: true, allow_promotion_codes: false } },
+    // Let Stripe mail that recovery link itself. It only does so when the
+    // visitor both typed an email and ticked the box, which is the whole point:
+    // Stripe never hands us the address of a session that did not complete
+    // (formally tested 2026-07-29, customer_details stays null through
+    // expiry), so a visitor who leaves before paying is otherwise unreachable
+    // for good. Over 28-30/07, 21 of 21 abandoned sessions were anonymous and
+    // roughly $9.4k of cart value expired with nobody to write to.
+    //
+    // This covers only the subset who opt in, so it does not replace capturing
+    // the address before the visitor leaves for Stripe. It is the one recovery
+    // path that works without us ever seeing the address.
+    consent_collection: { promotions: "auto" },
     // Same-day: authorize only (manual capture). Advance: default (auto capture).
     ...(requestToBook
       ? { payment_intent_data: { capture_method: "manual" as const } }
