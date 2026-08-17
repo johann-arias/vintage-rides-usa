@@ -17,6 +17,7 @@ import {
 import { earliestBookableDate, todayInRapidCity, addDays } from "@/lib/booking-window";
 import { buildDatePresets, type DatePreset } from "@/lib/date-presets";
 import { trackEvent, trackBeginCheckout, daysBetween } from "@/lib/analytics";
+import { loadAdClick } from "@/lib/ad-click";
 
 // Short testimonials for the trust rail on the dates step (cold ad traffic).
 // Trimmed from the full set on the homepage — same reviewers, same voice.
@@ -367,6 +368,10 @@ export default function BookPage() {
           dropoffTime,
           icEventId,
           promoCode: promoCode || undefined,
+          // Whatever ad click started this visit, captured site-wide by
+          // AdClickCapture. Rides along into Stripe metadata so a search-ad
+          // booking can be proved the same way `_fbc` proves a Meta one.
+          adClick: loadAdClick() ?? undefined,
         }),
       });
       const data = await res.json();

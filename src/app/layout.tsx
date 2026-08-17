@@ -4,6 +4,7 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import ContactButton from "@/components/ContactButton";
+import AdClickCapture from "@/components/AdClickCapture";
 import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 
@@ -273,6 +274,7 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(motorcycleJsonLd) }}
         />
+        <AdClickCapture />
         {children}
         <ContactButton />
       </body>
