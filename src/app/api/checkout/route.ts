@@ -96,8 +96,8 @@ export async function POST(req: NextRequest) {
 
   // Google's half of the same idea. `_fbc` is what makes a Meta-attributed
   // rental auditable one by one; without an equivalent, a search ad could only
-  // ever be inferred from GA4 session sources — which is exactly how the SEA
-  // side of the 24 Jul–16 Aug review had to be guessed at.
+  // ever be inferred from GA4 session sources, which is exactly how the SEA
+  // side of the 24 Jul to 16 Aug review had to be guessed at.
   //
   // The browser sends whatever it captured from the landing URL (the ads point
   // at destination pages, so the click id is long gone by /book). The `_gcl_*`

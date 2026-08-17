@@ -3,15 +3,15 @@
 // Why this exists: every completed booking carries `_fbp`/`_fbc` into Stripe
 // metadata, which is the only reason a Meta-attributed rental can be audited
 // one by one. Google had no equivalent, so a search ad could never be proved
-// or cleared at the payment level — the 24 Jul–16 Aug review could only infer
+// or cleared at the payment level. The 24 Jul to 16 Aug review could only infer
 // SEA bookings from GA4 session sources.
 //
 // Two sources, because neither covers the other:
 //
 //   1. The URL. Google auto-tagging appends `gclid` (Search/Shopping), or
 //      `gbraid`/`wbraid` on iOS where the click id is app-scoped. Bing uses
-//      `msclkid`. These land on whichever page the ad points at — usually a
-//      destination page, not /book — so capture is site-wide and stashed for
+//      `msclkid`. These land on whichever page the ad points at, usually a
+//      destination page and not /book, so capture is site-wide and stashed for
 //      the rest of the visit.
 //   2. The `_gcl_*` cookies the Google tag writes from that same click id.
 //      They survive a page the visitor reached without the query string, e.g.
@@ -85,7 +85,7 @@ export function parseAdClick(search: string): AdClick | null {
 export function parseGclCookie(value: string | undefined): string | undefined {
   if (!value) return undefined;
   const parts = value.split(".");
-  // GCL . timestamp . id  — the id itself may contain dots, so re-join the tail.
+  // GCL . timestamp . id, and the id itself may contain dots, so re-join the tail.
   if (parts.length < 3) return undefined;
   return clean(parts.slice(2).join("."));
 }
