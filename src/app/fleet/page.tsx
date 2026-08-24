@@ -30,7 +30,6 @@ const INCLUDED = [
   "Custer State Park entrance pass",
   "Black Hills National Forest trail pass",
   "Panniers (2× 28L side cases)",
-  "Tank bag (15L)",
   "Phone / GPS RAM mount",
   "Basic tool kit + puncture repair kit",
   "24/7 emergency support contact",

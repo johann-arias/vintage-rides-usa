@@ -38,7 +38,7 @@ const RAIL_REVIEWS = [
 const RAIL_INCLUDED = [
   "452cc · 40 hp · 6-speed",
   "Long-travel suspension, built for pavement & dirt",
-  "Panniers, phone mount & tank bag included",
+  "Panniers & phone mount included",
   "Custer State Park + Black Hills passes included",
   "Insured: liability + damage, $1,000 deductible",
 ];

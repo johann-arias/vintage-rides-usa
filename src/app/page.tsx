@@ -215,7 +215,7 @@ export default function HomePage() {
                     "40 hp · 40 Nm torque · 6-speed gearbox",
                     "Long-travel suspension — 200mm front / 210mm rear",
                     "USB-C charging · GPS mount · all-day comfort seat",
-                    "Panniers, phone mount & tank bag included",
+                    "Panniers & phone mount included",
                     "Custer State Park + Black Hills National Forest passes included",
                     "Insurance included in the daily rate",
                   ].map((spec) => (
@@ -394,7 +394,7 @@ export default function HomePage() {
                 },
                 {
                   q: "What's included in the rental?",
-                  a: "The bike and its insurance, panniers, a tank bag, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
+                  a: "The bike and its insurance, panniers, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
                 },
                 {
                   q: "Is insurance included?",
