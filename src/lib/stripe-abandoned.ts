@@ -50,6 +50,17 @@ export interface AbandonedSession {
   recoveryUrl: string | null;
   /** True once we have emailed this cart. */
   recoveryEmailSentAt: string | null;
+  /**
+   * Whether the visitor ticked the marketing box on Stripe's page. This is the
+   * only thing that tells us who is actually being chased: Stripe holds the
+   * email of an unfinished session and never hands it back (tested 2026-07-29,
+   * customer_details stays null through expiry), so "no email" in this table
+   * describes our blindness, not the customer's reachability. On `opt_in`,
+   * Stripe has the address and its own recovery email is the one that goes out.
+   */
+  promotionsConsent: "opt_in" | "opt_out" | null;
+  /** Sessions this visitor left behind for the same intent, this one included. */
+  attempts: number;
 }
 
 export interface AbandonedStats {
@@ -67,6 +78,8 @@ export interface AbandonedStats {
   lostValue: number;
   /** Carts above MAX_PLAUSIBLE_CART_USD, excluded from every figure above. */
   discarded: number;
+  /** Repeat sessions folded into the visitor who made them. */
+  duplicates: number;
   sessions: AbandonedSession[];
 }
 
@@ -82,6 +95,7 @@ function empty(rangeDays: number, error?: string): AbandonedStats {
     abandonRate: 0,
     lostValue: 0,
     discarded: 0,
+    duplicates: 0,
     sessions: [],
   };
 }
@@ -209,7 +223,60 @@ function emailsThatBooked(all: Stripe.Checkout.Session[]): Set<string> {
   return booked;
 }
 
-function toAbandonedSession(s: Stripe.Checkout.Session): AbandonedSession {
+/**
+ * One browser, from the `_fbp` cookie already stored in the session metadata
+ * for the Conversions API. It carries its own random suffix, so it identifies a
+ * browser rather than a network.
+ *
+ * Deliberately NOT falling back to the IP: mobile carriers and hotels put
+ * strangers behind one address, and merging two real prospects into one row is
+ * far worse than listing one person twice. A session without the cookie simply
+ * stays on its own.
+ */
+function visitorKey(s: Stripe.Checkout.Session): string | null {
+  const fbp = ((s.metadata ?? {}).fbp ?? "").trim();
+  return fbp || null;
+}
+
+/**
+ * One row per person, not per session.
+ *
+ * A visitor who taps pay twice, or comes back in the evening, leaves several
+ * dead sessions behind. Over the 30 days to 2026-08-28 that was 341 sessions
+ * for 247 people, and 57 of them were created less than five minutes apart:
+ * "left on the table" was reading about 40% more money than could ever be
+ * recovered, because the same $291 rental was counted three times.
+ *
+ * The most recent attempt wins: it is their latest intent, and it carries the
+ * live recovery link.
+ */
+function foldByVisitor(lost: Stripe.Checkout.Session[]): {
+  kept: { session: Stripe.Checkout.Session; attempts: number }[];
+  duplicates: number;
+} {
+  const byVisitor = new Map<string, Stripe.Checkout.Session[]>();
+  const alone: Stripe.Checkout.Session[] = [];
+  for (const s of lost) {
+    const key = visitorKey(s);
+    if (!key) {
+      alone.push(s);
+      continue;
+    }
+    byVisitor.set(key, [...(byVisitor.get(key) ?? []), s]);
+  }
+
+  const kept = [
+    ...alone.map((session) => ({ session, attempts: 1 })),
+    ...[...byVisitor.values()].map((group) => {
+      const sorted = [...group].sort((a, b) => b.created - a.created);
+      return { session: sorted[0], attempts: sorted.length };
+    }),
+  ].sort((a, b) => b.session.created - a.session.created);
+
+  return { kept, duplicates: lost.length - kept.length };
+}
+
+function toAbandonedSession(s: Stripe.Checkout.Session, attempts = 1): AbandonedSession {
   const m = (s.metadata ?? {}) as Record<string, string>;
   const { firstName, lastName } = nameOf(s);
   const name = `${firstName} ${lastName}`.trim();
@@ -226,6 +293,8 @@ function toAbandonedSession(s: Stripe.Checkout.Session): AbandonedSession {
     bikes: m.bikeCount ? Number(m.bikeCount) : null,
     recoveryUrl: s.after_expiration?.recovery?.url ?? null,
     recoveryEmailSentAt: m[RECOVERY_SENT_KEY] ?? null,
+    promotionsConsent: s.consent?.promotions ?? null,
+    attempts,
   };
 }
 
@@ -249,20 +318,26 @@ export async function getAbandonedCheckouts(rangeDays = 30): Promise<AbandonedSt
       return email == null || !booked.has(email);
     });
 
-    const sessions: AbandonedSession[] = lost
-      .sort((a, b) => b.created - a.created)
-      .map(toAbandonedSession);
+    // Everything below counts PEOPLE, not sessions: one visitor who abandoned
+    // three times is one prospect to chase and one rental worth of money, not
+    // three. `created` stays a session count, because that is what it says.
+    const { kept, duplicates } = foldByVisitor(lost);
+    const sessions: AbandonedSession[] = kept.map(({ session, attempts }) =>
+      toAbandonedSession(session, attempts)
+    );
+    const reachable = completed.length + rebooked.length + sessions.length;
 
     return {
       connected: true,
       rangeDays,
       created: all.length,
       completed: completed.length,
-      abandoned: lost.length,
+      abandoned: sessions.length,
       recovered: rebooked.length,
-      abandonRate: all.length > 0 ? lost.length / all.length : 0,
+      abandonRate: reachable > 0 ? sessions.length / reachable : 0,
       lostValue: sessions.reduce((sum, s) => sum + (s.amount ?? 0), 0),
       discarded,
+      duplicates,
       sessions: sessions.slice(0, 15),
     };
   } catch (e) {

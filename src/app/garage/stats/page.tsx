@@ -693,7 +693,15 @@ export default async function StatsPage() {
                 value={int.format(abandoned.recovered)}
                 sub="booked under another session"
               />
-              <Kpi label="Abandoned" value={int.format(abandoned.abandoned)} />
+              <Kpi
+                label="Abandoned"
+                value={int.format(abandoned.abandoned)}
+                sub={
+                  abandoned.duplicates > 0
+                    ? `people, not sessions · ${int.format(abandoned.duplicates)} repeat merged`
+                    : "people, not sessions"
+                }
+              />
               <Kpi
                 label="Left on the table"
                 value={usd.format(abandoned.lostValue)}
@@ -715,7 +723,19 @@ export default async function StatsPage() {
                     session, counted above as &ldquo;changed their cart&rdquo;. And our own
                     traffic: scripts, and the office IPs listed in ABANDONED_IGNORE_IPS. Everyone
                     still listed gets one automatic recovery email 3h after they walked away, when
-                    we have an address for them.
+                    we have an address for them. Repeat attempts by the same visitor are folded
+                    into one row.
+              </p>
+              <p className="mb-3 text-xs text-muted-foreground">
+                <span className="font-medium">Read the last column, not the email one.</span>{" "}
+                Stripe never gives back the address of a checkout that was not completed, so this
+                table says &ldquo;no email&rdquo; even for someone Stripe is already chasing.
+                What settles it is the marketing box on Stripe&rsquo;s page:{" "}
+                <span className="font-medium">Stripe is chasing them</span> means they ticked it,
+                Stripe holds their address and sends its own recovery email.{" "}
+                <span className="font-medium">Unreachable</span> means nobody can write to them,
+                and the only way to change that is to ask for the address before they leave for
+                Stripe.
               </p>
               {abandoned.sessions.length > 0 ? (
                 <div className="overflow-x-auto">
@@ -747,6 +767,7 @@ export default async function StatsPage() {
                           <td className="py-2 whitespace-nowrap text-xs text-muted-foreground">
                             {s.startDate && s.endDate ? `${s.startDate} → ${s.endDate}` : "—"}
                             {s.bikes ? ` · ${s.bikes} bike${s.bikes > 1 ? "s" : ""}` : ""}
+                            {s.attempts > 1 ? ` · ${s.attempts} attempts` : ""}
                           </td>
                           <td className="py-2 text-right tabular-nums">
                             {s.amount != null ? usd.format(s.amount) : "—"}
@@ -766,8 +787,12 @@ export default async function StatsPage() {
                             )}
                             <span className="block text-xs text-muted-foreground">
                               {s.recoveryEmailSentAt
-                                ? `emailed ${new Date(s.recoveryEmailSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
-                                : "not emailed yet"}
+                                ? `we emailed ${new Date(s.recoveryEmailSentAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+                                : s.promotionsConsent === "opt_in"
+                                  ? "Stripe is chasing them"
+                                  : s.promotionsConsent === "opt_out"
+                                    ? "declined marketing"
+                                    : "unreachable"}
                             </span>
                           </td>
                         </tr>
