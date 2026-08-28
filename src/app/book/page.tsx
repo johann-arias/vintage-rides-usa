@@ -72,6 +72,28 @@ function availabilityOutcome(a: NonNullable<AvailabilityResult>): string {
   return "available";
 }
 
+// Why the checkout call failed, as a short slug that goes into the GA4 event
+// name. /api/checkout names its own refusals in a `code` field; anything else
+// is inferred from the HTTP status. The set stays deliberately small and
+// closed: GA4 caps a property at 500 distinct event names, so an unbounded slug
+// (an HTTP status, a message) would burn that budget for nothing.
+const CHECKOUT_ERROR_CODES = [
+  "missing_fields",
+  "past_date",
+  "sold_out",
+  "min_days",
+  "server_error",
+] as const;
+
+function checkoutErrorCode(res: Response, data: { code?: string } | null): string {
+  const named = typeof data?.code === "string" ? data.code : "";
+  if ((CHECKOUT_ERROR_CODES as readonly string[]).includes(named)) return named;
+  // No code: either a server error that never reached our own handler (Next's
+  // HTML 500), or a refusal from something in front of the route.
+  if (res.status >= 500) return "server_error";
+  return "unknown";
+}
+
 // Return date can be the pickup date itself (same-day / day rental).
 const minEnd = (start: string) => start;
 
@@ -356,8 +378,14 @@ export default function BookPage() {
       value: availability?.pricing?.totalPrice,
       currency: "USD",
     });
+    // The request and the reading of its answer are caught separately on
+    // purpose. Wrapping both in one try made every failure indistinguishable:
+    // a lost connection, a 500 answering HTML that `res.json()` chokes on and a
+    // plain refusal all ended up as reason "network", which is how the first 20
+    // checkout errors became unreadable after the fact.
+    let res: Response;
     try {
-      const res = await fetch("/api/checkout", {
+      res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -374,26 +402,60 @@ export default function BookPage() {
           adClick: loadAdClick() ?? undefined,
         }),
       });
-      const data = await res.json();
-      if (data.url) {
-        // Leaving for Stripe is the success case, not an abandon.
-        leavingForCheckoutRef.current = true;
-        trackEvent("book_checkout_redirect", {
-          value: availability?.pricing?.totalPrice,
-          currency: "USD",
-          request_to_book: Boolean(availability?.requestToBook),
-        });
-        window.location.href = data.url;
-      } else {
-        setError(data.error ?? "Checkout failed. Please try again.");
-        trackEvent("book_checkout_error", { reason: String(data.error ?? "unknown").slice(0, 100) });
-      }
     } catch {
+      // The request itself never completed: no signal, tab backgrounded by the
+      // in-app browser, request aborted. This is the only true "network".
       setError("Something went wrong. Please try again.");
-      trackEvent("book_checkout_error", { reason: "network" });
-    } finally {
+      reportCheckoutError("network", "network");
       setSubmitting(false);
+      return;
     }
+
+    let data: { url?: string; error?: string; code?: string } | null = null;
+    try {
+      data = await res.json();
+    } catch {
+      data = null; // answered, but not with JSON: an unhandled server error page
+    }
+
+    if (data?.url) {
+      // Leaving for Stripe is the success case, not an abandon.
+      leavingForCheckoutRef.current = true;
+      trackEvent("book_checkout_redirect", {
+        value: availability?.pricing?.totalPrice,
+        currency: "USD",
+        request_to_book: Boolean(availability?.requestToBook),
+      });
+      window.location.href = data.url;
+      return; // submitting stays true: the page is on its way out
+    }
+
+    setError(data?.error ?? "Checkout failed. Please try again.");
+    reportCheckoutError(checkoutErrorCode(res, data), data?.error ?? "unknown");
+    setSubmitting(false);
+  }
+
+  /**
+   * The reason has to reach GA4 in the event NAME, not in a parameter. GA4 only
+   * exposes an event parameter through the Data API once it has been registered
+   * as a custom dimension in the GA4 UI, and it never backfills, so the `reason`
+   * sent alongside the first 20 checkout errors was collected and unreadable.
+   * Event names need no configuration at all, which is the same reason the
+   * availability outcomes are named `book_avail_<outcome>`.
+   *
+   * `reason` is kept as a parameter too: worthless in reports today, but it is
+   * the exact message, and it costs nothing should a custom dimension ever be
+   * registered.
+   */
+  function reportCheckoutError(code: string, reason: string) {
+    trackEvent(`book_checkout_error_${code}`, {
+      reason: String(reason).slice(0, 100),
+      code,
+      days: availability?.pricing?.totalDays,
+      bikes: bikeCount,
+      value: availability?.pricing?.totalPrice,
+      currency: "USD",
+    });
   }
 
   const belowMinDays =

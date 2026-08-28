@@ -370,6 +370,8 @@ export interface BookingFunnelStats {
   exits: FunnelBreakdownRow[];
   missingFields: FunnelBreakdownRow[];
   checkoutErrors: number;
+  /** The same errors split by cause, most frequent first. */
+  checkoutErrorReasons: FunnelBreakdownRow[];
 }
 
 // Ordered spine of the funnel. Keys are GA4 event names.
@@ -405,6 +407,21 @@ const EXIT_LABELS: Record<string, string> = {
   book_exit_review: "Left on step 3 (review)",
 };
 
+// Causes of a failed checkout call, keyed by the event name /book fires. The
+// bare `book_checkout_error` is the pre-2026-08-28 event: it carried its reason
+// in a parameter GA4 never exposed, so those stay permanently unattributed and
+// are labelled as such rather than folded into one of the real causes.
+const CHECKOUT_ERROR_LABELS: Record<string, string> = {
+  book_checkout_error_sold_out: "Bikes taken in the meantime",
+  book_checkout_error_past_date: "Pickup date had gone past",
+  book_checkout_error_min_days: "Below the minimum duration",
+  book_checkout_error_missing_fields: "Incomplete request",
+  book_checkout_error_server_error: "Our server failed (Airtable / Stripe)",
+  book_checkout_error_network: "Visitor lost the connection",
+  book_checkout_error_unknown: "Refused, cause not named",
+  book_checkout_error: "Cause not recorded (before 28 Aug 2026)",
+};
+
 const MISSING_LABELS: Record<string, string> = {
   book_missing_first_name: "First name",
   book_missing_last_name: "Last name",
@@ -425,6 +442,7 @@ function emptyFunnel(rangeDays: number, error?: string): BookingFunnelStats {
     exits: [],
     missingFields: [],
     checkoutErrors: 0,
+    checkoutErrorReasons: [],
   };
 }
 
@@ -563,7 +581,13 @@ export async function getBookingFunnel(rangeDays = 30): Promise<BookingFunnelSta
       outcomes: breakdown(OUTCOME_LABELS),
       exits: breakdown(EXIT_LABELS),
       missingFields: breakdown(MISSING_LABELS),
-      checkoutErrors: all.get("book_checkout_error")?.events ?? 0,
+      // Prefix, not an exact key: every cause is its own event name since
+      // 2026-08-28, and the bare legacy event has to keep counting too.
+      checkoutErrors: [...all].reduce(
+        (n, [name, v]) => (name.startsWith("book_checkout_error") ? n + v.events : n),
+        0
+      ),
+      checkoutErrorReasons: breakdown(CHECKOUT_ERROR_LABELS),
     };
   } catch (e) {
     return emptyFunnel(rangeDays, e instanceof Error ? e.message : "Unknown GA4 error.");

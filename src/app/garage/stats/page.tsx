@@ -586,12 +586,23 @@ export default async function StatsPage() {
                 <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">
                   <p className="mb-1 font-medium">Checkout errors</p>
                   <p className="mb-3 text-xs text-muted-foreground">
-                    Payment refused by our own API: dates taken in the meantime, minimum duration,
-                    network.
+                    Clicked pay and never reached Stripe. Split by cause since 28 Aug 2026.
                   </p>
                   <p className="font-serif text-3xl tabular-nums text-[var(--brand-olive-700)]">
                     {int.format(funnel.checkoutErrors)}
                   </p>
+                  {funnel.checkoutErrorReasons.length > 0 && (
+                    <div className="mt-4">
+                      <BarList
+                        rows={funnel.checkoutErrorReasons.map((r) => ({
+                          label: r.label,
+                          value: r.events,
+                        }))}
+                        max={Math.max(1, ...funnel.checkoutErrorReasons.map((r) => r.events))}
+                        labelClass="w-52"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

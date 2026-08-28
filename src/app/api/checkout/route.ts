@@ -10,7 +10,42 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: "2026-03-25.dahlia",
 });
 
+/**
+ * Every failure this route can answer with carries a short, stable `code`
+ * alongside the human message. /book turns it into the GA4 event name
+ * (`book_checkout_error_<code>`), which is the only way the reason is readable
+ * without registering a custom dimension in GA4 first. Keep the set small and
+ * bounded: GA4 caps a property at 500 distinct event names.
+ */
+type CheckoutErrorCode =
+  | "missing_fields"
+  | "past_date"
+  | "sold_out"
+  | "min_days"
+  | "server_error";
+
+function fail(code: CheckoutErrorCode, error: string, status: number) {
+  return NextResponse.json({ error, code }, { status });
+}
+
 export async function POST(req: NextRequest) {
+  try {
+    return await createCheckoutSession(req);
+  } catch (err) {
+    // Airtable and Stripe are both called below without a net of their own. An
+    // unhandled throw used to surface as Next's HTML 500, which /book could
+    // only report as "network", so a real outage was indistinguishable from a
+    // visitor losing signal. Now it is named.
+    console.error("[checkout] unhandled failure:", err);
+    return fail(
+      "server_error",
+      "We could not start the payment. Please try again in a moment.",
+      500
+    );
+  }
+}
+
+async function createCheckoutSession(req: NextRequest) {
   const body = await req.json();
   const {
     startDate,
@@ -28,12 +63,12 @@ export async function POST(req: NextRequest) {
   // people already trust, and the rest of the rider profile is filled in after
   // the money has moved. So the only thing this route needs is the rental.
   if (!startDate || !endDate || !bikeCount) {
-    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+    return fail("missing_fields", "Missing required fields", 400);
   }
 
   // Past pickup dates are never bookable.
   if (isPast(startDate)) {
-    return NextResponse.json({ error: "That pickup date is in the past." }, { status: 400 });
+    return fail("past_date", "That pickup date is in the past.", 400);
   }
 
   // Same-day = request-to-book: authorize the card now, capture only once the
@@ -43,20 +78,14 @@ export async function POST(req: NextRequest) {
   // Re-check availability server-side (never trust client)
   const available = await getAvailableBikeCount(startDate, endDate);
   if (available < bikeCount) {
-    return NextResponse.json(
-      { error: `Only ${available} bike(s) available for those dates.` },
-      { status: 409 }
-    );
+    return fail("sold_out", `Only ${available} bike(s) available for those dates.`, 409);
   }
 
   const rules = await getActivePricingRules();
   const pricing = calculateRentalPrice(startDate, endDate, bikeCount, rules);
 
   if (pricing.totalDays < pricing.minDays) {
-    return NextResponse.json(
-      { error: `Minimum rental is ${pricing.minDays} days.` },
-      { status: 400 }
-    );
+    return fail("min_days", `Minimum rental is ${pricing.minDays} days.`, 400);
   }
 
   // A discount is only ever applied when the visitor arrived with a code in the
