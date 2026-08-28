@@ -697,7 +697,13 @@ export default async function StatsPage() {
               <Kpi
                 label="Left on the table"
                 value={usd.format(abandoned.lostValue)}
-                sub={`${pct(abandoned.abandonRate)} abandon rate`}
+                sub={
+                  abandoned.discarded > 0
+                    ? `${pct(abandoned.abandonRate)} abandon rate · ${int.format(
+                        abandoned.discarded
+                      )} impossible cart${abandoned.discarded > 1 ? "s" : ""} excluded`
+                    : `${pct(abandoned.abandonRate)} abandon rate`
+                }
               />
             </div>
             <div className="rounded-2xl border border-border bg-card p-5 shadow-sm">

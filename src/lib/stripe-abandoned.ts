@@ -65,6 +65,8 @@ export interface AbandonedStats {
   abandonRate: number;
   /** Money left on the table by the abandoned ones. */
   lostValue: number;
+  /** Carts above MAX_PLAUSIBLE_CART_USD, excluded from every figure above. */
+  discarded: number;
   sessions: AbandonedSession[];
 }
 
@@ -79,6 +81,7 @@ function empty(rangeDays: number, error?: string): AbandonedStats {
     recovered: 0,
     abandonRate: 0,
     lostValue: 0,
+    discarded: 0,
     sessions: [],
   };
 }
@@ -125,6 +128,30 @@ function isProbeEmail(email: string): boolean {
  * like lost money: on 2026-07-29 six of the thirteen unreachable carts were
  * ours, which made the problem look twice its real size.
  */
+/**
+ * A cart no fleet of ten bikes could ever produce.
+ *
+ * On 2026-08-04 a visitor set the return date to the year 10000. Nothing capped
+ * the rental duration, so the site quoted 2,912,525 days on 5 bikes and Stripe
+ * created a real session for $2,118,425,058.75 (cs_live_a1ulhVb0eH…, expired,
+ * never paid). It was one session out of 394, and it made "value left on the
+ * table" read two billion dollars.
+ *
+ * The ceiling is deliberately far above any real booking: the whole fleet,
+ * rented for a full year, at the standard rate plus tax. Anything past that is
+ * arithmetic, not a lost sale, so it is excluded from every figure here AND
+ * from the recovery cron, which would otherwise be free to email someone a
+ * "come back and finish your $2.1bn booking" link.
+ *
+ * This is a net, not a fix. The fix is an upper bound on the duration at the
+ * point of quoting, so such a session can never be created in the first place.
+ */
+export const MAX_PLAUSIBLE_CART_USD = 10 /* bikes */ * 365 /* days */ * 130 /* $/day */ * 1.119;
+
+function isImplausibleCart(s: Stripe.Checkout.Session): boolean {
+  return (s.amount_total ?? 0) / 100 > MAX_PLAUSIBLE_CART_USD;
+}
+
 const NON_BROWSER_AGENT = /curl|wget|python|node-fetch|postman|insomnia|headless|bot|spider/i;
 
 function internalIps(): string[] {
@@ -148,18 +175,27 @@ function isInternalTraffic(s: Stripe.Checkout.Session): boolean {
   return email != null && isProbeEmail(email);
 }
 
-async function listSessions(rangeDays: number): Promise<Stripe.Checkout.Session[]> {
+async function listSessions(
+  rangeDays: number
+): Promise<{ sessions: Stripe.Checkout.Session[]; discarded: number }> {
   const since = Math.floor((Date.now() - rangeDays * 86_400_000) / 1000);
   const all: Stripe.Checkout.Session[] = [];
+  let discarded = 0;
   for await (const s of stripe.checkout.sessions.list({ created: { gte: since }, limit: 100 })) {
     // Filtered here rather than at each read, so every figure downstream, the
     // counts, the abandon rate and the money left on the table, is about
     // customers only.
     if (isInternalTraffic(s)) continue;
+    // Counted, not silently dropped: a discarded cart is a bug upstream, and a
+    // dashboard that hides it teaches nobody anything.
+    if (isImplausibleCart(s)) {
+      discarded += 1;
+      continue;
+    }
     all.push(s);
     if (all.length >= 500) break; // sanity stop, far above real volume
   }
-  return all;
+  return { sessions: all, discarded };
 }
 
 /** Lowercased emails that completed a checkout in the window, whatever the session. */
@@ -197,7 +233,7 @@ export async function getAbandonedCheckouts(rangeDays = 30): Promise<AbandonedSt
   if (!process.env.STRIPE_SECRET_KEY) return empty(rangeDays, "STRIPE_SECRET_KEY is not set.");
 
   try {
-    const all = await listSessions(rangeDays);
+    const { sessions: all, discarded } = await listSessions(rangeDays);
     const booked = emailsThatBooked(all);
 
     const completed = all.filter((s) => s.status === "complete");
@@ -226,6 +262,7 @@ export async function getAbandonedCheckouts(rangeDays = 30): Promise<AbandonedSt
       recovered: rebooked.length,
       abandonRate: all.length > 0 ? lost.length / all.length : 0,
       lostValue: sessions.reduce((sum, s) => sum + (s.amount ?? 0), 0),
+      discarded,
       sessions: sessions.slice(0, 15),
     };
   } catch (e) {
@@ -272,7 +309,7 @@ export async function findRecoverableCarts(): Promise<RecoveryScan> {
   }
 
   try {
-    const all = await listSessions(RECOVERY_MAX_AGE_DAYS);
+    const { sessions: all } = await listSessions(RECOVERY_MAX_AGE_DAYS);
     const booked = emailsThatBooked(all);
     const now = Date.now();
     const minAgeMs = RECOVERY_DELAY_HOURS * 3_600_000;
