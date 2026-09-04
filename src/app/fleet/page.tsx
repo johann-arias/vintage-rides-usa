@@ -19,7 +19,7 @@ const SPECS = [
   { label: "Front brake", value: "320mm disc, Bybre 2-piston" },
   { label: "Rear brake", value: "270mm disc, Bybre 1-piston" },
   { label: "Fuel tank", value: "17 litres (~400 mi range)" },
-  { label: "Seat height", value: "825mm (adjustable)" },
+  { label: "Seat height", value: "825mm (adjustable) · lower seat on request" },
   { label: "Kerb weight", value: "196 kg" },
   { label: "Ground clearance", value: "230mm" },
 ];
@@ -108,6 +108,18 @@ export default function FleetPage() {
                       <span className="text-[#1a1a17] text-sm font-medium">{spec.value}</span>
                     </div>
                   ))}
+                </div>
+                {/* Mike's shop keeps a single lower seat: riders who need it have
+                    to ask for it, and it goes to whoever asks first. */}
+                <div className="mt-8 border-l-2 border-[#d9a32b] pl-4">
+                  <p className="text-[#1a1a17] text-sm font-semibold mb-1">
+                    Need a lower seat?
+                  </p>
+                  <p className="text-[#6e6a5e] text-sm leading-relaxed">
+                    We now have one lower seat in the fleet, available by
+                    request on a first come, first served basis. Tell us when you
+                    book and we&apos;ll fit it to your bike.
+                  </p>
                 </div>
               </div>
 
