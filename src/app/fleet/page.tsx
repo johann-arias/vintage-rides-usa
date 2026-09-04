@@ -116,9 +116,9 @@ export default function FleetPage() {
                     Need a lower seat?
                   </p>
                   <p className="text-[#6e6a5e] text-sm leading-relaxed">
-                    We now have one lower seat in the fleet, available by
-                    request on a first come, first served basis. Tell us when you
-                    book and we&apos;ll fit it to your bike.
+                    We now have one lower seat in the fleet, free of charge and
+                    available by request on a first come, first served basis.
+                    Tell us when you book and we&apos;ll fit it to your bike.
                   </p>
                 </div>
               </div>
