@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown, Menu, X } from "lucide-react";
+import { ROYAL_ENFIELD_PARTNER_URL } from "@/lib/press";
 
 const RIDES = [
   { href: "/black-hills-motorcycle-rental", label: "Black Hills" },
@@ -38,20 +39,30 @@ export default function Navbar() {
               className="h-9 w-auto [filter:brightness(0)_invert(1)]"
             />
           </Link>
-          {/* Trust marker — kept visible on phones and desktop; hidden only in the crowded tablet band */}
-          <span className="flex md:hidden lg:flex items-center gap-2 border-l border-white/20 pl-3">
+          {/* Trust marker — kept visible on phones and desktop; hidden only in the
+              crowded tablet band. Links to Royal Enfield's own page about this
+              shop: the badge used to be an unbacked claim, and this is the page
+              that backs it. Opens in a new tab so nobody loses a booking in
+              progress on /book, where this header is also on screen. */}
+          <a
+            href={ROYAL_ENFIELD_PARTNER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Read Royal Enfield's page about Vintage Rides USA"
+            className="group flex md:hidden lg:flex items-center gap-2 border-l border-white/20 pl-3"
+          >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/royal-enfield-logo.svg"
               alt="Royal Enfield"
               className="h-3 w-auto [filter:brightness(0)_invert(1)]"
             />
-            <span className="text-white/60 text-[10px] leading-tight tracking-wider uppercase">
+            <span className="text-white/60 group-hover:text-white transition-colors text-[10px] leading-tight tracking-wider uppercase">
               Official Rental
               <br />
               Partner
             </span>
-          </span>
+          </a>
         </div>
 
         {/* Desktop nav */}

@@ -18,6 +18,7 @@ import { earliestBookableDate, todayInRapidCity, addDays } from "@/lib/booking-w
 import { buildDatePresets, type DatePreset } from "@/lib/date-presets";
 import { trackEvent, trackBeginCheckout, daysBetween } from "@/lib/analytics";
 import { loadAdClick } from "@/lib/ad-click";
+import { PRESS_PULL_QUOTE, FEATURED_OUTLETS } from "@/lib/press";
 
 // Short testimonials for the trust rail on the dates step (cold ad traffic).
 // Trimmed from the full set on the homepage — same reviewers, same voice.
@@ -903,6 +904,44 @@ export default function BookPage() {
                   >
                     Read all reviews →
                   </a>
+                </div>
+
+                {/* Press. This is the one place on the site where the outlet
+                    names are deliberately NOT links: the visitor is mid-booking
+                    and nine of the ten pieces are about the guided tours, not
+                    about this rental, so a click out lands them somewhere that
+                    does not answer what they are hesitating about. The single
+                    way out goes to our own /press, in a new tab, so the dates
+                    they have already picked survive. */}
+                <div className="border border-[#e8e3d3] bg-white rounded-sm p-6">
+                  <p className="text-[#a9781a] text-[10px] font-semibold tracking-[0.25em] uppercase mb-4">In the Press</p>
+                  <figure>
+                    <blockquote className="text-[#1a1a17] text-base font-light italic leading-snug">
+                      &ldquo;{PRESS_PULL_QUOTE.text}&rdquo;
+                    </blockquote>
+                    <figcaption className="text-xs text-[#6e6a5e] mt-2.5 tracking-wider">
+                      <span className="text-[#1a1a17] font-medium">{PRESS_PULL_QUOTE.outlet}</span>
+                      <span className="text-[#1a1a17]/25"> · </span>
+                      {PRESS_PULL_QUOTE.date}
+                    </figcaption>
+                  </figure>
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1.5 mt-5 pt-4 border-t border-[#e8e3d3]">
+                    {FEATURED_OUTLETS.map((outlet) => (
+                      <li
+                        key={outlet}
+                        className="text-[#1a1a17]/45 text-[10px] font-medium tracking-[0.12em] uppercase"
+                      >
+                        {outlet}
+                      </li>
+                    ))}
+                  </ul>
+                  <Link
+                    href="/press"
+                    target="_blank"
+                    className="inline-block mt-4 text-sm text-[#6e6a5e] hover:text-[#1a1a17] font-medium border-b border-[#1a1a17]/20 transition-colors"
+                  >
+                    Read the coverage →
+                  </Link>
                 </div>
               </aside>
             </div>

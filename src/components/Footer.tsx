@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PICKUP_LOCATION, PICKUP_MAPS_URL, GOOGLE_REVIEW_URL } from "@/lib/location";
+import { ROYAL_ENFIELD_PARTNER_URL } from "@/lib/press";
 
 export default function Footer() {
   return (
@@ -20,15 +21,20 @@ export default function Footer() {
               Motorcycle rentals in Rapid City, SD, gateway to the Black Hills,
               Badlands, and Spearfish Canyon. A Vintage Rides company.
             </p>
-            <div className="inline-flex items-center gap-3 border border-white/10 rounded-sm bg-white/[0.03] px-4 py-3">
+            <a
+              href={ROYAL_ENFIELD_PARTNER_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-3 border border-white/10 hover:border-white/30 rounded-sm bg-white/[0.03] hover:bg-white/[0.06] px-4 py-3 transition-colors"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/royal-enfield-logo.svg"
                 alt="Royal Enfield"
                 className="h-3.5 w-auto [filter:brightness(0)_invert(1)]"
               />
-              <span className="text-white/60 text-[11px] tracking-wider uppercase">Official Partner</span>
-            </div>
+              <span className="text-white/60 group-hover:text-white transition-colors text-[11px] tracking-wider uppercase">Official Partner</span>
+            </a>
           </div>
 
           <div>
@@ -38,6 +44,7 @@ export default function Footer() {
               <li><Link href="/book" className="hover:text-white transition-colors">Book a Rental</Link></li>
               <li><Link href="/#how-it-works" className="hover:text-white transition-colors">How It Works</Link></li>
               <li><Link href="/#faq" className="hover:text-white transition-colors">FAQ</Link></li>
+              <li><Link href="/press" className="hover:text-white transition-colors">Press</Link></li>
             </ul>
           </div>
 

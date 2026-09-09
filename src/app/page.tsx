@@ -2,6 +2,7 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_LISTING_URL } from "@/lib/location";
+import { ROYAL_ENFIELD_PARTNER_URL, PRESS_PULL_QUOTE, FEATURED_OUTLETS } from "@/lib/press";
 
 const REVIEWS = [
   {
@@ -93,11 +94,17 @@ export default function HomePage() {
                   Co-founded by an Iron Butt Rally champion
                 </span>
                 <span className="hidden sm:inline text-white/25" aria-hidden>|</span>
-                <span className="flex items-center gap-2 tracking-wider">
+                <a
+                  href={ROYAL_ENFIELD_PARTNER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Read Royal Enfield's page about Vintage Rides USA"
+                  className="flex items-center gap-2 tracking-wider hover:text-white transition-colors underline-offset-4 hover:underline decoration-white/30"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/royal-enfield-logo.svg" alt="Royal Enfield" className="h-3 w-auto [filter:brightness(0)_invert(1)]" />
                   Official Royal Enfield Partner
-                </span>
+                </a>
               </div>
             </div>
           </div>
@@ -199,11 +206,19 @@ export default function HomePage() {
                   Royal Enfield<br />
                   <span className="font-semibold">Himalayan 450</span>
                 </h2>
-                <div className="inline-flex items-center gap-3 border border-[#1a1a17]/15 bg-white rounded-sm px-4 py-2.5 mb-6">
+                <a
+                  href={ROYAL_ENFIELD_PARTNER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center gap-3 border border-[#1a1a17]/15 hover:border-[#1a1a17]/40 bg-white rounded-sm px-4 py-2.5 mb-6 transition-colors"
+                >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/royal-enfield-logo.svg" alt="Royal Enfield" className="h-4 w-auto" />
-                  <span className="text-[#1a1a17]/70 text-xs font-semibold tracking-wider uppercase">Official Partner</span>
-                </div>
+                  <span className="text-[#1a1a17]/70 group-hover:text-[#1a1a17] transition-colors text-xs font-semibold tracking-wider uppercase">
+                    Official Partner
+                  </span>
+                  <span className="text-[#a9781a] text-xs opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden>→</span>
+                </a>
                 <p className="text-[#6e6a5e] text-lg leading-relaxed mb-8">
                   The same bikes we trust to take our riders through the Himalayas
                   and across the Andes. Reliable, capable, and perfectly sized for
@@ -375,6 +390,60 @@ export default function HomePage() {
               >
                 Read all reviews on Google →
               </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ── In the press ─────────────────────────────────────────────────── */}
+        {/* Sits immediately after the Google reviews: proof next to proof. The
+            pull quote is doing conversion work, not vanity — a US rider's real
+            objection in front of a 450 is whether it is enough bike for America,
+            and that headline answers it before the FAQ has to. Names are set in
+            our own type rather than scraped logos: cleaner with the charte, no
+            trademark housekeeping, nothing to re-export when a masthead changes. */}
+        <section className="bg-[#faf5ea] py-20">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center">
+              <p className="text-[#a9781a] text-xs font-semibold tracking-[0.25em] uppercase mb-7">In the Press</p>
+              <figure>
+                <blockquote className="font-serif text-[#1a1a17] text-2xl md:text-4xl font-light italic leading-snug max-w-3xl mx-auto">
+                  &ldquo;{PRESS_PULL_QUOTE.text}&rdquo;
+                </blockquote>
+                <figcaption className="mt-6 text-sm tracking-wider text-[#6e6a5e]">
+                  <a
+                    href={PRESS_PULL_QUOTE.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#1a1a17] font-medium hover:text-[#a9781a] transition-colors"
+                  >
+                    {PRESS_PULL_QUOTE.outlet}
+                  </a>
+                  <span className="text-[#1a1a17]/25"> · </span>
+                  {PRESS_PULL_QUOTE.date}
+                </figcaption>
+              </figure>
+            </div>
+
+            <div className="border-t border-[#1a1a17]/10 mt-14 pt-9">
+              <p className="text-center text-[#6e6a5e] text-[11px] tracking-[0.25em] uppercase mb-6">As featured in</p>
+              <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-4">
+                {FEATURED_OUTLETS.map((outlet) => (
+                  <li
+                    key={outlet}
+                    className="text-[#1a1a17]/50 text-sm md:text-base font-medium tracking-[0.14em] uppercase"
+                  >
+                    {outlet}
+                  </li>
+                ))}
+              </ul>
+              <div className="text-center mt-9">
+                <Link
+                  href="/press"
+                  className="inline-block border border-[#1a1a17]/30 hover:border-[#1a1a17] hover:bg-[#2e3b23] hover:text-white text-[#1a1a17] font-medium tracking-wider px-6 py-3 rounded-sm transition-colors text-sm uppercase"
+                >
+                  See all coverage →
+                </Link>
+              </div>
             </div>
           </div>
         </section>
