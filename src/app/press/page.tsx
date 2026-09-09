@@ -193,7 +193,7 @@ export default function PressPage() {
             </h2>
             <div className="space-y-5 text-[#57534a] text-lg leading-relaxed">
               <p>
-                Vintage Rides was founded in 2005 and has been running premium
+                Vintage Rides was founded in 2006 and has been running premium
                 guided motorcycle tours ever since, across the Himalayas, the Andes,
                 the Atlas Mountains and a dozen other ranges. Royal Enfield has been
                 our partner on those roads for years.
