@@ -215,6 +215,13 @@ export default async function PlanningPage({
                   <span className="text-sm text-muted-foreground">
                     {fmtRange(b.startDate, b.endDate)}
                   </span>
+                  {b.dateSplits ? (
+                    <span className="text-xs font-medium text-[#8a6516]">
+                      {b.dateSplits
+                        .map((s) => `${s.bikes} × ${fmtRange(s.startDate, s.endDate)}`)
+                        .join(" · ")}
+                    </span>
+                  ) : null}
                   <span className="ml-auto text-sm font-medium">
                     {b.numberOfBikes} bike{b.numberOfBikes > 1 ? "s" : ""}
                   </span>

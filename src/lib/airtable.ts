@@ -322,6 +322,17 @@ export interface AdminBooking {
    * knowing before they walk in.
    */
   riderProfileCompletedAt?: string;
+  /**
+   * Set only when the bikes do not all share the booking's dates (some bikes
+   * returned early, say): one entry per date range, read from the blocks.
+   */
+  dateSplits?: DateSplit[];
+}
+
+export interface DateSplit {
+  startDate: string;
+  endDate: string;
+  bikes: number;
 }
 
 /** A booking plus the live per-block bike assignment (read from the blocks). */
@@ -471,6 +482,50 @@ function mapBooking(r: AirtableRecord<FieldSet>): AdminBooking {
   };
 }
 
+/**
+ * Blocks normally carry their booking's dates. A partial change (2 of 6 bikes
+ * back a day early) is stored as blocks with their own dates, which the booking
+ * row cannot express. This reads the blocks back and attaches `dateSplits` to
+ * the bookings whose bikes disagree, so the garage shows what is really held.
+ */
+async function withDateSplits(bookings: AdminBooking[]): Promise<AdminBooking[]> {
+  if (bookings.length === 0) return bookings;
+  const scope =
+    bookings.length === 1
+      ? `{Booking ID} = "${bookings[0].bookingId}"`
+      : `{Booking ID} != ""`;
+  const records = await base(Tables.Blocks)
+    .select({
+      filterByFormula: `AND({Status} != "Cancelled", {Type} = "RENTAL", ${scope})`,
+      fields: ["Booking ID", "Start Date", "End Date"],
+    })
+    .all();
+
+  const wanted = new Set(bookings.map((b) => b.bookingId));
+  const ranges = new Map<string, Map<string, DateSplit>>();
+  for (const r of records) {
+    const bookingId = r.get("Booking ID") as string;
+    if (!wanted.has(bookingId)) continue;
+    const startDate = r.get("Start Date") as string;
+    const endDate = r.get("End Date") as string;
+    const byRange = ranges.get(bookingId) ?? new Map<string, DateSplit>();
+    ranges.set(bookingId, byRange);
+    const key = `${startDate}|${endDate}`;
+    const split = byRange.get(key) ?? { startDate, endDate, bikes: 0 };
+    split.bikes += 1;
+    byRange.set(key, split);
+  }
+
+  return bookings.map((b) => {
+    const byRange = ranges.get(b.bookingId);
+    if (!byRange || byRange.size < 2) return b;
+    const dateSplits = [...byRange.values()].sort(
+      (x, y) => y.endDate.localeCompare(x.endDate) || x.startDate.localeCompare(y.startDate)
+    );
+    return { ...b, dateSplits };
+  });
+}
+
 /** Rental bookings (website + B2B) overlapping [from, to]. */
 export async function getBookingsForPlanning(
   from: string,
@@ -483,7 +538,7 @@ export async function getBookingsForPlanning(
     })
     .all();
 
-  return records.map(mapBooking);
+  return withDateSplits(records.map(mapBooking));
 }
 
 /** Every rental booking, newest start first — for the full bookings table. */
@@ -491,7 +546,7 @@ export async function getAllBookings(): Promise<AdminBooking[]> {
   const records = await base(Tables.Bookings)
     .select({ sort: [{ field: "Start Date", direction: "desc" }] })
     .all();
-  return records.map(mapBooking);
+  return withDateSplits(records.map(mapBooking));
 }
 
 // ── Turnover stats ───────────────────────────────────────────────────────────
@@ -887,7 +942,7 @@ export async function getBookingByRecordId(
   } catch {
     return null;
   }
-  const booking = mapBooking(rec);
+  const [booking] = await withDateSplits([mapBooking(rec)]);
   const blocks = await base(Tables.Blocks)
     .select({
       filterByFormula: `AND({Booking ID} = "${booking.bookingId}", {Status} != "Cancelled")`,

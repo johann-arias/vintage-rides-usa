@@ -206,6 +206,16 @@ export default async function EditBookingPage({
           </div>
         </div>
 
+        {booking.dateSplits ? (
+          <p className="rounded-lg border border-[#b34b00]/30 bg-[#b34b00]/10 px-4 py-2.5 text-sm text-[#b34b00]">
+            Split dates:{" "}
+            {booking.dateSplits
+              .map((s) => `${s.bikes} bike${s.bikes > 1 ? "s" : ""} ${s.startDate} → ${s.endDate}`)
+              .join(", ")}
+            . Saving this form puts every bike back on the dates below.
+          </p>
+        ) : null}
+
         <div className="grid grid-cols-3 gap-4">
           <div className="space-y-1.5">
             <Label htmlFor="startDate">Start date</Label>

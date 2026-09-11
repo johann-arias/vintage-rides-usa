@@ -159,6 +159,14 @@ export default async function BookingsPage({
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
                     {fmt(b.startDate)} → {fmt(b.endDate)}
+                    {b.dateSplits?.map((s) => (
+                      <div
+                        key={`${s.startDate}-${s.endDate}`}
+                        className="text-[0.7rem] font-medium text-[#8a6516]"
+                      >
+                        {s.bikes} bike{s.bikes > 1 ? "s" : ""}: {fmt(s.startDate)} → {fmt(s.endDate)}
+                      </div>
+                    ))}
                     {b.pickupTime || b.dropoffTime ? (
                       <div className="text-[0.7rem] text-muted-foreground">
                         Pickup {b.pickupTime ?? "—"} · Drop-off {b.dropoffTime ?? "—"}
