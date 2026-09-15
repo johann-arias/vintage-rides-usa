@@ -21,7 +21,9 @@ export const metadata: Metadata = {
 // vendor, a form field or a tracking tag, update the matching section here.
 const LAST_UPDATED = "September 15, 2026";
 
-const EMAIL = CONTACT.email;
+// Privacy requests go to the shared team inbox, not the rental desk address
+// used everywhere else on the site (CONTACT.email).
+const EMAIL = "teamvr@vintagerides.com";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
