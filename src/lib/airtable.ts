@@ -136,8 +136,8 @@ export async function getBikesCommittedToTours(
 }
 
 /**
- * Returns how many bikes are blocked by confirmed rentals overlapping [start, end].
- * Excludes blocks tagged as Stripe test-mode sessions so dev bookings don't eat
+ * Returns how many bikes are blocked by rentals or maintenance/blackouts overlapping
+ * [start, end], matching the garage Planning (lib/planning.ts). Excludes blocks tagged as Stripe test-mode sessions so dev bookings don't eat
  * into real availability.
  */
 export async function getBikesBlockedByRentals(
@@ -147,7 +147,7 @@ export async function getBikesBlockedByRentals(
   const records = await base(Tables.Blocks)
     .select({
       filterByFormula: `AND(
-        {Type} = "RENTAL",
+        OR({Type} = "RENTAL", {Type} = "MAINTENANCE"),
         {Status} != "Cancelled",
         FIND("cs_test_", {Notes}) = 0,
         IS_BEFORE({Start Date}, DATEADD("${endDate}", 1, "days")),
