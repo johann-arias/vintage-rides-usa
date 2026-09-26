@@ -57,7 +57,7 @@ export default function HomePage() {
         <section className="relative h-screen min-h-[600px] bg-[#2e3b23] flex items-center overflow-hidden">
           <Image
             src="/hero-himalayan-meadow-rider.jpg"
-            alt=""
+            alt="Rider with a rental Royal Enfield Himalayan 450 in a Black Hills meadow"
             fill
             preload
             fetchPriority="high"

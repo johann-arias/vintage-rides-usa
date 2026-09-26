@@ -63,7 +63,7 @@ export default function DestinationPage({ destination: d }: Props) {
               background-image JPGs cost 7 to 14 s of LCP on mobile (audit 2026-09-26). */}
           <Image
             src={d.heroImage}
-            alt=""
+            alt={`Royal Enfield Himalayan 450 rental: riding ${d.h1Accent}, South Dakota`}
             fill
             preload
             fetchPriority="high"
@@ -281,7 +281,7 @@ export default function DestinationPage({ destination: d }: Props) {
                     <div className="relative aspect-[4/3]">
                       <Image
                         src={r.heroImage}
-                        alt=""
+                        alt={`${r.eyebrow}: Royal Enfield Himalayan 450 in ${r.h1Accent}`}
                         fill
                         sizes="(min-width: 768px) 33vw, 100vw"
                         className="object-cover object-center"
