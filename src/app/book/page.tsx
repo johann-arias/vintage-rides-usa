@@ -59,6 +59,10 @@ type AvailabilityResult = {
     totalPrice: number;
     minDays: number;
     seasonName: string;
+    /** "$130 × 2 days + $200 × 3 days": per-day pricing since 2026-09-26. */
+    rateLabel?: string;
+    /** Rate of the special rule the rental touches (Sturgis Rally), if any. */
+    specialRate?: number | null;
   } | null;
 } | null;
 
@@ -700,7 +704,7 @@ export default function BookPage() {
                     ) : belowMinDays ? (
                       <p className="text-red-700 text-sm font-medium">
                         {availability.pricing!.seasonName === "Sturgis Rally"
-                          ? `Sturgis Rally week rentals are ${availability.pricing!.minDays} days minimum, at $${availability.pricing!.dailyRate}/day + tax.`
+                          ? `Rentals including Sturgis Rally days are ${availability.pricing!.minDays} days minimum (rally days $${availability.pricing!.specialRate ?? availability.pricing!.dailyRate}/day + tax).`
                           : `This period requires a minimum ${availability.pricing!.minDays}-day rental.`}{" "}
                         Please extend your return date.
                       </p>
@@ -718,7 +722,7 @@ export default function BookPage() {
                         )}
                         <div className="space-y-1.5 text-sm">
                           <div className="flex justify-between">
-                            <span className="text-[#6e6a5e]">${availability.pricing!.dailyRate} × {availability.pricing!.totalDays} day{availability.pricing!.totalDays !== 1 ? "s" : ""} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
+                            <span className="text-[#6e6a5e]">{availability.pricing!.rateLabel ?? `$${availability.pricing!.dailyRate} × ${availability.pricing!.totalDays} day${availability.pricing!.totalDays !== 1 ? "s" : ""}`} × {bikeCount} bike{bikeCount > 1 ? "s" : ""}</span>
                             <span className="text-[#1a1a17]">${availability.pricing!.subtotal.toLocaleString()}</span>
                           </div>
                           <div className="flex justify-between">

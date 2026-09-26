@@ -47,7 +47,7 @@ const HOME_FAQ = [
   },
   {
     q: "What does a rental cost during the Sturgis Rally?",
-    a: "During rally week (August 6-15, 2027) the rate is $200 a day plus 11.9% South Dakota tax, with a 3-day minimum. A rental that includes any day of rally week is billed at the rally rate. Our 10 bikes book out months ahead for August, so reserve early.",
+    a: "During rally week (August 6-15, 2027) the rate is $200 a day plus 11.9% South Dakota tax, with a 3-day minimum. Only the rally days are billed at $200: the other days of the same rental stay at $130. Our 10 bikes book out months ahead for August, so reserve early.",
   },
   {
     q: "Is the Himalayan 450 easier to ride than a Harley?",

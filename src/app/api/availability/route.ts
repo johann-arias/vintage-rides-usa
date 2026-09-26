@@ -114,6 +114,8 @@ export async function GET(req: NextRequest) {
           totalPrice: pricing.totalPrice,
           minDays: pricing.minDays,
           seasonName: pricing.seasonName,
+          rateLabel: pricing.rateLabel,
+          specialRate: pricing.specialRate,
         },
       },
       { headers: NO_STORE }

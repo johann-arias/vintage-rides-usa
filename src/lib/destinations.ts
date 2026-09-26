@@ -248,7 +248,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "How much does a motorcycle rental cost during the Sturgis Rally?",
-        a: "During rally week (August 6-15 in 2027) the rate is $200 a day plus 11.9% South Dakota tax, with a 3-day minimum. A rental that includes any day of rally week is billed at the rally rate. Outside rally week it is $130 a day with no minimum. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
+        a: "During rally week (August 6-15 in 2027) the rate is $200 a day plus 11.9% South Dakota tax, with a 3-day minimum. Only the rally days are billed at $200: the other days of the same rental stay at $130. Outside rally week it is $130 a day with no minimum. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [

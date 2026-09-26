@@ -203,52 +203,47 @@ function mmddOrdinal(mmdd: string): number {
   return m * 31 + d;
 }
 
-// Picks the pricing rule for a rental spanning [startDate, endDate] (inclusive).
-// Any day the rental touches a special window makes that window apply to the
-// WHOLE rental, so a rental that merely clips it is billed at that rate too.
-// Active special window since 2026-09-26: "Sturgis Rally" (Aug 6-15, $200/day,
-// 3-day minimum). Season rates live in Airtable and change without a deploy.
-export function getPriceForDate(
-  startDate: Date,
-  endDate: Date,
-  rules: PricingRule[]
-): PricingRule {
-  const matching = new Map<string, PricingRule>();
-  const cursor = new Date(startDate);
-  // Cap the walk defensively; a rental is at most a few weeks in practice.
-  for (let i = 0; i <= 400 && cursor <= endDate; i++) {
-    const mmdd = `${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
-    for (const r of rules) {
-      if (r.seasonStart && r.seasonEnd && mmdd >= r.seasonStart && mmdd <= r.seasonEnd) {
-        matching.set(r.id, r);
-      }
-    }
-    cursor.setDate(cursor.getDate() + 1);
-  }
-
-  const matched = [...matching.values()];
+// The pricing rule for ONE day: the narrowest active window containing that
+// day wins (a rally week inside the May-September season), and a day outside
+// every window falls back to the cheapest active rule.
+function ruleForDay(day: Date, rules: PricingRule[]): PricingRule {
+  const mmdd = `${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
+  const matched = rules.filter((r) => r.seasonStart && r.seasonEnd && mmdd >= r.seasonStart && mmdd <= r.seasonEnd);
   if (matched.length > 0) {
-    // Most specific (narrowest) window wins, so a short seasonal window overrides
-    // the broad standard season when dates overlap (e.g. a week inside May-Sep).
     return matched.sort(
       (a, b) =>
         mmddOrdinal(a.seasonEnd!) - mmddOrdinal(a.seasonStart!) -
         (mmddOrdinal(b.seasonEnd!) - mmddOrdinal(b.seasonStart!))
     )[0];
   }
-
-  // Off-season (no window matches): fall back to the cheapest active rule.
   return [...rules].sort((a, b) => a.dailyRateUsd - b.dailyRateUsd)[0];
 }
 
 export const TAX_RATE = 0.119; // 11.9%
 
+export interface PriceSegment {
+  seasonName: string;
+  rate: number;
+  days: number;
+}
+
+// Per-day pricing (Johann, 2026-09-26): each billed day is charged at the rate
+// of its own rule, so only Sturgis Rally days cost $200 and the other days of
+// the same rental stay at $130. Billed days run from pickup to the day before
+// return (a same-day return bills the pickup day), the same count as before.
+// The minimum duration is the highest "Min Rental Days" among the rules the
+// billed days fall in: a rental touching one rally day needs 3 days in total.
+// dailyRate is the average (kept for analytics and older callers); display
+// code should use `segments` / `rateLabel` when a rental mixes rates.
 export function calculateRentalPrice(
   startDate: string,
   endDate: string,
   numberOfBikes: number,
   rules: PricingRule[]
-): { dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number; minDays: number; seasonName: string } {
+): {
+  dailyRate: number; totalDays: number; subtotal: number; tax: number; totalPrice: number;
+  minDays: number; seasonName: string; segments: PriceSegment[]; rateLabel: string; specialRate: number | null;
+} {
   const start = new Date(startDate);
   const end = new Date(endDate);
   // Same-day return (end === start) still bills as a full 1-day rental.
@@ -257,17 +252,43 @@ export function calculateRentalPrice(
     Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
   );
 
-  const rule = getPriceForDate(start, end, rules);
-  const dailyRate = rule.dailyRateUsd;
-  const subtotal = dailyRate * totalDays * numberOfBikes;
+  const segments: PriceSegment[] = [];
+  const touched: PricingRule[] = [];
+  let perBike = 0;
+  const cursor = new Date(start);
+  for (let i = 0; i < totalDays; i++) {
+    const rule = ruleForDay(cursor, rules);
+    touched.push(rule);
+    perBike += rule.dailyRateUsd;
+    const last = segments[segments.length - 1];
+    if (last && last.seasonName === rule.seasonName && last.rate === rule.dailyRateUsd) last.days += 1;
+    else segments.push({ seasonName: rule.seasonName, rate: rule.dailyRateUsd, days: 1 });
+    cursor.setDate(cursor.getDate() + 1);
+  }
+
+  const subtotal = perBike * numberOfBikes;
   const tax = Math.round(subtotal * TAX_RATE * 100) / 100;
   const totalPrice = Math.round((subtotal + tax) * 100) / 100;
+  const dailyRate = Math.round((perBike / totalDays) * 100) / 100;
+  const minDays = Math.max(1, ...touched.map((r) => r.minRentalDays || 1));
 
-  // Minimum rental duration is data-driven per pricing rule (Airtable "Min Rental
-  // Days"): 1 day for the standard rate, 3 days for the Sturgis Rally rule.
-  const minDays = Math.max(1, rule.minRentalDays || 1);
+  // The special rule (e.g. "Sturgis Rally") is one priced above the cheapest
+  // ACTIVE rule, i.e. above the standard rate, even when every day is special.
+  const cheapest = Math.min(...rules.map((r) => r.dailyRateUsd));
+  const special = touched.find((r) => r.dailyRateUsd > cheapest) ?? null;
+  const seasonName = special ? special.seasonName : touched[0].seasonName;
 
-  return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName: rule.seasonName };
+  // Merge segments by rate for the label: "$130 × 2 days + $200 × 3 days".
+  const byRate = new Map<number, number>();
+  for (const seg of segments) byRate.set(seg.rate, (byRate.get(seg.rate) ?? 0) + seg.days);
+  const rateLabel = [...byRate.entries()]
+    .map(([rate, days]) => `$${rate} × ${days} day${days !== 1 ? "s" : ""}`)
+    .join(" + ");
+
+  return {
+    dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName, segments, rateLabel,
+    specialRate: special ? special.dailyRateUsd : null,
+  };
 }
 
 // ── Bikes ──────────────────────────────────────────────────────────────────

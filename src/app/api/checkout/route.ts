@@ -183,7 +183,7 @@ async function createCheckoutSession(req: NextRequest) {
           unit_amount: Math.round(pricing.totalPrice * 100),
           product_data: {
             name: `Royal Enfield Himalayan 450 Rental × ${bikeCount}`,
-            description: `${startDate} → ${endDate} · ${pricing.totalDays} days · $${pricing.dailyRate}/bike/day`,
+            description: `${startDate} → ${endDate} · ${pricing.totalDays} days · ${pricing.rateLabel} per bike`,
           },
         },
         quantity: 1,
