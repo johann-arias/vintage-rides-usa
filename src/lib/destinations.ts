@@ -99,7 +99,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         name: "Spearfish Canyon + Northern Hills",
-        miles: "~180 mi",
+        miles: "~125 mi",
         ridingTime: "Full day",
         highlights: "Spearfish Canyon · Roughlock Falls · Lead · Deadwood",
         description:
@@ -107,7 +107,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         name: "Devils Tower extension",
-        miles: "~280 mi roundtrip",
+        miles: "~220 mi roundtrip",
         ridingTime: "Long day or overnight",
         highlights: "Bear Lodge Mountains · Devils Tower National Monument · Wyoming high plains",
         description:
@@ -205,7 +205,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         name: "Sturgis-to-Devils Tower",
-        miles: "~250 mi roundtrip",
+        miles: "~220 mi roundtrip",
         ridingTime: "Long day",
         highlights: "Spearfish · Sundance, WY · Devils Tower",
         description:
@@ -286,7 +286,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     routes: [
       {
         name: "The Badlands Loop",
-        miles: "~150 mi roundtrip",
+        miles: "~170 mi roundtrip",
         ridingTime: "Full day",
         highlights: "SD-44 / White River Valley · Badlands Scenic Byway · Wall Drug · Prairie dog towns",
         description:
@@ -398,7 +398,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         name: "Black Hills loop (Needles included)",
-        miles: "~250 mi",
+        miles: "~125 mi",
         ridingTime: "Full day or 2 days",
         highlights: "Mount Rushmore · Iron Mountain Road · Needles · Wildlife Loop · Hill City",
         description:

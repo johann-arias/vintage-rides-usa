@@ -54,6 +54,11 @@ export default function Footer() {
           <div>
             <h4 className="text-white text-xs font-semibold tracking-widest uppercase mb-4">Rides</h4>
             <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/black-hills-motorcycle-rides" className="hover:text-white transition-colors">
+                  Black Hills Motorcycle Rides
+                </Link>
+              </li>
               {DESTINATION_SLUGS.map((slug) => (
                 <li key={slug}>
                   <Link href={`/${slug}`} className="hover:text-white transition-colors">

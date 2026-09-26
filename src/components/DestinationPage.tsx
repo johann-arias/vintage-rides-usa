@@ -188,6 +188,11 @@ export default function DestinationPage({ destination: d }: Props) {
                 </article>
               ))}
             </div>
+            <p className="mt-10 text-sm">
+              <Link href="/black-hills-motorcycle-rides" className="text-[#a9781a] hover:text-[#1a1a17] font-medium">
+                All ten Black Hills motorcycle rides, with maps and distances →
+              </Link>
+            </p>
           </div>
         </section>
 

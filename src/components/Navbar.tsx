@@ -6,6 +6,7 @@ import { ChevronDown, Menu, X } from "lucide-react";
 import { ROYAL_ENFIELD_PARTNER_URL } from "@/lib/press";
 
 const RIDES = [
+  { href: "/black-hills-motorcycle-rides", label: "All ride routes" },
   { href: "/black-hills-motorcycle-rental", label: "Black Hills" },
   { href: "/mount-rushmore-motorcycle-rental", label: "Mount Rushmore" },
   { href: "/needles-highway-motorcycle-tour", label: "Needles Highway" },
