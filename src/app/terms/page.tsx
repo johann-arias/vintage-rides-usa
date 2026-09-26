@@ -13,8 +13,12 @@ export const metadata: Metadata = {
 
 // Public summary of the B2C Motorcycle Rental Agreement signed at pickup
 // (Google Doc "Vintage Rides USA - Motorcycle Rental Agreement (B2C)").
-// Every figure below comes from that agreement: when the agreement changes,
-// update this page and bump LAST_UPDATED. The signed agreement prevails.
+// Every figure below comes from that agreement, except two points where the
+// site is the reference (Johann, 2026-09-26): cancellation follows the policy
+// shown at booking (14+ days free, 50% at 7-14 days), and the insurance limits
+// follow the MBA certificate of 06/08/2026 (excess liability $1,000,000, not the
+// $300,000 of the agreement draft). When either changes, update this page, the
+// agreement, /book, the destination pages and llms.txt together.
 const LAST_UPDATED = "September 26, 2026";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -72,7 +76,7 @@ export default function TermsPage() {
                 <li>Riders must be 21 or older with a valid motorcycle license or endorsement. Riders licensed outside the US also need an International Driving Permit.</li>
                 <li>Insurance is included. You are responsible for the $1,000 deductible if the bike is damaged, lost or stolen.</li>
                 <li>Bring the bike back to Rapid City with a full tank, on time, in the condition you received it.</li>
-                <li>Cancel 30 days or more before pickup for a full refund, 14 to 29 days for 50%. Under 14 days, the rental is not refunded.</li>
+                <li>Free cancellation 14 or more days before pickup. Between 7 and 14 days, 50% is refunded. Within 7 days of pickup, the rental is not refunded.</li>
               </ul>
             </div>
 
@@ -121,12 +125,15 @@ export default function TermsPage() {
               </Section>
 
               <Section id="insurance" title="Insurance and your responsibility">
-                <p>Each motorcycle is covered by our motorcycle insurance policy, with these limits:</p>
+                <p>
+                  Each motorcycle is covered by our motorcycle insurance (policies placed by MBA Insurance with
+                  Agent Alliance Insurance Company), included in the daily rate, with these limits:
+                </p>
                 <List>
                   <li>Liability, bodily injury: $25,000 per person / $50,000 per accident</li>
                   <li>Liability, property damage: $25,000</li>
-                  <li>Excess liability: $300,000</li>
-                  <li>Uninsured / underinsured motorist, bodily injury: $25,000 per person / $50,000 per accident</li>
+                  <li>Excess liability: $1,000,000 combined single limit</li>
+                  <li>Uninsured / underinsured motorist: as required by South Dakota law ($25,000 per person / $50,000 per accident)</li>
                   <li>Medical payments: $2,000</li>
                 </List>
                 <p>
@@ -198,9 +205,9 @@ export default function TermsPage() {
               <Section id="cancellation" title="Cancellation and refunds">
                 <p>Counted from the scheduled pickup date:</p>
                 <List>
-                  <li>30 days or more before pickup: full refund of the rental charge;</li>
-                  <li>14 to 29 days before pickup: 50% refund;</li>
-                  <li>fewer than 14 days before pickup: no refund.</li>
+                  <li>14 days or more before pickup: full refund of the rental charge;</li>
+                  <li>7 to 14 days before pickup: 50% refund;</li>
+                  <li>fewer than 7 days before pickup: no refund.</li>
                 </List>
                 <p>A no-show, or a cancellation on the day of pickup, is not refunded. Date changes depend on availability.</p>
               </Section>
