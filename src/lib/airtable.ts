@@ -206,9 +206,8 @@ function mmddOrdinal(mmdd: string): number {
 // Picks the pricing rule for a rental spanning [startDate, endDate] (inclusive).
 // Any day the rental touches a special window makes that window apply to the
 // WHOLE rental, so a rental that merely clips it is billed at that rate too.
-// No special window is active today: rally week is priced like any other week
-// since 2026-07-29, so every active rule sits at $130. The mechanism stays so a
-// season rate can be reinstated from Airtable without a deploy.
+// Active special window since 2026-09-26: "Sturgis Rally" (Aug 6-15, $200/day,
+// 3-day minimum). Season rates live in Airtable and change without a deploy.
 export function getPriceForDate(
   startDate: Date,
   endDate: Date,
@@ -265,8 +264,7 @@ export function calculateRentalPrice(
   const totalPrice = Math.round((subtotal + tax) * 100) / 100;
 
   // Minimum rental duration is data-driven per pricing rule (Airtable "Min Rental
-  // Days"). The only active rule is at 1 today (day rentals OK, rally week
-  // included); the check stays so a minimum can be reinstated without a deploy.
+  // Days"): 1 day for the standard rate, 3 days for the Sturgis Rally rule.
   const minDays = Math.max(1, rule.minRentalDays || 1);
 
   return { dailyRate, totalDays, subtotal, tax, totalPrice, minDays, seasonName: rule.seasonName };

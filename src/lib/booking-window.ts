@@ -12,10 +12,11 @@ export const RAPID_CITY_TZ = "America/Denver";
 // bike freed, customer notified). Kept short because same-day means today.
 export const SAME_DAY_REQUEST_EXPIRY_HOURS = 3;
 
-// Sturgis Rally week, as MM-DD. Not a pricing rule any more (rally week is
-// billed like any other week since 2026-07-29), but still a real-world fact:
-// it drives a suggested date range on /book and the demand read in the garage.
-export const RALLY_WEEK = { start: "08-07", end: "08-16" } as const;
+// Sturgis Rally week, as MM-DD (2027: Aug 6-15). The PRICE comes from the
+// Airtable rule "Sturgis Rally" ($200/day, 3-day minimum since 2026-09-26);
+// this constant only drives the suggested dates on /book and the demand read
+// in the garage. Update both each year to the official rally dates.
+export const RALLY_WEEK = { start: "08-06", end: "08-15" } as const;
 
 // Format a Date as YYYY-MM-DD in a given IANA timezone. en-CA yields ISO order.
 function ymdInTz(date: Date, tz: string): string {

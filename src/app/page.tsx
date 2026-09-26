@@ -39,15 +39,15 @@ const HOME_FAQ = [
   },
   {
     q: "Can I rent a motorcycle for just one day?",
-    a: "Yes. There is no minimum rental: a single day is $130 plus 11.9% South Dakota tax. Same-day rentals work too: book online and we confirm as soon as a bike is ready, your card is only charged once we confirm.",
+    a: "Yes, outside the Sturgis Rally: a single day is $130 plus 11.9% South Dakota tax, with no minimum. During rally week (August 6-15, 2027) the minimum is 3 days. Same-day rentals work too: book online and we confirm as soon as a bike is ready, your card is only charged once we confirm.",
   },
   {
     q: "Is there a motorcycle rental near Rapid City Regional Airport?",
     a: "Our garage at 1715 Samco Rd #107 is about 14 miles from Rapid City Regional Airport (RAP), a short taxi or rideshare away. Pickups are by appointment every half hour from 8 AM to 6 PM: tell us your flight time and your bike will be ready.",
   },
   {
-    q: "Do your prices go up during the Sturgis Rally?",
-    a: "No. Rally week (August 6-15 in 2027) costs the same $130 a day plus tax as any other week, with no surcharge. Our 10 bikes book out months ahead for August, so reserve early.",
+    q: "What does a rental cost during the Sturgis Rally?",
+    a: "During rally week (August 6-15, 2027) the rate is $200 a day plus 11.9% South Dakota tax, with a 3-day minimum. A rental that includes any day of rally week is billed at the rally rate. Our 10 bikes book out months ahead for August, so reserve early.",
   },
   {
     q: "Is the Himalayan 450 easier to ride than a Harley?",

@@ -81,10 +81,9 @@ export interface SearchStats {
   rallyWeekShare: number;
 }
 
-// Rally week is read from the requested dates, not from the pricing rule: since
-// 2026-07-29 rally week is priced like any other week, so the season name no
-// longer says anything about demand. The dates still do. Same helper the /book
-// date suggestions use, so both agree on what rally week is.
+// Rally week is read from the requested dates, not from the pricing rule, so the
+// demand read does not depend on how the rally is priced in a given year. Same
+// helper the /book date suggestions use, so both agree on what rally week is.
 
 const LEAD_BUCKETS: { label: string; max: number }[] = [
   { label: "Today or tomorrow", max: 1 },

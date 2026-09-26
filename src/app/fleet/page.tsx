@@ -246,6 +246,9 @@ export default function FleetPage() {
                 <div className="text-sm opacity-70">+ $15.47 tax · per bike / per day</div>
               </div>
             </div>
+            <p className="text-white/70 text-sm mb-3">
+              Sturgis Rally week (Aug 6-15, 2027): $200/day + tax, 3-day minimum.
+            </p>
             <p className="text-white/40 text-sm mb-8">
               Group discounts available for 5+ bikes. Contact us directly.
             </p>

@@ -99,7 +99,7 @@ export default function DestinationPage({ destination: d }: Props) {
                 Check availability
               </Link>
               <span className="text-white/60 text-sm">
-                $130/day · insurance included · free cancellation 14+ days out
+                {d.priceLine ?? "$130/day"} · insurance included · free cancellation 14+ days out
               </span>
             </div>
           </div>
@@ -365,7 +365,7 @@ export default function DestinationPage({ destination: d }: Props) {
               Your bike is waiting in Rapid City
             </h2>
             <p className="text-white/60 text-base md:text-lg mb-10 max-w-2xl mx-auto">
-              $130/day. Brand-new 2025 Royal Enfield Himalayan 450. Insurance,
+              {d.priceLine ?? "$130/day"}. Brand-new 2025 Royal Enfield Himalayan 450. Insurance,
               Custer State Park and Black Hills National Forest passes included.
               Free cancellation 14+ days out. Available year-round.
             </p>

@@ -86,12 +86,14 @@ export function touchesRallyWeek(startDate: string, endDate: string): boolean {
 export function buildDatePresets(today: string = todayInRapidCity()): DatePreset[] {
   const friday = nextFriday(today);
   const weekend = preset("weekend", "Weekend", friday, 2);
-  // A weekend that lands inside rally week is worth naming, since not charging
-  // extra that week is the whole point of our pricing.
-  if (touchesRallyWeek(weekend.startDate, weekend.endDate)) weekend.label = "Rally weekend";
+  // Rally week has a 3-day minimum (Airtable rule "Sturgis Rally"): a weekend
+  // that touches it is offered as Friday to Monday, never as a 2-day rental
+  // the booking would then refuse.
+  const rallyWeekend = touchesRallyWeek(weekend.startDate, weekend.endDate);
+  const first = rallyWeekend ? preset("weekend", "Rally, 3 days", friday, 3) : weekend;
 
   const presets = [
-    weekend,
+    first,
     preset("three_days", "3 days", friday, 3),
     preset("week", "A week", friday, 7),
   ];
@@ -101,7 +103,7 @@ export function buildDatePresets(today: string = todayInRapidCity()): DatePreset
   // year's rally dates are not ours to guess.
   const rallyStart = `${today.slice(0, 4)}-${RALLY_WEEK.start}`;
   if (today < rallyStart && !presets.some((p) => p.startDate === rallyStart)) {
-    presets.push(preset("rally", "Rally weekend", rallyStart, 2));
+    presets.push(preset("rally", "Rally, 3 days", rallyStart, 3));
   }
 
   return presets;
