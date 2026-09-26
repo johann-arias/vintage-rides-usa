@@ -5,7 +5,7 @@ import { Inter, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import ContactButton from "@/components/ContactButton";
 import AdClickCapture from "@/components/AdClickCapture";
-import { PICKUP_LOCATION, CONTACT } from "@/lib/location";
+import { PICKUP_LOCATION, CONTACT, INSTAGRAM_URL } from "@/lib/location";
 import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 
 const GA_ID = GA_MEASUREMENT_ID;
@@ -177,6 +177,7 @@ const businessJsonLd = {
     "https://share.google/lzlz2jYsuFtaHkgAO",
     // Google Business Profile by its stable cid (the share.google link is a redirect).
     "https://maps.google.com/?cid=635947390850455694",
+    INSTAGRAM_URL,
   ],
 };
 

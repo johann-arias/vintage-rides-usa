@@ -26,6 +26,9 @@ export const GOOGLE_REVIEW_URL = "https://g.page/r/CY5YelfIVtMIEBM/review";
 // Public GBP listing (shows all existing reviews).
 export const GOOGLE_LISTING_URL = "https://share.google/lzlz2jYsuFtaHkgAO";
 
+/** Official social profiles, also listed as sameAs in the business JSON-LD. */
+export const INSTAGRAM_URL = "https://www.instagram.com/vintage_rides_usa/";
+
 // Contact channels.
 export const CONTACT = {
   phone: { display: "+1 (760) 350-9700", e164: "+17603509700" },

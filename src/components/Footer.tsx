@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PICKUP_LOCATION, PICKUP_MAPS_URL, GOOGLE_REVIEW_URL } from "@/lib/location";
+import { PICKUP_LOCATION, PICKUP_MAPS_URL, GOOGLE_REVIEW_URL, INSTAGRAM_URL } from "@/lib/location";
 import { ROYAL_ENFIELD_PARTNER_URL } from "@/lib/press";
 import { DESTINATIONS, DESTINATION_SLUGS } from "@/lib/destinations";
 
@@ -86,6 +86,11 @@ export default function Footer() {
               <li>
                 <a href="https://www.vintagerides.com" target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
                   vintagerides.com
+                </a>
+              </li>
+              <li>
+                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="hover:text-white transition-colors">
+                  Instagram @vintage_rides_usa
                 </a>
               </li>
               <li>
