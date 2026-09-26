@@ -12,7 +12,7 @@ import {
 export const metadata: Metadata = {
   title: "Press & Royal Enfield Partnership | Vintage Rides USA",
   description:
-    "Royal Enfield North America partnered with Vintage Rides in August 2026 to bring Royal Enfield motorcycle travel to the United States. Coverage from RideApart, Cycle News, ADV Rider, ADV Pulse and others, plus Royal Enfield's own page about the Rapid City fleet.",
+    "Royal Enfield North America partnered with Vintage Rides in August 2026. Press coverage from RideApart, Cycle News, ADV Rider, ADV Pulse and Royal Enfield.",
   alternates: { canonical: "https://www.vintageridesusa.com/press" },
 };
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import {
@@ -57,24 +58,34 @@ export default function DestinationPage({ destination: d }: Props) {
       <main className="flex-1 pt-16">
         {/* Hero */}
         <section className="relative h-[70vh] min-h-[500px] bg-[#2e3b23] flex items-end overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-top opacity-70"
-            style={{ backgroundImage: `url('${d.heroImage}')` }}
-            aria-hidden
+          {/* next/image rather than a CSS background: served as AVIF/WebP at the
+              phone's width, and preloaded as the largest paint (preload + fetchPriority). The
+              background-image JPGs cost 7 to 14 s of LCP on mobile (audit 2026-09-26). */}
+          <Image
+            src={d.heroImage}
+            alt=""
+            fill
+            preload
+            fetchPriority="high"
+            loading="eager"
+            sizes="100vw"
+            className="object-cover object-top opacity-70"
           />
           <div
             className="absolute inset-0 bg-gradient-to-t from-[#2e3b23] via-[#2e3b23]/45 to-transparent"
             aria-hidden
           />
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full pb-16">
-            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">
+            {/* The H1 carries the search query ("Black Hills Motorcycle Rental");
+                the big "Ride the Black Hills" line stays as the visual headline. */}
+            <h1 className="font-sans text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">
               {d.eyebrow}
-            </p>
-            <h1 className="text-white text-5xl md:text-7xl font-light leading-[1.05] tracking-tight mb-6">
+            </h1>
+            <p className="font-heading text-white text-5xl md:text-7xl font-light leading-[1.05] tracking-tight mb-6">
               {d.h1}
               <br />
               <span className="italic text-[#d9a32b]">{d.h1Accent}</span>
-            </h1>
+            </p>
             <p className="text-white/70 text-lg md:text-xl leading-relaxed max-w-2xl">
               {d.intro}
             </p>
@@ -267,11 +278,15 @@ export default function DestinationPage({ destination: d }: Props) {
                     href={`/${r.slug}`}
                     className="group block bg-[#faf5ea] border border-[#e8e3d3] hover:border-[#d9a32b] transition-colors overflow-hidden"
                   >
-                    <div
-                      className="aspect-[4/3] bg-cover bg-center"
-                      style={{ backgroundImage: `url('${r.heroImage}')` }}
-                      aria-hidden
-                    />
+                    <div className="relative aspect-[4/3]">
+                      <Image
+                        src={r.heroImage}
+                        alt=""
+                        fill
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        className="object-cover object-center"
+                      />
+                    </div>
                     <div className="p-6">
                       <div className="text-[#d9a32b] text-[10px] font-semibold tracking-[0.22em] uppercase mb-2">
                         {r.eyebrow}

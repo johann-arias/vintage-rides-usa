@@ -1,8 +1,15 @@
 import Link from "next/link";
+import Image from "next/image";
+import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_LISTING_URL } from "@/lib/location";
 import { ROYAL_ENFIELD_PARTNER_URL, PRESS_PULL_QUOTE, FEATURED_OUTLETS } from "@/lib/press";
+
+// Each page declares its own canonical (the root layout no longer does).
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const REVIEWS = [
   {
@@ -48,23 +55,29 @@ export default function HomePage() {
       <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
         <section className="relative h-screen min-h-[600px] bg-[#2e3b23] flex items-center overflow-hidden">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('/hero-himalayan-meadow-rider.jpg')" }}
-            aria-hidden
+          <Image
+            src="/hero-himalayan-meadow-rider.jpg"
+            alt=""
+            fill
+            preload
+            fetchPriority="high"
+            loading="eager"
+            sizes="100vw"
+            className="object-cover object-center"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-[#2e3b23]/85 via-[#2e3b23]/25 to-transparent" aria-hidden />
           <div className="absolute inset-0 bg-gradient-to-t from-[#2e3b23]/55 via-transparent to-transparent" aria-hidden />
 
           <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
             <div className="max-w-2xl">
-              <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
+              {/* H1 = the query the page answers; the big line is the visual headline. */}
+              <h1 className="font-sans text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-6">
                 Motorcycle Rental · Rapid City & Black Hills
-              </p>
-              <h1 className="text-white text-5xl md:text-7xl font-light leading-[1.05] tracking-tight mb-6">
+              </h1>
+              <p className="font-heading text-white text-5xl md:text-7xl font-light leading-[1.05] tracking-tight mb-6">
                 Ride the<br />
                 <span className="italic text-[#d9a32b]">Black Hills</span>
-              </h1>
+              </p>
               <p className="text-white/80 text-lg md:text-xl leading-relaxed mb-10 max-w-lg">
                 Rent a Royal Enfield Himalayan 450 in Rapid City and explore
                 the Black Hills, Badlands, and beyond.
@@ -136,12 +149,15 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid md:grid-cols-2 gap-16 items-center">
               <div className="relative order-2 md:order-1">
-                <div
-                  className="aspect-[4/3] bg-[#e8e3d3] bg-cover bg-center rounded-sm overflow-hidden border border-[#e8e3d3]"
-                  style={{ backgroundImage: "url('/mike-wendy-garage.jpg')" }}
-                  role="img"
-                  aria-label="Mike and Wendy with their dog Katie in the Vintage Rides USA garage in Rapid City"
-                />
+                <div className="relative aspect-[4/3] bg-[#e8e3d3] rounded-sm overflow-hidden border border-[#e8e3d3]">
+                  <Image
+                    src="/mike-wendy-garage.jpg"
+                    alt="Mike and Wendy with their dog Katie in the Vintage Rides USA garage in Rapid City"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                </div>
                 <div className="absolute -bottom-6 -right-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm shadow-md hidden md:block">
                   <div className="text-sm font-semibold italic">Mike &amp; Wendy</div>
                   <div className="text-xs tracking-wider uppercase opacity-70">Rapid City, SD</div>
@@ -248,12 +264,15 @@ export default function HomePage() {
                 </Link>
               </div>
               <div className="relative">
-                <div
-                  className="aspect-[4/3] bg-[#e8e3d3] bg-cover bg-center rounded-sm overflow-hidden"
-                  style={{ backgroundImage: "url('/bike-studio.jpg')" }}
-                  role="img"
-                  aria-label="Royal Enfield Himalayan 450"
-                />
+                <div className="relative aspect-[4/3] bg-[#e8e3d3] rounded-sm overflow-hidden">
+                  <Image
+                    src="/bike-studio.jpg"
+                    alt="Royal Enfield Himalayan 450"
+                    fill
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover object-center"
+                  />
+                </div>
                 <div className="absolute -bottom-6 -left-6 bg-[#d9a32b] text-[#1a1a17] px-6 py-4 rounded-sm hidden md:block">
                   <div className="text-2xl font-light">$130/day</div>
                   <div className="text-xs font-semibold tracking-wider uppercase">+ tax</div>

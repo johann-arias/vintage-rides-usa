@@ -59,9 +59,9 @@ export interface Destination {
 export const DESTINATIONS: Record<string, Destination> = {
   "black-hills-motorcycle-rental": {
     slug: "black-hills-motorcycle-rental",
-    metaTitle: "Black Hills Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
+    metaTitle: "Black Hills Motorcycle Rental | Vintage Rides USA",
     metaDescription:
-      "Rent a 2025 Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills loop — Needles Highway, Iron Mountain Road, Custer State Park. $130/day, year-round.",
+      "Rent a Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills: Needles Highway, Iron Mountain Road, Custer State Park. $130/day, year-round.",
     ogImage: "/blackhills-himalayan-valley.jpg",
     heroImage: "/blackhills-himalayan-valley.jpg",
     eyebrow: "Black Hills Motorcycle Rental",
@@ -156,9 +156,9 @@ export const DESTINATIONS: Record<string, Destination> = {
 
   "sturgis-motorcycle-rental": {
     slug: "sturgis-motorcycle-rental",
-    metaTitle: "Sturgis Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
+    metaTitle: "Sturgis Motorcycle Rental | Vintage Rides USA",
     metaDescription:
-      "Rent a Royal Enfield Himalayan 450 in Rapid City for the Sturgis Motorcycle Rally. 30 minutes from downtown Sturgis. Adventure bike alternative to the Harley parade. $130/day.",
+      "Motorcycle rental for Sturgis and the Rally: a Royal Enfield Himalayan 450 from Rapid City, 30 minutes away. $130/day, no rally surcharge.",
     ogImage: "/sturgis-himalayan-group-ride.jpg",
     heroImage: "/sturgis-himalayan-group-ride.jpg",
     eyebrow: "Sturgis Motorcycle Rental",
@@ -255,9 +255,9 @@ export const DESTINATIONS: Record<string, Destination> = {
 
   "badlands-motorcycle-rental": {
     slug: "badlands-motorcycle-rental",
-    metaTitle: "Badlands Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
+    metaTitle: "Badlands Motorcycle Rental | Vintage Rides USA",
     metaDescription:
-      "Rent a Royal Enfield Himalayan 450 in Rapid City to ride the Badlands National Park loop. 1h from base. Adventure bike for an alien landscape. $130/day, year-round.",
+      "Rent a Royal Enfield Himalayan 450 in Rapid City and ride the Badlands National Park loop, 1 hour from base. $130/day, open year-round.",
     ogImage: "/badlands-himalayan-vista.jpg",
     heroImage: "/badlands-himalayan-vista.jpg",
     eyebrow: "Badlands Motorcycle Rental",
@@ -351,7 +351,7 @@ export const DESTINATIONS: Record<string, Destination> = {
 
   "needles-highway-motorcycle-tour": {
     slug: "needles-highway-motorcycle-tour",
-    metaTitle: "Needles Highway Motorcycle Tour — Royal Enfield Himalayan 450 | Vintage Rides USA",
+    metaTitle: "Needles Highway Motorcycle Tour & Rental | Vintage Rides USA",
     metaDescription:
       "Ride the Needles Highway on a 2025 Royal Enfield Himalayan 450. The most spectacular 14 miles in South Dakota. Rent in Rapid City, $130/day, year-round.",
     ogImage: "/needles-himalayan-road-curve.jpg",
@@ -447,7 +447,7 @@ export const DESTINATIONS: Record<string, Destination> = {
 
   "mount-rushmore-motorcycle-rental": {
     slug: "mount-rushmore-motorcycle-rental",
-    metaTitle: "Mount Rushmore Motorcycle Rental — Royal Enfield Himalayan 450 | Vintage Rides USA",
+    metaTitle: "Mount Rushmore Motorcycle Rental | Vintage Rides USA",
     metaDescription:
       "Rent a Royal Enfield Himalayan 450 in Rapid City and ride to Mount Rushmore via the iconic Iron Mountain Road. 30 minutes from base. $130/day, year-round.",
     ogImage: "/mountrushmore-himalayan-sunset.jpg",

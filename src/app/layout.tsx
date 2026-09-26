@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.vintageridesusa.com"),
   title: "Motorcycle Rental Rapid City & Black Hills | Vintage Rides USA",
   description:
-    "Rent a Royal Enfield Himalayan 450 in Rapid City, SD. Explore the Black Hills, Badlands, and Sturgis on a world-class adventure motorcycle. Daily rentals available year-round.",
-  alternates: {
-    canonical: "/",
-  },
+    "Rent a Royal Enfield Himalayan 450 in Rapid City, SD and ride the Black Hills, Badlands and Sturgis. $130/day, insurance included, open year-round.",
+  // No canonical here: every page declares its own. A canonical in the root
+  // layout is inherited by any page that forgets one, and pointed /fleet and
+  // /book at the homepage (SEO audit of 2026-09-26).
   keywords: [
     "motorcycle rental Rapid City",
     "motorcycle rental Black Hills",
@@ -47,7 +47,6 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://www.vintageridesusa.com",
     title: "Motorcycle Rental in Rapid City & Black Hills | Vintage Rides USA",
     description:
       "Rent a Royal Enfield Himalayan 450 in Rapid City and ride the Black Hills. $130/day + tax.",
@@ -74,7 +73,9 @@ const SITE_URL = "https://www.vintageridesusa.com";
 
 const businessJsonLd = {
   "@context": "https://schema.org",
-  "@type": ["MotorcycleDealer", "LocalBusiness"],
+  // AutoRental (a LocalBusiness) rather than MotorcycleDealer, which means a
+  // dealership selling bikes.
+  "@type": "AutoRental",
   "@id": `${SITE_URL}#business`,
   name: "Vintage Rides USA",
   alternateName: "Vintage Rides USA — Royal Enfield Rentals",
@@ -168,14 +169,14 @@ const businessJsonLd = {
       unitText: "DAY",
     },
     availability: "https://schema.org/InStock",
-    availabilityStarts: "2026-05-01",
-    availabilityEnds: "2026-09-30",
     seller: { "@id": `${SITE_URL}#business` },
     itemOffered: { "@id": `${SITE_URL}#himalayan-450` },
   },
   sameAs: [
     "https://www.vintagerides.com",
     "https://share.google/lzlz2jYsuFtaHkgAO",
+    // Google Business Profile by its stable cid (the share.google link is a redirect).
+    "https://maps.google.com/?cid=635947390850455694",
   ],
 };
 
@@ -223,8 +224,6 @@ const motorcycleJsonLd = {
       unitText: "DAY",
     },
     availability: "https://schema.org/InStock",
-    availabilityStarts: "2026-05-01",
-    availabilityEnds: "2026-09-30",
     seller: { "@id": `${SITE_URL}#business` },
     areaServed: { "@type": "AdministrativeArea", name: "South Dakota" },
   },
