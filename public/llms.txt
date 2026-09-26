@@ -100,7 +100,7 @@ insurance.
 ## Cancellation
 
 - Free cancellation 14 or more days before start date (full refund)
-- 50% refund 7–14 days before
+- 50% refund 7 to 13 days before
 - No refund within 7 days of start date
 - Reschedule once for free if requested 7+ days in advance
 

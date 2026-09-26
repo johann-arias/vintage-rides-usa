@@ -761,7 +761,7 @@ export default function BookPage() {
                       {availability?.requestToBook
                         ? "Same-day: your card is authorized and only charged once we confirm your bike."
                         : "Secure payment on the next screen, then two minutes of ride details."}{" "}
-                      Full refund if cancelled 14 or more days before pickup, 50% between 7 and 14
+                      Full refund if cancelled 14 or more days before pickup, 50% from 7 to 13
                       days, none within 7.
                     </p>
                   </div>

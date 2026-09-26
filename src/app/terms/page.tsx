@@ -13,12 +13,11 @@ export const metadata: Metadata = {
 
 // Public summary of the B2C Motorcycle Rental Agreement signed at pickup
 // (Google Doc "Vintage Rides USA - Motorcycle Rental Agreement (B2C)").
-// Every figure below comes from that agreement, except two points where the
-// site is the reference (Johann, 2026-09-26): cancellation follows the policy
-// shown at booking (14+ days free, 50% at 7-14 days), and the insurance limits
-// follow the MBA certificate of 06/08/2026 (excess liability $1,000,000, not the
-// $300,000 of the agreement draft). When either changes, update this page, the
-// agreement, /book, the destination pages and llms.txt together.
+// Every figure below comes from that agreement, which was aligned on the site
+// on 2026-09-26: cancellation as shown at booking (14+ days free, 50% at 7-13
+// days), insurance limits from the MBA certificate of 06/08/2026. When either
+// changes, update the agreement, this page, /book, the destination pages and
+// llms.txt together.
 const LAST_UPDATED = "September 26, 2026";
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
@@ -59,8 +58,9 @@ export default function TermsPage() {
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-5">Legal</p>
             <h1 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">Rental Terms &amp; Conditions</h1>
             <p className="text-white/70 text-lg leading-relaxed">
-              The rules of a Vintage Rides USA motorcycle rental, in plain English. They are the terms of the
-              Motorcycle Rental Agreement you sign when you pick up your bike.
+              The rules of a Vintage Rides USA motorcycle rental, in plain English. This page summarizes the
+              Motorcycle Rental Agreement you sign when you pick up your bike; if the two ever differ, the
+              signed agreement applies.
             </p>
             <p className="text-white/50 text-sm tracking-wider mt-6">Last updated: {LAST_UPDATED}</p>
           </div>
@@ -75,7 +75,7 @@ export default function TermsPage() {
                 <li>Riders must be 21 or older with a valid motorcycle license or endorsement. Riders licensed outside the US also need an International Driving Permit.</li>
                 <li>Insurance is included. You are responsible for the $1,000 deductible if the bike is damaged, lost or stolen.</li>
                 <li>Bring the bike back to Rapid City with a full tank, on time, in the condition you received it.</li>
-                <li>Free cancellation 14 or more days before pickup. Between 7 and 14 days, 50% is refunded. Within 7 days of pickup, the rental is not refunded.</li>
+                <li>Free cancellation 14 or more days before pickup. From 7 to 13 days, 50% is refunded. Within 7 days of pickup, the rental is not refunded.</li>
               </ul>
             </div>
 
@@ -205,7 +205,7 @@ export default function TermsPage() {
                 <p>Counted from the scheduled pickup date:</p>
                 <List>
                   <li>14 days or more before pickup: full refund of the rental charge;</li>
-                  <li>7 to 14 days before pickup: 50% refund;</li>
+                  <li>7 to 13 days before pickup: 50% refund;</li>
                   <li>fewer than 7 days before pickup: no refund.</li>
                 </List>
                 <p>A no-show, or a cancellation on the day of pickup, is not refunded. Date changes depend on availability.</p>
