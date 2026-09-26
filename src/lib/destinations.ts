@@ -121,7 +121,7 @@ export const DESTINATIONS: Record<string, Destination> = {
         { label: "Daily rate", value: "$130 + 11.9% SD tax" },
         { label: "Park passes", value: "Custer State Park + Black Hills NF passes included" },
         { label: "Best months", value: "Late May to mid-September (June and September are quietest)" },
-        { label: "Avoid", value: "Aug 7-16 (Sturgis Rally, traffic and lodging insane)" },
+        { label: "Avoid", value: "Aug 6-15, 2027 (Sturgis Rally, traffic and lodging insane)" },
         { label: "License", value: "Valid motorcycle endorsement (M-class) or IDP for international riders" },
       ],
     },
@@ -136,7 +136,7 @@ export const DESTINATIONS: Record<string, Destination> = {
       },
       {
         q: "When is the best time to rent a motorcycle in the Black Hills?",
-        a: "June and September. Weather is mild (60-80°F daytime), wildlife is active, the loops are open, and crowds are thin. Avoid August 7-16 unless you're going for the Sturgis Rally, when every road and every campground is packed. May and October are quieter shoulder months and work well too. We now rent year-round, though winter riding is weather-dependent and some mountain roads close for snow.",
+        a: "June and September. Weather is mild (60-80°F daytime), wildlife is active, the loops are open, and crowds are thin. Avoid the Sturgis Rally (August 6-15 in 2027) unless you're going for it, when every road and every campground is packed. May and October are quieter shoulder months and work well too. We now rent year-round, though winter riding is weather-dependent and some mountain roads close for snow.",
       },
       {
         q: "What's the difference between renting in Rapid City vs Sturgis?",
@@ -156,19 +156,19 @@ export const DESTINATIONS: Record<string, Destination> = {
 
   "sturgis-motorcycle-rental": {
     slug: "sturgis-motorcycle-rental",
-    metaTitle: "Sturgis Motorcycle Rental | Vintage Rides USA",
+    metaTitle: "Sturgis Motorcycle & Bike Rental | Vintage Rides USA",
     metaDescription:
       "Motorcycle rental for Sturgis and the Rally: a Royal Enfield Himalayan 450 from Rapid City, 30 minutes away. $130/day, no rally surcharge.",
     ogImage: "/sturgis-himalayan-group-ride.jpg",
     heroImage: "/sturgis-himalayan-group-ride.jpg",
-    eyebrow: "Sturgis Motorcycle Rental",
+    eyebrow: "Sturgis Motorcycle & Bike Rental",
     h1: "Ride the",
     h1Accent: "Sturgis Rally",
     intro:
-      "Sturgis is the world's biggest motorcycle gathering, averaging around 500,000 bikes every August in a town of 7,000. During rally week the paved roads run two-wide for a hundred miles in every direction. Most rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to slip off the pavement and onto the trails, where the Black Hills are almost yours alone. And rally week costs the same $130 a day as any other week, with no surcharge.",
+      "Sturgis is the world's biggest motorcycle gathering, averaging around 500,000 bikes every August in a town of 7,000. During rally week the paved roads run two-wide for a hundred miles in every direction. Most bike rentals there are Harleys. We're the alternative: a brand-new 2025 Royal Enfield Himalayan 450, 30 minutes south in Rapid City, ready to slip off the pavement and onto the trails, where the Black Hills are almost yours alone. And rally week costs the same $130 a day as any other week, with no surcharge.",
     stats: [
       { label: "Distance to Sturgis", value: "30 min from base" },
-      { label: "Rally dates 2026", value: "Aug 7-16" },
+      { label: "Rally dates 2027", value: "Aug 6-15" },
       { label: "Daily rate", value: "$130 + 11.9% SD tax, rally week included" },
       { label: "Why us", value: "Adventure bike, not a Harley" },
     ],
@@ -227,7 +227,7 @@ export const DESTINATIONS: Record<string, Destination> = {
     faq: [
       {
         q: "When is the Sturgis Motorcycle Rally?",
-        a: "The official rally runs in August each year, typically over ten days. Rally 2026 is August 7-16 (Friday to Sunday). Crowds start arriving 5-7 days before the official kickoff and linger for 3-4 days after. If you want to experience the rally, book for those dates. If you want to ride the Black Hills with elbow room, come in June, July, or September.",
+        a: "The official rally runs in August each year, typically over ten days. Rally 2027 is August 6-15 (Friday to Sunday), the 87th edition. Crowds start arriving 5-7 days before the official kickoff and linger for 3-4 days after. If you want to experience the rally, book for those dates. If you want to ride the Black Hills with elbow room, come in June, July, or September.",
       },
       {
         q: "Why rent in Rapid City instead of Sturgis itself?",
@@ -242,8 +242,8 @@ export const DESTINATIONS: Record<string, Destination> = {
         a: "The rally itself (Main Street, downtown Sturgis) is intense — that's the point. The surrounding Black Hills are still rideable if you go early or late and avoid the obvious tourist corridors. Spearfish Canyon at 6 AM is empty. Needles Highway after sunset is empty. Forest gravel is empty year-round. Pick your routes and you'll have the best riding of your life.",
       },
       {
-        q: "How much does motorcycle rental cost during Sturgis?",
-        a: "The same as any other week of the year: $130/day plus 11.9% South Dakota tax, with no minimum rental duration, so you can book a single day if that's all you need. We don't add a rally surcharge during Sturgis week (August 7-16), which is unusual in the Black Hills. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
+        q: "Do motorcycle rental prices go up during the Sturgis Rally?",
+        a: "No. It is the same as any other week of the year: $130/day plus 11.9% South Dakota tax, with no minimum rental duration, so you can book a single day if that's all you need. We don't add a rally surcharge during Sturgis week (August 6-15 in 2027), which is unusual in the Black Hills. Rally demand is intense and our 10 bikes book out 3-6 months ahead, so reserve early.",
       },
     ],
     relatedSlugs: [

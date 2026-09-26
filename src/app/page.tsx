@@ -6,6 +6,59 @@ import Footer from "@/components/Footer";
 import { PICKUP_LOCATION, PICKUP_DIRECTIONS_URL, PICKUP_MAP_EMBED_URL, GOOGLE_LISTING_URL } from "@/lib/location";
 import { ROYAL_ENFIELD_PARTNER_URL, PRESS_PULL_QUOTE, FEATURED_OUTLETS } from "@/lib/press";
 
+// Home FAQ, rendered below and published as FAQPage JSON-LD. The last five
+// answer the questions ChatGPT could not answer about us (panel of 2026-09-26).
+const HOME_FAQ = [
+  {
+    q: "What license do I need?",
+    a: "A valid motorcycle endorsement on your driver's license is required. International riders need an International Driving Permit plus their home country license.",
+  },
+  {
+    q: "What's included in the rental?",
+    a: "The bike and its insurance, panniers, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
+  },
+  {
+    q: "Is insurance included?",
+    a: "Yes. Insurance on the motorcycle is in the daily rate, so there is nothing to buy at the counter. It covers liability up to $1,000,000 excess, plus damage to the bike after a $1,000 deductible, which is the part you are responsible for if the bike is damaged. Cover for you personally, accident, medical and trip cancellation, is not included, so bring your own travel insurance.",
+  },
+  {
+    q: "Where can I ride?",
+    a: "Anywhere you like from our Rapid City base. Popular rides include the Black Hills, Badlands National Park, Needles Highway, Spearfish Canyon, and Mount Rushmore. We'll share GPX tracks on request.",
+  },
+  {
+    q: "What happens if the bike breaks down?",
+    a: "Call our 24/7 support line. We have a roadside assistance network and will either repair or replace your bike. You're never left stranded.",
+  },
+  {
+    q: "Can I book multiple bikes?",
+    a: "Yes. You can book up to all 10 bikes simultaneously — perfect for group rides or small moto-events.",
+  },
+  {
+    q: "Can I rent year-round, or just in summer?",
+    a: "We rent year-round. May through September is the prime season: mild weather, every road open, and wildlife active. Winter rides are weather-dependent, some mountain roads like Needles Highway close for snow, and you should be comfortable riding in the cold. Tell us your dates and we'll tell you what's rideable.",
+  },
+  {
+    q: "Can I rent a motorcycle for just one day?",
+    a: "Yes. There is no minimum rental: a single day is $130 plus 11.9% South Dakota tax. Same-day rentals work too: book online and we confirm as soon as a bike is ready, your card is only charged once we confirm.",
+  },
+  {
+    q: "Is there a motorcycle rental near Rapid City Regional Airport?",
+    a: "Our garage at 1715 Samco Rd #107 is about 14 miles from Rapid City Regional Airport (RAP), a short taxi or rideshare away. Pickups are by appointment every half hour from 8 AM to 6 PM: tell us your flight time and your bike will be ready.",
+  },
+  {
+    q: "Do your prices go up during the Sturgis Rally?",
+    a: "No. Rally week (August 6-15 in 2027) costs the same $130 a day plus tax as any other week, with no surcharge. Our 10 bikes book out months ahead for August, so reserve early.",
+  },
+  {
+    q: "Is the Himalayan 450 easier to ride than a Harley?",
+    a: "For most riders, yes. It weighs 196 kg (432 lb), roughly half a big touring Harley, with an 825 mm (32.5 in) adjustable seat and one lower seat available on request. It is easy at walking pace and in hairpins, and its 40 hp are plenty for the Black Hills.",
+  },
+  {
+    q: "Can I ride gravel and dirt roads?",
+    a: "Yes. The Himalayan is an adventure bike built for it: Black Hills forest roads, Sage Creek Rim Road in the Badlands and the Galena detour near Deadwood are all fair game. No racing or stunts, and tell us your plan: we share GPX tracks.",
+  },
+];
+
 // Each page declares its own canonical (the root layout no longer does).
 export const metadata: Metadata = {
   alternates: { canonical: "/" },
@@ -51,6 +104,16 @@ const REVIEWS = [
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: HOME_FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+          }),
+        }}
+      />
       <Navbar />
       <main className="flex-1">
         {/* ── Hero ─────────────────────────────────────────────────────────── */}
@@ -475,37 +538,7 @@ export default function HomePage() {
               <h2 className="text-[#1a1a17] text-4xl font-light">Common Questions</h2>
             </div>
             <div className="space-y-6">
-              {[
-                {
-                  q: "What license do I need?",
-                  a: "A valid motorcycle endorsement on your driver's license is required. International riders need an International Driving Permit plus their home country license.",
-                },
-                {
-                  q: "What's included in the rental?",
-                  a: "The bike and its insurance, panniers, a phone/GPS mount, your Custer State Park entrance pass, your Black Hills National Forest trail pass, and 24/7 support contact. Fuel and accommodation are not included.",
-                },
-                {
-                  q: "Is insurance included?",
-                  a: "Yes. Insurance on the motorcycle is in the daily rate, so there is nothing to buy at the counter. It covers liability up to $1,000,000 excess, plus damage to the bike after a $1,000 deductible, which is the part you are responsible for if the bike is damaged. Cover for you personally, accident, medical and trip cancellation, is not included, so bring your own travel insurance.",
-                },
-
-                {
-                  q: "Where can I ride?",
-                  a: "Anywhere you like from our Rapid City base. Popular rides include the Black Hills, Badlands National Park, Needles Highway, Spearfish Canyon, and Mount Rushmore. We'll share GPX tracks on request.",
-                },
-                {
-                  q: "What happens if the bike breaks down?",
-                  a: "Call our 24/7 support line. We have a roadside assistance network and will either repair or replace your bike. You're never left stranded.",
-                },
-                {
-                  q: "Can I book multiple bikes?",
-                  a: "Yes. You can book up to all 10 bikes simultaneously — perfect for group rides or small moto-events.",
-                },
-                {
-                  q: "Can I rent year-round, or just in summer?",
-                  a: "We rent year-round. May through September is the prime season: mild weather, every road open, and wildlife active. Winter rides are weather-dependent, some mountain roads like Needles Highway close for snow, and you should be comfortable riding in the cold. Tell us your dates and we'll tell you what's rideable.",
-                },
-              ].map((item) => (
+              {HOME_FAQ.map((item) => (
                 <div key={item.q} className="border-b border-[#e8e3d3] pb-6">
                   <h3 className="text-[#1a1a17] font-semibold mb-2">{item.q}</h3>
                   <p className="text-[#6e6a5e] text-sm leading-relaxed">{item.a}</p>

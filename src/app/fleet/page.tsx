@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -56,12 +57,13 @@ export default function FleetPage() {
           <div className="max-w-7xl mx-auto px-6">
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">The Fleet</p>
             <h1 className="text-white text-4xl md:text-6xl font-light leading-tight mb-4">
-              Royal Enfield<br />
+              Royal Enfield{" "}<br />
               <span className="font-semibold">Himalayan 450</span>
             </h1>
             <p className="text-white/60 text-lg max-w-lg">
-              10 bikes. All 2025. Maintained to the same standard we use for our
-              guided tours across 4 continents.
+              Adventure motorcycle rental in Rapid City: 10 bikes, all 2025,
+              maintained to the same standard we use for our guided tours across
+              4 continents.
             </p>
             {/* Specs pages are read by people comparing bikes; the way to book
                 one belongs here, not only after the whole spec sheet. */}
@@ -82,12 +84,62 @@ export default function FleetPage() {
         {/* Bike hero image */}
         <section className="bg-[#26301c]">
           <div className="max-w-7xl mx-auto px-6 py-12">
-            <div
-              className="aspect-[16/7] bg-[#2e3b23] bg-cover bg-center rounded-sm overflow-hidden"
-              style={{ backgroundImage: "url('/hero-bike-outdoor.jpg')" }}
-              role="img"
-              aria-label="Royal Enfield Himalayan 450 in the Black Hills"
-            />
+            <div className="relative aspect-[16/7] bg-[#2e3b23] rounded-sm overflow-hidden">
+              <Image
+                src="/hero-bike-outdoor.jpg"
+                alt="Royal Enfield Himalayan 450 rental in the Black Hills"
+                fill
+                preload
+                fetchPriority="high"
+                loading="eager"
+                sizes="(min-width: 1280px) 1216px, 100vw"
+                className="object-cover object-center"
+              />
+            </div>
+          </div>
+        </section>
+
+        {/* Why this bike: answers "lighter than a Harley?" and "can I ride
+            gravel?", the two questions riders ask before renting an ADV bike
+            (and that assistants could not answer about us, panel of 2026-09-26).
+            Every figure comes from SPECS below. */}
+        <section className="bg-white py-20">
+          <div className="max-w-5xl mx-auto px-6">
+            <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-4">Why this bike</p>
+            <h2 className="text-[#1a1a17] text-3xl md:text-4xl font-light mb-10">
+              Easier than a Harley, built for gravel
+            </h2>
+            <div className="grid md:grid-cols-3 gap-10">
+              <div>
+                <h3 className="text-[#1a1a17] text-lg font-medium mb-3">Light and easy to handle</h3>
+                <p className="text-[#2a2a24] text-sm md:text-base leading-relaxed">
+                  196 kg (432 lb) ready to ride, roughly half a big touring Harley. The 825 mm
+                  (32.5 in) seat is adjustable, and one lower seat is available on request. Easy at
+                  walking pace, in a parking lot or in the Needles Highway hairpins.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-[#1a1a17] text-lg font-medium mb-3">Made for dirt roads</h3>
+                <p className="text-[#2a2a24] text-sm md:text-base leading-relaxed">
+                  200 mm of travel up front, 210 mm at the rear and 230 mm of ground clearance: the
+                  Black Hills forest roads, Sage Creek Rim Road in the Badlands and the Galena
+                  detour are all fair game. We share the GPX tracks.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-[#1a1a17] text-lg font-medium mb-3">Enough for a long day</h3>
+                <p className="text-[#2a2a24] text-sm md:text-base leading-relaxed">
+                  40 hp and a 6-speed box with slip-and-assist clutch, happy at highway speed on
+                  I-90 to Sturgis. The 17-liter tank gives about 400 miles: the classic Black Hills
+                  loop on a single fill.
+                </p>
+              </div>
+            </div>
+            <p className="mt-10 text-sm">
+              <Link href="/black-hills-motorcycle-rides" className="text-[#a9781a] hover:text-[#1a1a17] font-medium">
+                Where to ride it: the 10 best Black Hills motorcycle rides →
+              </Link>
+            </p>
           </div>
         </section>
 
