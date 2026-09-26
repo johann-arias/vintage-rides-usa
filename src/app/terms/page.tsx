@@ -59,9 +59,8 @@ export default function TermsPage() {
             <p className="text-[#d9a32b] text-xs font-semibold tracking-[0.25em] uppercase mb-5">Legal</p>
             <h1 className="text-white text-4xl md:text-5xl font-light leading-tight mb-6">Rental Terms &amp; Conditions</h1>
             <p className="text-white/70 text-lg leading-relaxed">
-              The rules of a Vintage Rides USA motorcycle rental, in plain English. This page summarizes the
-              Motorcycle Rental Agreement you sign when you pick up your bike; if the two ever differ, the
-              signed agreement applies.
+              The rules of a Vintage Rides USA motorcycle rental, in plain English. They are the terms of the
+              Motorcycle Rental Agreement you sign when you pick up your bike.
             </p>
             <p className="text-white/50 text-sm tracking-wider mt-6">Last updated: {LAST_UPDATED}</p>
           </div>
