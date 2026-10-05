@@ -87,7 +87,7 @@ export const DESTINATIONS: Record<string, Destination> = {
         "452cc liquid-cooled DOHC single — relaxed at Black Hills speeds (45–65 mph)",
         "200mm front / 210mm rear travel — handles forest gravel and Custer washboard",
         "196 kg kerb weight — agile through Needles Highway tunnels and pigtails",
-        "Full tank = ~400 mi range — one fill-up covers the full loop",
+        "Full tank = ~280 mi range — one fill-up covers the full loop",
         "Adjustable 825mm seat — comfortable for full-day riding",
       ],
     },
@@ -284,7 +284,7 @@ export const DESTINATIONS: Record<string, Destination> = {
         "Light enough for Sage Creek Rim Road's washboard gravel",
         "Long-travel suspension absorbs the prairie heat-cracked tarmac",
         "Compact size makes the Pinnacles overlooks a quick park-and-shoot",
-        "Tank range (~400 mi) means no fuel stress on a 250-mi day",
+        "Tank range (~280 mi) means no fuel stress on a 250-mi day",
       ],
     },
     routesTitle: "Best Badlands rides from Rapid City",
@@ -311,7 +311,7 @@ export const DESTINATIONS: Record<string, Destination> = {
         ridingTime: "Long day or 2 days",
         highlights: "Badlands Loop · Wall · Rapid City · Mount Rushmore · Iron Mountain Road",
         description:
-          "Combine both icons in one trip. Morning: Badlands Loop. Lunch: Wall. Afternoon: Black Hills via Mount Rushmore + Iron Mountain Road. Doable in one long summer day with the Himalayan's 400-mile tank range, more comfortable as a 2-day rental.",
+          "Combine both icons in one trip. Morning: Badlands Loop. Lunch: Wall. Afternoon: Black Hills via Mount Rushmore + Iron Mountain Road. Doable in one long summer day with the Himalayan's 280-mile tank range, more comfortable as a 2-day rental.",
       },
     ],
     knowBefore: {

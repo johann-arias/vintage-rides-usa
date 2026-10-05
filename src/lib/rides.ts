@@ -91,7 +91,7 @@ export const RIDES: Ride[] = [
       "South into Custer State Park and the Wildlife Loop: bison, pronghorn and burros own the road.",
       "Needles Highway to Sylvan Lake, then home through Hill City.",
     ],
-    tips: ["Give bison 100 yards and never ride between two of them.", "The Himalayan's 400-mile range covers the loop on one tank."],
+    tips: ["Give bison 100 yards and never ride between two of them.", "The Himalayan's 280-mile range covers the loop on one tank."],
     maps: { origin: BASE, destination: BASE, waypoints: ["Keystone, SD", "Mount Rushmore National Memorial", "Wildlife Loop Road, Custer State Park, SD", "Sylvan Lake, Custer, SD", "Hill City, SD"] },
     rent: { href: "/black-hills-motorcycle-rental", label: "Black Hills motorcycle rental" },
   },

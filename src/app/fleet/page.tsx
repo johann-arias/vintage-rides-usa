@@ -20,7 +20,7 @@ const SPECS = [
   { label: "Rear suspension", value: "Monoshock, 210mm travel" },
   { label: "Front brake", value: "320mm disc, Bybre 2-piston" },
   { label: "Rear brake", value: "270mm disc, Bybre 1-piston" },
-  { label: "Fuel tank", value: "17 litres (~400 mi range)" },
+  { label: "Fuel tank", value: "17 litres (~280 mi range)" },
   { label: "Seat height", value: "825mm (adjustable) · lower seat on request" },
   { label: "Kerb weight", value: "196 kg" },
   { label: "Ground clearance", value: "230mm" },
@@ -130,7 +130,7 @@ export default function FleetPage() {
                 <h3 className="text-[#1a1a17] text-lg font-medium mb-3">Enough for a long day</h3>
                 <p className="text-[#2a2a24] text-sm md:text-base leading-relaxed">
                   40 hp and a 6-speed box with slip-and-assist clutch, happy at highway speed on
-                  I-90 to Sturgis. The 17-liter tank gives about 400 miles: the classic Black Hills
+                  I-90 to Sturgis. The 17-liter tank gives about 280 miles: the classic Black Hills
                   loop on a single fill.
                 </p>
               </div>

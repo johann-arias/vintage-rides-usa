@@ -216,7 +216,7 @@ export default function RidesPage() {
               <h2 className="text-white text-3xl font-light mb-4">One bike for all ten</h2>
               <p className="text-white/70 leading-relaxed">
                 The Royal Enfield Himalayan 450 does the Needles Highway hairpins and the Sage Creek gravel on the
-                same tank: 400 miles of range, long-travel suspension, panniers and a phone mount included.
+                same tank: about 280 miles of range, long-travel suspension, panniers and a phone mount included.
                 $130 a day plus tax, insurance included ($1,000 deductible), Custer State Park pass included.
               </p>
             </div>
